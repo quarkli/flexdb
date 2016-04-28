@@ -68,6 +68,7 @@
     <button onclick="clearForm()">Clear</button>
     <button onclick="saveDoc()">Save</button>
     <button onclick="evalDoc()">Eval</button>
+    <button onclick="altTable()">Alter</button>
     <form></form>
     <hr>
     <h3>Data:</h3>
@@ -96,14 +97,78 @@
         var form = $('form');
         var tables = {};
         var doc = {};
-        var dbfi = [];
+        var dbfi;
+        var xdb = new Proxy({}, {
+                set: (t,p,v)=>{
+                    // if (p != 'length' && t[p]) upddbfi(v.key, v.data);
+                    if (p != 'length' && t[p]) {
+                        var add = true;
+                        var del = 2;
+                        Object.keys(t).forEach(k=>{
+                            if (t[k] == v) add = false;
+                            if (t[k] == t[p]) del--;
+                        });
+                        if (del) {
+                            console.log('del',t[p],'at',p);
+                        }
+                        if (add) {
+                            console.log('add',v,'at',p);
+                        }
+                    }
+                    t[p]=v;
+                    return t;
+                },
+                deleteProperty: (t,p,v)=>{
+                    var del = 2;
+                    Object.keys(t).forEach(k=>{
+                        if (t[k] == v) add = false;
+                        if (t[k] == t[p]) del--;
+                    });
+                    if (del) {
+                        console.log('del',t[p],'at',p);
+                    }
+                    return t;
+                }
+            });
         var curTable = '';
         var fbfi_url = 'https://luminous-inferno-3027.firebaseio.com/dbfi';
         var fbfi = new Firebase(fbfi_url);
 
         fbfi.on("value", function(snapshot) {
             var res = snapshot.val();
-            dbfi.splice(0);
+            if (!res) return;
+            dbfi = new Proxy([], {
+                set: (t,p,v)=>{
+                    // if (p != 'length' && t[p]) upddbfi(v.key, v.data);
+                    if (p != 'length' && t[p]) {
+                        var add = true;
+                        var del = 2;
+                        Object.keys(t).forEach(k=>{
+                            if (t[k] == v) add = false;
+                            if (t[k] == t[p]) del--;
+                        });
+                        if (del) {
+                            console.log('del',t[p],'at',p);
+                        }
+                        if (add) {
+                            console.log('add',v,'at',p);
+                        }
+                    }
+                    t[p]=v;
+                    return t;
+                },
+                deleteProperty: (t,p,v)=>{
+                    var del = 2;
+                    Object.keys(t).forEach(k=>{
+                        if (t[k] == v) add = false;
+                        if (t[k] == t[p]) del--;
+                    });
+                    if (del) {
+                        console.log('del',t[p],'at',p);
+                    }
+                    return t;
+                }
+            });
             Object.keys(res).forEach(k=>{
                 dbfi.push({key: k, data: res[k]});
             });
@@ -119,12 +184,27 @@
         });
         $('#ipt-table').focus();
 
-        function deldbfi(idx) {
-            var key = dbfi[idx].key;
-            if (key) {
-                var doc = new Firebase(fbfi_url + '/' + key);
-                doc.remove();
-            }
+        function upddbfi(key, data) {
+            var doc = new Firebase(fbfi_url + '/' + key);
+            if (doc) doc.update(data);
+        }
+
+        function deldbfi(key) {
+            var doc = new Firebase(fbfi_url + '/' + key);
+            if (doc) doc.remove();
+        }
+
+        function altTable() {
+            doc = form2json();
+            if (Object.keys(doc).length) tables[curTable] = doc;
+        }
+
+        function evalTable(evalTbl = {}, srcTbl = []) {
+            var ret = [];
+            srcTbl.forEach(e=>{
+                ret.push(evalDoc(evalTbl, e));
+            });
+            return ret;
         }
 
         function updTableList() {
@@ -236,13 +316,15 @@
             }
         }
 
-        function calcPKI(pki, data) {
+        function evalValue(val, refTable) {
             try {
-                var statement = pki.split('__').map((e)=>{var ret=getValue(e);return ret?ret:e}).join('');
+                var statement = val.split('__');
+                if (statement.length > 1) statement = statement.map((e)=>{var ret=getValue(e, refTable);return ret?ret:e});
+                statement = statement.join('');
                 return eval(statement);
             }
             catch (e) {
-                return pki;
+                return val;
             }
         }
 
@@ -345,17 +427,17 @@
 
         function evalForm() {
             $('form').find('input[type="text"]').each((i,e)=>{
-                if (e.value) e.value = calcPKI(e.value);
+                if (e.value) e.value = evalValue(e.value);
             });
         }
 
-        function evalDoc() {
-            var doc = form2json();
+        function evalDoc(src, refTable) {
+            var doc = src || form2json();
             objIterator(doc, (e,k,p)=>{
                 var path = 'doc';
                 path += p.map((a,b)=>{return '["'+a+'"]'}).reduce((a,b)=>{return a+b}, '');
                 var node = eval(path);
-                node[k] = calcPKI(node[k]);
+                node[k] = evalValue(node[k], refTable);
             });
             $('pre').html(JSON.stringify(doc,null,4));
             return doc;
