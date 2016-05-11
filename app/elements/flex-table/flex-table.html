@@ -1,0 +1,186 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+
+<dom-module id="flex-table">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      span {
+        @apply(--paper-font-body1);
+      }
+    </style>
+
+    <table></table>
+
+  </template>
+
+  <link rel="import" href="../../../include.html">
+  <script>
+    var dbfi = new Proxy([], {
+      set: (t,p,v)=>{refreshTable();t[p]=v;return t;},
+      deleteProperty: (t,p,v)=>{refreshTable();return t;}
+    });
+
+    xdb.on('data/findex', 'value', data=>{
+      dbfi.splice(0);
+      data.forEach(e=>dbfi.push({key: e.key, data: e.data}));
+    });   
+
+    function refreshTable(){
+      $('table').empty();
+
+      dbfi.forEach((e,i)=>{
+        if (i == 0) {
+          $('<tr>').attr('id', 'tb-head').appendTo('table');
+          objIterator(e.data, (e,k,p,o)=>{
+            var header = $('<th>').html(k);
+            if (typeof e == 'object') {
+              header.addClass('sec');
+              header.attr('rowspan', dbfi.length+1);
+            }
+            header.appendTo('#tb-head');
+          });
+        }
+        var tr = $('<tr>').attr('id', e.key).appendTo('table');
+        objIterator(e.data, (e,k,p,o)=>{
+          if (typeof e == 'object') return;
+          var cls = isNaN(e) ? isNaN((new Date(e)).valueOf()) ? 'text' : 'date' : 'number';
+          $('<td>').attr('name',k).addClass(cls).html(e).on('click',editField).appendTo(tr);
+        });
+      });
+    }
+
+    function editField(e) {
+      var td = $(e.target);
+      var val = td.html();
+      var ipt = $('<input>').width(td.width()).val(val).on('keydown blur', endEdit);
+      if (!isNaN(val)) ipt.css('text-align', 'right');
+      td.attr('value', val).html('').append(ipt);
+      ipt.focus().select();
+    }
+
+    function endEdit(e) {
+      var ipt = $(e.target);
+      var td = ipt.parent('td');
+      var kc = e.keyCode;
+      if (kc && kc != 9 && kc != 13 && kc != 27) return;
+      e.preventDefault();
+
+      if (kc == 27) ipt.val(td.attr('value'));
+      td.html(ipt.val());
+      if (ipt.val() != td.attr('value')) console.log('data changed')
+      ipt.remove();
+      if (kc == 9) td.next().click();
+    }
+
+    function _getPath(data, field) {
+      var path = '';
+      var key = '';
+      objIterator(data, (e,k,p,o)=>{
+        if (k == field) {
+          path = p; //.splice(0,1);
+          key = k;
+        }
+      },true);
+      path.push(key);
+      path.splice(0, 1);
+      path = path.map((a,b)=>{return '["'+a+'"]'}).reduce((a,b)=>{return a+b}, '');
+      return path;
+    }
+
+    function avg(data, field, start = 1, len = data.length, incEmpty = true) {
+      var path = _getPath(data, field);
+      var count = len;
+      if (!incEmpty) {
+        count = data.reduce((e1, e2, i)=>{
+          if (i < start - 1 || i > start + len - 2) return e1;
+          return eval('e2' + path).length || isNaN(eval('e2' + path)) ? ++e1 : e1;
+        }, 0);
+      }
+      return sum(data, field, start, len) / count;
+    }
+
+    function sum(data, field, start = 1, len = data.length) {
+      var path = _getPath(data, field);
+      return data.reduce((e1, e2, i)=>{
+        // console.log(i, (i < start || i > end), e1)
+        if (i < start - 1 || i > start + len - 2) return e1;
+        return e1 + (isNaN(eval('e2' + path)) ? 0 : 1 * eval('e2' + path));
+      }, 0);
+    }
+
+    function sort(data, field, ascending = true) {
+      var path = _getPath(data, field);
+      data.sort((a,b)=>{
+        // compare numbers
+        if (!isNaN(eval('a' + path)) && !isNaN(eval('a' + path))) {
+          return ascending ? eval('a' + path) - eval('b' + path) : eval('b' + path)　- eval('a' + path);
+        }
+        else {
+          var ad = (new Date(eval('a' + path))).valueOf();
+          var bd = (new Date(eval('b' + path))).valueOf();
+          if (isNaN(ad) || isNaN(bd)) {
+            return (eval('a' + path) > eval('b' + path)) == ascending ? 1 : -1;
+          }
+          else {
+            return ascending ? ad - bd : bd - ad;
+          }
+        }
+      });
+    }
+    
+    function objIterator(obj, cb, arrayAsObj = false, path = [], cache) {
+        if (typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
+            cache = cache || [obj];
+            Object.keys(obj).forEach(key=>{
+                if (cache.indexOf(obj[key]) < 0) {
+                    var p = path.slice();
+                    // if (typeof obj[key] !== 'object' || (Array.isArray(obj[key]) && !arrayAsObj)) {
+                        if (typeof cb == 'function') cb(obj[key], key, p, obj);
+                    // }
+                    // else {
+                        p.push(key);
+                        cache.push(obj[key]);
+                        objIterator(obj[key], cb, arrayAsObj, p, cache);
+                    // }
+                }
+            });
+        }
+    }
+
+  </script>
+
+  <script>
+    (function() {
+      'use strict';
+      var dkt = null;
+
+      Polymer({
+        is: 'flex-table',
+
+        properties: {
+          data: {
+            type: Object,
+            notify: true
+          }
+        },
+
+        ready: function() {
+          dkt = this.$.dkt;
+        }
+      });
+    })();
+  </script>
+</dom-module>
