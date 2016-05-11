@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Table Browser</title>
+	<style>
+	table, td  {
+	  border: 1px solid grey;
+	  border-collapse: collapse;
+	  padding: 5px;
+	}
+	</style>
+</head>
+<body>
+
+<div ng-app="myApp" ng-controller="customersCtrl"> 
+
+<table>
+  <tr ng-repeat="x in dbfi">
+  	<td ng-repeat="y in x">{{ y }}</td>
+  </tr>
+</table>
+
+</div>
+	
+<script src="bower_components/firebase/firebase.js"></script>
+<script src="bower_components/angular/angular.min.js"></script>
+<script src="bower_components/angularfire/dist/angularfire.min.js"></script>
+<script>
+var app = angular.module('myApp', ['firebase']);
+app.controller('customersCtrl', function($scope, $firebaseObject) {
+	var fbfi_url = 'https://luminous-inferno-3027.firebaseio.com/dbfi';
+	var ref = new Firebase(fbfi_url);
+	$scope.dbfi = $firebaseObject(ref);
+});
+
+var adata = null;
+var uid = null;
+function authDataCallback(authData) {
+  if (authData) {
+  	adata = authData;
+    console.log("User " + authData.uid + " is logged in with " + authData.provider);
+  } else {
+  	adata = null;
+    console.log("User is logged out");
+  }
+}
+// Register the callback to be fired every time auth state changes
+var ref = new Firebase("https://luminous-inferno-3027.firebaseio.com");
+
+if (ref) ref.onAuth(authDataCallback);
+
+function authHandler(error, authData) {
+  if (error) {
+    console.log("Login Failed!", error);
+  } else {
+    console.log("Authenticated successfully with payload:", authData);
+  }
+}
+
+ref.authWithPassword({
+  email    : 'quarkli@gmail.com',
+  password : 'lcw919'});
+// }, authHandler);
+</script>
+</body>
+</html>
