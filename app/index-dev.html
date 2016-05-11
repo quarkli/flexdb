@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Business Performance Index</title>
+    <!-- <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script> -->
+    <!-- <script src="scripts/main.js"></script> -->
+    <!-- <link href="elements/todo-app.html" rel="import"> -->
+    <!-- <link rel="import" href="elements/fi-columns.html"> -->
+    <style>
+        input {
+            width: 400px;
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px; /* Could be more or less, depending on screen size */
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body unresolved>
+    <!-- <fi-columns></fi-columns> -->
+    <!-- <db-column></db-column> -->
+    <!--<todo-app></todo-app>-->
+    <h3>Table:</h3>
+    <label for="ipt-table">Table: </label>
+    <input id="ipt-table" type="text" list="table-list">
+    <datalist id="table-list"></datalist>
+    <button onclick="useTable()">Use</button>
+    <button onclick="dropTable()">Drop</button>
+    <button onclick="impTable()">Import</button>
+    <button onclick="expTable()">Export</button><br><br>
+    <label for="ipt-section">Append</label>
+    <select id="slct-sections"></select>
+    <input id="ipt-section" type="text">
+    <button onclick="appendTable()">Section</button>
+    <button onclick="appendTable(1)">Field</button><br><br>
+    <hr>
+    <h3>Form:</h3>
+    <button onclick="clearForm()">Clear</button>
+    <button onclick="saveDoc()">Save</button>
+    <button onclick="evalDoc()">Eval</button>
+    <button onclick="altTable()">Alter</button>
+    <form></form>
+    <hr>
+    <h3>Data:</h3>
+    <pre></pre>
+    <div id="modalSel" class="modal">
+        <div class="modal-content">
+            <h3>Field Selector</h3>
+            <p>
+                <label for="slct-table">Table: </label>
+                <select id="slct-table"></select>
+            </p>
+            <p>
+                <label for="slct-section">Section: </label>
+                <select id="slct-section"></select>
+            </p>  
+            <p>
+                <label for="slct-field">Field: </label>
+                <select id="slct-field"></select>
+            </p>
+            <button onclick="selectField()">Select</button>
+            <button onclick="hideModal()">Cancel</button>
+        </div>
+    </div>
+    <link rel="import" href="include.html">
+    <script>
+        var form = $('form');
+        var tables = {};
+        var doc = {};
+        var curTable = '';
+
+        impTable();
+
+        $('.modal-content').on('keydown', selectorKeydownHdl);
+        $('#slct-table').on('change', updateSelSec);
+        $('#slct-section').on('change', updateSelFld);
+        $('#ipt-table').on('keydown', e=>{
+            if (e.keyCode == 13) useTable();
+        });
+        $('#ipt-table').focus();
+
+        function altTable() {
+            doc = form2json();
+            if (Object.keys(doc).length) tables[curTable] = doc;
+        }
+
+        function evalTable(evalTbl = {}, srcTbl = []) {
+            var ret = [];
+            srcTbl.forEach(e=>{
+                ret.push(evalDoc(evalTbl, e));
+            });
+            return ret;
+        }
+
+        function updTableList() {
+            $('#table-list').empty();
+            Object.keys(tables).forEach(key=>{
+                $('<option>').val(key).appendTo($('#table-list'));
+            });
+        }
+
+        function impTable() {
+            try {
+                tables = JSON.parse(localStorage.tables);
+                updTableList();
+            }
+            catch (e) {}
+        }
+
+        function expTable() {
+            localStorage.tables = JSON.stringify(tables);
+        }
+
+        function clearForm() {
+            $('form').find('input[type="text"]').val('');
+        }
+
+        function hideModal() {
+            $('#modalSel').hide();
+            $('#' + $('#modalSel').attr('target')).focus();
+            $('#modalSel').attr('target', '');
+        }
+
+        function selectField() {
+            var val = $('#' + $('#modalSel').attr('target')).val() 
+                + '__' + $('#slct-table').val() + '.' + $('#slct-field').val() + '__';
+            $('#' + $('#modalSel').attr('target')).val(val);
+            hideModal();            
+        }
+
+        function updateSelFld() {
+            $('#slct-field').empty();
+            var sec = eval($('#slct-section').val().replace('doc', 'tables["' + $('#slct-table').val() + '"]'));
+            Object.keys(sec).forEach(k=>{
+                if (typeof sec[k] !== 'object') {
+                    $('<option>').val(k).html(k).appendTo($('#slct-field'));
+                }
+            });
+        }
+
+        function updateSelSec() {
+            $('#slct-section').empty();
+            getSections(tables[$('#slct-table').val()]).forEach(e=>{
+                $('<option>').val(e.replace('root','doc')).html(e).appendTo($('#slct-section'));
+            });
+            updateSelFld();
+        }
+
+        function updateSelTbl() {
+            $('#slct-table').empty();
+            Object.keys(tables).forEach(k=>{
+                $('<option>').val(k).html(k).appendTo($('#slct-table'));
+            });
+        }
+
+        function selectorKeydownHdl(e) {
+            if (e.keyCode == 27) hideModal();
+        }
+
+        function getValue(value, data) {
+            var obj, key;
+
+            // Search from a data source
+            // i.e. getValue('apple', foods), foods = {vegi: {carrot: 1}, fruit: {apple: 2, banana: 1}}
+            // return => 2
+            if (data) {
+                obj = data;
+                key = value;
+            }
+            else {
+                try {
+                    // getValue('doc["sectA"]["sectB"]["fieldA"]')
+                    // converts to => tables.doc["sectA"]["sectB"]["fieldA"]
+                    var val = eval('tables.' + value);
+                    if (val) return val;
+                }
+                catch (e) {}
+
+                try {
+                    // getValue('src.val') = getValue('val', tables.src)
+                    obj = eval('tables.' + value.split('.')[0]);
+                    key = value.split('.')[1];
+                    if (!obj) return null;
+                }
+                catch (e) {
+                    return null;
+                }
+            }
+
+            if (obj[key]) {
+                return obj[key];
+            }
+            else {
+                var ret = null;
+                Object.keys(obj).forEach(k=>{
+                    if (!ret && typeof obj[k] == 'object') {
+                        ret = getValue(key, obj[k]);
+                    }
+                });
+                return ret;
+            }
+        }
+
+        function evalValue(val, refTable) {
+            try {
+                var statement = val.split('__');
+                if (statement.length > 1) statement = statement.map((e)=>{var ret=getValue(e, refTable);return ret?ret:e});
+                statement = statement.join('');
+                return eval(statement);
+            }
+            catch (e) {
+                return val;
+            }
+        }
+
+        function dropTable() {
+            var tbl = $('#ipt-table').val();
+
+            if (tbl.length && tables[tbl]) {
+                delete tables[tbl];
+                doc = {};
+                updTableList();
+                updateScreen();
+            }
+        }
+
+        function useTable() {
+            var tbl = $('#ipt-table').val();
+
+            if (tbl.length) {
+                if (!tables[tbl]) {
+                    doc = {}
+                    tables[tbl] = doc;
+                }
+                else {
+                    doc = tables[tbl];
+                    $('#ipt-section').focus();
+                }
+                curTable = tbl;
+                updateScreen();
+            }
+        }
+
+        function getSections(obj, secs, str) {
+            var secs = secs || ['root'];
+            var str = str || 'root';
+            Object.keys(obj).forEach(key=>{
+                if (typeof obj[key] == 'object') {
+                    var x = str + '["' + key + '"]';
+                    secs.push(x);
+                    getSections(obj[key], secs, x);
+                }
+            });
+            return secs;
+        }
+
+        function json2form(obj, id) {
+            var id = id || 'doc';
+            var form = $('<div>').attr('id', id);
+            Object.keys(obj).forEach(key=>{
+                $('<br>').appendTo(form);
+                $('<button>').attr('value', key).html('X').on('click', deleteItem).appendTo(form);
+                if (typeof obj[key] == 'object') {
+                    // var section = $('<div>').attr('id', key).appendTo(form);
+                    $('<label>').html(' ' + key + ': ').appendTo(form);
+                    $('<hr>').appendTo(form);
+                    json2form(obj[key], key).css('margin-left', 20).appendTo(form);
+                }
+                else {
+                    $('<label>').html(' ' + key + ': ').appendTo(form);
+                    var ipt = $('<input>').attr({type: 'text', id: key, value: obj[key]});
+                    ipt.on('keydown', showModal).appendTo(form);
+                }
+            });
+            // form.children().sort((a, b)=>{return $(a).})
+            return form;
+        }
+
+        function showModal(e){
+            if (e.altKey && e.keyCode == 75) {
+                updateSelTbl();
+                updateSelSec();
+                $('#modalSel').attr('target', e.target.id).show();
+                $('#slct-table').focus();
+            }
+        }
+
+        function saveDoc() {
+            doc = form2json();
+            updateScreen();
+        }
+
+        function objIterator(obj, cb, arrayAsObj = false, path = [], cache) {
+            if (typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
+                cache = cache || [obj];
+                Object.keys(obj).forEach(key=>{
+                    if (cache.indexOf(obj[key]) < 0) {
+                        var p = path.slice();
+                        if (typeof obj[key] !== 'object' || (Array.isArray(obj[key]) && !arrayAsObj)) {
+                            if (typeof cb == 'function') cb(obj[key], key, p, obj);
+                        }
+                        else {
+                            p.push(key);
+                            cache.push(obj[key]);
+                            objIterator(obj[key], cb, arrayAsObj, p, cache);
+                        }
+                    }
+                });
+            }
+        }
+
+        function evalForm() {
+            $('form').find('input[type="text"]').each((i,e)=>{
+                if (e.value) e.value = evalValue(e.value);
+            });
+        }
+
+        function evalDoc(src, refTable) {
+            var doc = src || form2json();
+            objIterator(doc, (e,k,p)=>{
+                var path = 'doc';
+                path += p.map((a,b)=>{return '["'+a+'"]'}).reduce((a,b)=>{return a+b}, '');
+                var node = eval(path);
+                node[k] = evalValue(node[k], refTable);
+            });
+            $('pre').html(JSON.stringify(doc,null,4));
+            return doc;
+        }
+
+        function form2json(obj, doc) {
+            var obj = obj || $('#doc');
+            var doc = doc || {};
+            obj.children('input').each((i, e, k)=>{
+                doc[e.id] = e.value;
+            });
+            obj.children('div').each((i, e, k)=>{
+                doc[e.id] = form2json($('#' + e.id), doc[e.id]);
+            });
+            return doc;
+        }
+
+        function deleteItem(e) {
+            e.preventDefault();
+            var item = '["' + e.target.value + '"]';
+            $(e.target).parents('div').each((i,e,k)=>{
+                if (e.id != 'doc') item = '["' + e.id + '"]' + item;
+                else item = 'doc' + item;
+            });
+            eval('delete ' + item);
+            updateScreen();
+        }
+
+        function updateScreen(){
+            $('#slct-sections').empty();
+            getSections(doc).forEach(e=>{
+                var opt = $('<option>').val(e.replace('root', 'doc')).html(e);
+                $('#slct-sections').append(opt);
+            });
+
+            $('form').empty();
+            json2form(doc).appendTo(form);
+            $('pre').html(JSON.stringify(doc,null,4));
+        }
+
+        function appendTable(isField) {
+            if ($('#ipt-section').val().length) {
+                var val = isField ? '' : {};
+                var sec = isField ? $('#slct-sections').val() : $('#slct-sections').val()+'["'+$('#ipt-section').val()+'"]';
+                eval($('#slct-sections').val())[$('#ipt-section').val()] = val;
+
+                updateScreen();
+                if (sec) $('#slct-sections').val(sec);
+                $('#ipt-section').val('').focus();
+            }
+        }
+    </script>
+</body>
+</html>
