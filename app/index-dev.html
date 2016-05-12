@@ -319,23 +319,24 @@
             updateScreen();
         }
 
-        function objIterator(obj, cb, arrayAsObj = false, path = [], cache) {
-            if (typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
-                cache = cache || [obj];
-                Object.keys(obj).forEach(key=>{
-                    if (cache.indexOf(obj[key]) < 0) {
-                        var p = path.slice();
-                        if (typeof obj[key] !== 'object' || (Array.isArray(obj[key]) && !arrayAsObj)) {
-                            if (typeof cb == 'function') cb(obj[key], key, p, obj);
-                        }
-                        else {
-                            p.push(key);
-                            cache.push(obj[key]);
-                            objIterator(obj[key], cb, arrayAsObj, p, cache);
-                        }
-                    }
-                });
-            }
+        function objectNodeIterator(obj, cb, leafOnly = true, arrayAsObj = false, path = [], cache) {
+          if (typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
+            cache = cache || [obj];
+            Object.keys(obj).forEach(key=>{
+              if (cache.indexOf(obj[key]) < 0) {
+                var p = path.slice();
+                if (leafOnly && typeof obj[key] !== 'object' || (Array.isArray(obj[key]) && !arrayAsObj)) {
+                  if (typeof cb == 'function') cb(obj[key], key, p, obj);
+                }
+                else {
+                  if (!leafOnly && typeof cb == 'function') cb(obj[key], key, p, obj);
+                  p.push(key);
+                  cache.push(obj[key]);
+                  objectNodeIterator(obj[key], cb, leafOnly, arrayAsObj, p, cache);
+                }
+              }
+            });
+          }
         }
 
         function evalForm() {
@@ -345,15 +346,21 @@
         }
 
         function evalDoc(src, refTable) {
-            var doc = src || form2json();
-            objIterator(doc, (e,k,p)=>{
-                var path = 'doc';
-                path += p.map((a,b)=>{return '["'+a+'"]'}).reduce((a,b)=>{return a+b}, '');
-                var node = eval(path);
-                node[k] = evalValue(node[k], refTable);
-            });
-            $('pre').html(JSON.stringify(doc,null,4));
-            return doc;
+            var ret = {};
+            src = src || form2json();
+            objectNodeIterator(src, (e,k,p)=>{
+                var path = p.map((a,b)=>{return '["'+a+'"]'}).reduce((a,b)=>{return a+b}, '');
+                var srcnode = eval('src' + path);
+                var retnode = eval('ret' + path);
+                if (typeof srcnode[k] == 'object') {
+                    retnode[k] = {};
+                }
+                else {
+                    retnode[k] = evalValue(srcnode[k], refTable);
+                }
+            }, false);
+            $('pre').html(JSON.stringify(ret,null,4));
+            return ret;
         }
 
         function form2json(obj, doc) {
