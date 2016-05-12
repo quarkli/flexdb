@@ -99,11 +99,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.auth = function() {
-    if (xdb) xdb.auth(app.email, app.password, uid=>app.uid = uid);
+    if (flexModel) flexModel.auth(app.email, app.password, uid=>app.uid = uid);
   };
 
   app.unauth = function() {
-    if (xdb) xdb.unauth();
+    if (flexModel) flexModel.unauth();
     app.uid = null;
   };
 
