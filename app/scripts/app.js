@@ -38,8 +38,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // See https://github.com/Polymer/polymer/issues/1381
   window.addEventListener('WebComponentsReady', function() {
     // imports are loaded and elements have been registered
-     if (!app.uid) {
+     if (flexModel && !flexModel.uid) {
       Polymer.dom(document).querySelector('#modalLogin').toggle();
+    }
+    else {
+      app.authenticated = true;
+      popToast('User has logged in!', '#B2DFDB');
     }
   });
 
@@ -84,9 +88,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.password = '';
 
+  app.authenticated = false;
+
   app.login = function() {
-    if (app.uid) {
-      app.unauth();
+    if (flexModel && flexModel.uid) {
+      flexModel.unauth();
+      app.authenticated = false;
+      popToast('User has logged out!');
     }
     else {
       Polymer.dom(document).querySelector('#modalLogin').toggle();
@@ -99,14 +107,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.auth = function() {
-    if (flexModel) flexModel.auth(app.email, app.password, uid=>app.uid = uid);
+    if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{
+      if (uid) {
+        app.authenticated = true;
+        popToast('User has logged in!', '#B2DFDB');
+      }
+      else {
+        popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
+      }
+    });
   };
 
-  app.unauth = function() {
-    if (flexModel) flexModel.unauth();
-    app.uid = null;
-  };
-
-  app.uid =null;
-
+  function popToast(msg, color) {
+    app.$.toast.text = msg;
+    app.$.toast.$$('span').style = "color: " + (color ? color : 'white');
+    app.$.toast.show();
+  }
 })(document);

@@ -6,6 +6,7 @@ This code may only be used under the MIT license.
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
 <link rel="import" href="../elements.html">
 <link rel="import" href="../../include.html">
 
@@ -18,9 +19,7 @@ This code may only be used under the MIT license.
       span {
         @apply(--paper-font-body1);
       }
-      :host paper-dropdown-menu {
-        float: right;
-      }
+
     </style>
 
     <paper-dropdown-menu label="select a table" name="table" required value="{{curtable}}">
@@ -31,7 +30,9 @@ This code may only be used under the MIT license.
       </paper-menu>
     </paper-dropdown-menu>
 
-    <table id="ftab-table"></table>
+    <paper-material elevation="1">
+      <table id="ftab-table"></table>
+    </paper-material>
 
   </template>
   <script>
@@ -40,29 +41,95 @@ This code may only be used under the MIT license.
 
       var srcData = [];
 
-      function refreshTable(){
-        $('table').empty();
+      function refreshTable(sortNode, descending){
+        $('#ftab-table').empty();
 
         srcData.forEach((e,i)=>{
           if (i == 0) {
             $('<tr>').attr('id', 'tb-head').appendTo('table');
             flexTools.objectNodeIterator(e.data, (e,k,p,o)=>{
               var header = $('<th>').html(k);
+              var cls = p.join('-');
+              header.addClass(cls);
               if (typeof e == 'object') {
-                header.addClass('sec');
                 header.attr('rowspan', srcData.length+1);
+                header.on('click', e=>{
+                  if ($('.' + p.join('-')).first().is(":visible")) {
+                    $('.' + p.join('-')).hide();
+                  }
+                  else {
+                    $('.' + p.join('-')).show();
+                  }
+                });
+              }
+              else {
+                header.on('click', sortTable);
+                if (k == sortNode) {
+                  if (descending) {
+                    header.append($('<iron-icon icon="arrow-drop-down">'));
+                  }
+                  else {
+                    header.append($('<iron-icon icon="arrow-drop-up">'));
+                  }
+                }
+
+                var cls = '';
+                p.forEach(path=>{
+                  cls += path;
+                  header.addClass(cls);
+                  cls += '-';
+                });
               }
               header.appendTo('#tb-head');
             }, false);
           }
           var tr = $('<tr>').attr('id', e.key).appendTo('table');
           flexTools.objectNodeIterator(e.data, (e,k,p,o)=>{
-            var cls = isNaN(e) ? isNaN((new Date(e)).valueOf()) ? 'text' : 'date' : 'number';
-            var name = p.slice();
-            name.push(k)
-            $('<td>').attr('name', name.join('/')).addClass(cls).html(e).on('click',editField).appendTo(tr);
+            var nodePath = p.slice();
+            nodePath.push(k);
+            nodePath = nodePath.join('-');
+
+            var format = isNaN(e) ? isNaN((new Date(e)).valueOf()) ? 'text' : 'date' : 'number';
+
+            var cell =$('<td>').attr('name', nodePath).addClass(format).html(e);
+            cell.on('click',editField);
+            cell.appendTo(tr);
+
+            var cls = '';
+            p.forEach(path=>{
+              cls += path;
+              cell.addClass(cls);
+              cls += '-';
+            });
           });
         });
+
+        function sortTable(e) {
+          e.preventDefault();
+          var curNode = $(e.target);
+          if (curNode.prop('tagName') != 'TH') curNode = curNode.parents('th');
+
+          var nodeIcon = $($('iron-icon[icon="arrow-drop-down"]')[0] ||
+            $('iron-icon[icon="arrow-drop-up"]')[0]);
+
+          var descending = (nodeIcon.length && nodeIcon.parent()[0] == curNode[0] &&
+            nodeIcon.attr('icon') == 'arrow-drop-up');
+
+          nodeIcon.remove();
+
+          var node = curNode.html();
+
+          if (descending) {
+            curNode.append($('<iron-icon icon="arrow-drop-down">'));
+          }
+          else {
+            curNode.append($('<iron-icon icon="arrow-drop-up">'));
+          }
+
+          flexTools.sort(srcData, node, !descending);
+          refreshTable(node, descending);
+        }
+
       }
 
       function editField(e) {

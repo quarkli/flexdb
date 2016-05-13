@@ -92,10 +92,10 @@ This code may only be used under the MIT license.
           <a data-route="Login" onclick="app.login()">
             <iron-icon icon="account-circle"></iron-icon>
             <span>
-            <template is="dom-if" if="{{!uid}}">
+            <template is="dom-if" if="{{!authenticated}}">
               Login
             </template>
-            <template is="dom-if" if="{{uid}}">
+            <template is="dom-if" if="{{authenticated}}">
               Logout
             </template>
             </span>
@@ -176,7 +176,7 @@ This code may only be used under the MIT license.
       </paper-scroll-header-panel>
     </paper-drawer-panel>
 
-    <template is="dom-if" if="{{!uid}}">
+    <template is="dom-if" if="{{!authenticated}}">
       <paper-dialog id="modalLogin" modal role="alertdialog">
         <h2>Login</h2>
         <div>

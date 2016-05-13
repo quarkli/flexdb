@@ -12,11 +12,11 @@ This code may only be used under the MIT license.
 
     // internal function to retrieve the path of object node
     function _getPath(data, node) {
-      var path = '';
+      var path = [];
       var key = '';
       objectNodeIterator(data, (e,k,p,o)=>{
         if (k == node) {
-          path = p; //.splice(0,1);
+          path = p.slice();
           key = k;
         }
       },true,true);

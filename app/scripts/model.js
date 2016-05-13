@@ -9,6 +9,7 @@ This code may only be used under the MIT license.
 
   // provide database access APIs
   function FlexModel(){
+    var me = this;
     var url = 'https://luminous-inferno-3027.firebaseio.com';
     var uid = null;
     var cbCache = [];
@@ -16,6 +17,15 @@ This code may only be used under the MIT license.
     var fbase = new Firebase(url);
 
     fbase.onAuth(authDataCallback);
+
+    function _initUbase(id) {
+          uid = id;
+          ubase = new Firebase(([url, 'userdb', uid]).join('/'));
+          cbCache.forEach(e=>{
+            me.on(e.path, e.event, e.cb)
+          });
+          cbCache.splice(0);
+    }
 
     //  add user information to 'users' collection when login succeeded
     function authDataCallback(authData) {
@@ -26,6 +36,7 @@ This code may only be used under the MIT license.
           provider: authData.provider,
           name: getName(authData)
         });
+        _initUbase(authData.uid);
       }
     }
 
@@ -77,18 +88,8 @@ This code may only be used under the MIT license.
         email    : eml,
         password : pwd
       }, (err, authData)=>{
-        if (err) {
-          console.error('Login failed: ' + err);
-        }
-        else {
-          uid = authData.uid;
-          if (cb) cb(authData.uid);
-          ubase = new Firebase(([url, 'userdb', uid]).join('/'));
-          cbCache.forEach(e=>{
-            this.on(e.path, e.event, e.cb)
-          });
-          cbCache.splice(0);
-        }
+        if (authData) _initUbase(authData.uid);
+        if (cb) cb(err, authData ? authData.uid : null);
       });
     };
 
