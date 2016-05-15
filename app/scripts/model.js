@@ -16,6 +16,11 @@ This code may only be used under the MIT license.
     var ubase = null;
     var fbase = new Firebase(url);
 
+    // --- must be removed for production
+    uid = "abb11a6c-fd31-4b3d-be34-5fc261b80810";
+    _initUbase(uid);
+    // --- must be removed for production
+
     fbase.onAuth(authDataCallback);
 
     function _initUbase(id) {

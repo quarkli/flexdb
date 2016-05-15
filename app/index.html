@@ -74,22 +74,22 @@ This code may only be used under the MIT license.
 
         <!-- Drawer Content -->
         <paper-menu class="app-menu" attr-for-selected="data-route" selected="[[route]]">
-          <a data-route="Create" href="{{baseUrl}}">
-            <iron-icon icon="create"></iron-icon>
-            <span>Create</span>
+          <a data-route="form" href="{{baseUrl}}">
+            <iron-icon icon="dns"></iron-icon>
+            <span>Form</span>
           </a>
 
-          <a data-route="View" href="{{baseUrl}}View">
-            <iron-icon icon="visibility"></iron-icon>
-            <span>View</span>
+          <a data-route="tableview" href="{{baseUrl}}tableview">
+            <iron-icon icon="editor:border-all"></iron-icon>
+            <span>Table</span>
           </a>
 
-          <a data-route="Transition" href="{{baseUrl}}Transition">
-            <iron-icon icon="swap-horiz"></iron-icon>
-            <span>Transition</span>
+          <a data-route="compute" href="{{baseUrl}}compute">
+            <iron-icon icon="assessment"></iron-icon>
+            <span>Compute</span>
           </a>
 
-          <a data-route="Login" onclick="app.login()">
+          <a onclick="app.login()">
             <iron-icon icon="account-circle"></iron-icon>
             <span>
             <template is="dom-if" if="{{!authenticated}}">
@@ -107,34 +107,41 @@ This code may only be used under the MIT license.
       <paper-scroll-header-panel main id="headerPanelMain" fixed>
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
+        <template is="dom-if" if="{{!isChildPage(route)}}">
           <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
+        </template>
+        <template is="dom-if" if="{{isChildPage(route)}}">
+          <paper-icon-button id="pageBack" icon="arrow-back" onclick="app.pageBack()"></paper-icon-button>
+        </template>
 
           <span class="space"></span>
 
           <!-- Toolbar icons -->
-          <!-- Create Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'Create')}}">
-            <paper-icon-button icon="add" alt="add"></paper-icon-button>
-            <paper-icon-button icon="open-in-new" alt="open-in-new"></paper-icon-button>
-            <paper-icon-button icon="save" alt="save"></paper-icon-button>
-            <paper-icon-button icon="more-vert" alt="more"></paper-icon-button>
+          <!-- /form Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'form')}}">
+            <a data-route="form-new" href="{{baseUrl}}form/new">
+              <paper-icon-button icon="add" alt="add"></paper-icon-button>
+            </a>
           </template>
-          <!-- View Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'View')}}">
+          <!-- /form/new Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'form-new')}}">
+            <paper-icon-button icon="check" alt="Save" onclick="app.saveForm()"></paper-icon-button>
+          </template>
+          <!-- /tableview Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'tableview')}}">
             <paper-icon-button icon="search" alt="search"></paper-icon-button>
             <paper-icon-button icon="filter-list" alt="fliter-list"></paper-icon-button>
             <paper-icon-button icon="save" alt="save"></paper-icon-button>
           </template>
-          <!-- Transition Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'Transition')}}">
+          <!-- /compute Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'compute')}}">
             <paper-icon-button icon="add" alt="add"></paper-icon-button>
->
             <paper-icon-button icon="save" alt="save"></paper-icon-button>
           </template>
 
           <!-- Application name -->
           <div class="middle middle-container">
-            <div class="app-name">{{route}}</div>
+            <div class="app-name">{{title}}</div>
           </div>
 
           <!-- Application sub title -->
@@ -146,29 +153,29 @@ This code may only be used under the MIT license.
         <!-- Main Content -->
         <div class="content">
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
-            <section data-route="Create" tabindex="-1">
-              <paper-material elevation="1">
-                <span class="page-title" tabindex="-1"></span>
-                <paper-dropdown-menu label="table" name="table" required>
-                  <paper-menu class="dropdown-content">
-                    <paper-item value="volvo">Financial Index</paper-item>
-                    <paper-item value="saab">Competivity Evauation</paper-item>
-                  </paper-menu>
-                </paper-dropdown-menu>
+            <section data-route="form" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-form id="fform"></flex-form>
+            </section>
+
+            <section data-route="form-new" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <paper-material elevation="1" onclick="app.dataChanged=true">
+                <p>Create New Form</p>
               </paper-material>
             </section>
 
-            <section id="view" data-route="View" tabindex="-1">
-              <!-- <paper-material id="view" elevation="1"> -->
+            <section id="tableview" data-route="tableview" tabindex="-1">
+              <!-- <paper-material id="tableview" elevation="1"> -->
                 <span class="page-title" tabindex="-1"></span>
                 <flex-table id="ftab"></flex-table>
               <!-- </paper-material> -->
             </section>
 
-            <section data-route="Transition" tabindex="-1">
+            <section data-route="compute" tabindex="-1">
               <paper-material elevation="1">
-                <h1 class="page-title" tabindex="-1">Transition</h1>
-                <p>This is the transition section</p>
+                <h1 class="page-title" tabindex="-1">Compute</h1>
+                <p>Computing data</p>
               </paper-material>
             </section>
           </iron-pages>
@@ -211,6 +218,18 @@ This code may only be used under the MIT license.
       </platinum-sw-cache>
     </platinum-sw-register>
     -->
+
+    <paper-dialog id="modalConfirm" modal role="alertdialog">
+      <h2>Warning!</h2>
+      <div>
+        <p>There are unsaved changes. Leaving the page will lose all the changes.</p>
+        <p>Are you sure?</p>
+      <div>
+      <div class="buttons">
+        <paper-button dialog-confirm onclick="app.forceBack()">Leave</paper-button>
+        <paper-button dialog-dismiss>Stay</paper-button>
+      </div>
+    </paper-dialog>
 
   </template>
 

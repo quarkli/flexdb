@@ -37,6 +37,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     --accent-color: var(--paper-indigo-a200);
     --light-accent-color: var(--paper-indigo-a100);
     --dark-accent-color: var(--paper-indigo-a400);
+    --warning-message-color: var(--paper-red-400);
 
     /* Components */
 
@@ -137,6 +138,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     /* Required for main area's paper-scroll-header-panel custom condensing transformation */
     -webkit-transform-origin: left center;
     transform-origin: left center;
+  }
+
+  #mainToolbar a {
+    color: var(--drawer-menu-color);
+  }
+
+  #modalConfirm {
+    color: var(--warning-message-color);
   }
 
   /* Height of the scroll area */

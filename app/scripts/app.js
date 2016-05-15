@@ -34,7 +34,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.addEventListener('dom-change', function() {
     console.log('Our app is ready to rock!');
   });
-  
+
   // See https://github.com/Polymer/polymer/issues/1381
   window.addEventListener('WebComponentsReady', function() {
     // imports are loaded and elements have been registered
@@ -90,6 +90,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.authenticated = false;
 
+  app.dataChanged = false;
+
   app.login = function() {
     if (flexModel && flexModel.uid) {
       flexModel.unauth();
@@ -105,6 +107,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.curPage = function(route, target) {
     return route == target;
   };
+
+  app.isChildPage = function(route) {
+    return route.split('-').length > 1;
+  };
+
+  app.pageBack = function() {
+    if (app.dataChanged) {
+      Polymer.dom(document).querySelector('#modalConfirm').toggle();
+    }
+    else {
+      history.back();
+    }
+  };
+
+  app.forceBack = function() {
+    app.dataChanged = false;
+    history.back();
+  };
+
+  app.saveForm = function() {
+    console.log('Save new form and go back to Form page.');
+    app.forceBack();
+  }
 
   app.auth = function() {
     if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{

@@ -42,20 +42,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/', function() {
-      app.route = 'Create';
-      app.desp = 'Create table / document';
+      app.route = 'form';
+      app.title = 'Form';
+      app.desp = 'Manage forms';
       setFocus(app.route);
     });
 
     page(app.baseUrl, function() {
-      app.route = 'Create';
-      app.desp = 'Create table / document';
+      app.route = 'form';
+      app.title = 'Form';
+      app.desp = 'Manage forms';
       setFocus(app.route);
     });
 
-    page('/View', function() {
-      app.route = 'View';
-      app.desp = 'View tables / documents';
+    page('/form/new', function() {
+      app.route = 'form-new';
+      app.title = 'New Form';
+      app.desp = 'Create new form';
+      setFocus(app.route);
+    });
+
+    page('/tableview', function() {
+      app.route = 'tableview';
+      app.title = 'Table';
+      app.desp = 'View tables';
       setFocus(app.route);
     });
 
@@ -65,9 +75,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/Transition', function() {
-      app.route = 'Transition';
-      app.desp = 'Transit table / document';
+    page('/compute', function() {
+      app.route = 'compute';
+      app.title = 'Compute';
+      app.desp = 'Computing data';
       setFocus(app.route);
     });
 

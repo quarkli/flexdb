@@ -120,6 +120,62 @@ This code may only be used under the MIT license.
       }
     }
 
+    this.json2array = json2array;
+    // Convert a JSON data to an Array data
+    // example:
+    // json = {
+    //   a: 1,
+    //   b: 2,
+    //   c: {
+    //     d: 'x',
+    //     e: 'y'
+    //   }
+    // }
+    // converts to:
+    // array = [
+    //  {key: 'a', value: 1},
+    //  {key: 'b', value: 2},
+    //  {key: 'c', value: [
+    //     {key: 'd', value: 'x'},
+    //     {key: 'e', value: 'y'}
+    //  ]}
+    // ]
+    // Arguments:
+    //   jsn - source JSON data
+    // Return:
+    //   Converted Array data
+    function json2array(jsn) {
+      var ret = [];
+
+      function findNode(p, a) {
+        var realNode = null;
+        var rootNode = a.find(e=>{
+          if (Array.isArray(e.v)) {
+            if (e.v.length) realNode = findNode(p, e.v);
+            if (!realNode) {
+              var path = e.p.slice();
+              path.push(e.k);
+              if (p.join('-') == path.join('-')) return true;
+            }
+            return false;
+          }
+        });
+        return realNode || rootNode;
+      }
+
+      flexTools.objectNodeIterator(jsn, (e,k,p,o)=>{
+        var path = p.slice();
+        var node = findNode(path, ret);
+        if (node) {
+          node.v.push({p: path, k: k, v: typeof e == 'object' ? [] : e});
+        }
+        else {
+          ret.push({p: path, k: k, v: typeof e == 'object' ? [] : e});
+        }
+      }, false);
+      return ret;
+    }
+
   }
 
   window.flexTools = window.flexTools || new FlexTools();

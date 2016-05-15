@@ -10,6 +10,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../elements.html">
+<link rel="import" href="../../include.html">
 
 <dom-module id="flex-form">
   <template>
@@ -20,9 +22,105 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       span {
         @apply(--paper-font-body1);
       }
+      paper-material {
+        border-radius: 2px;
+        height: 100%;
+        padding: 16px;
+        width: calc(98.66% - 16px);
+        margin: 16px auto;
+        background: var(--paper-indigo-50);
+      }
+      .header {
+        @apply(--layout-horizontal);
+        color: var(--secondary-text-color);
+      }
+      .space {
+        @apply(--layout-flex);
+      }
+      paper-icon-button {
+        color: var(--accent-color);
+      }
     </style>
 
-    <table></table>
+    <template is="dom-repeat" items="{{tables}}">
+      <paper-material elevation="1">
+        <div class="header">
+          <h1>{{item.name}}</h1>
+          <span class="space"></span>
+          <paper-icon-button icon="add" alt="New"></paper-icon-button>
+          <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
+          <template is="dom-if" if="{{item.expand}}">
+            <paper-icon-button icon="expand-less" alt="Less"></paper-icon-button>
+          </template>
+          <template is="dom-if" if="{{!item.expand}}">
+            <paper-icon-button icon="expand-more" alt="More"></paper-icon-button>
+          </template>
+        </div>
+        <template is="dom-repeat" items="{{item.data}}">
+          <paper-material elevation="2">
+            <template is="dom-if" if="{{isObject(item.v)}}">
+              <div class="header">
+                <h4>{{item.k}} : </h4>
+                <span class="space"></span>
+                <paper-icon-button icon="add" alt="New"></paper-icon-button>
+                <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
+                <template is="dom-if" if="{{item.expand}}">
+                  <paper-icon-button icon="expand-less" alt="Less"></paper-icon-button>
+                </template>
+                <template is="dom-if" if="{{!item.expand}}">
+                  <paper-icon-button icon="expand-more" alt="More"></paper-icon-button>
+                </template>
+              </div>
+              <template is="dom-repeat" items="{{item.v}}">
+                <paper-material elevation="3">
+                  <template is="dom-if" if="{{isObject(item.v)}}">
+                    <div class="header">
+                      <h4>{{item.k}} : </h4>
+                      <span class="space"></span>
+                      <paper-icon-button icon="add" alt="New"></paper-icon-button>
+                      <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
+                      <template is="dom-if" if="{{item.expand}}">
+                        <paper-icon-button icon="expand-less" alt="Less"></paper-icon-button>
+                      </template>
+                      <template is="dom-if" if="{{!item.expand}}">
+                        <paper-icon-button icon="expand-more" alt="More"></paper-icon-button>
+                      </template>
+                    </div>
+                    <template is="dom-repeat" items="{{item.v}}">
+                      <paper-material elevation="4">
+                        <div class="header">
+                          <span>{{item.k}} : </span>
+                          <span class="space"></span>
+                          <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
+                        </div>
+                        <paper-input label="Default Value" value="{{item.v}}"></paper-input>
+                      </paper-material>
+                    </template>
+                  </template>
+                  <template is="dom-if" if="{{!isObject(item.v)}}">
+                    <div class="header">
+                      <span>{{item.k}} : </span>
+                      <span class="space"></span>
+                      <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
+                    </div>
+                    <paper-input label="Default Value" value="{{item.v}}"></paper-input>
+                  </template>
+                </paper-material>
+              </template>
+            </template>
+            <template is="dom-if" if="{{!isObject(item.v)}}">
+              <div class="header">
+                <span>{{item.k}} : </span>
+                <span class="space"></span>
+                <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
+              </div>
+              <paper-input label="Default Value" value="{{item.v}}"></paper-input>
+            </template>
+          </paper-material>
+        </template>
+        <pre>{{item.schema}}</pre>
+      </paper-material>
+    </template>
 
   </template>
 
@@ -34,15 +132,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         is: 'flex-form',
 
         properties: {
-          data: {
-            type: Object,
-            value: {},
+          tables: {
+            type: Array,
+            value: [],
             notify: true
           }
         },
 
         ready: function() {
+          flexModel.on('table-schema', 'value', data=>{
+            data.forEach(e=>{
+              this.push('tables', {name: e.key, data: flexTools.json2array(e.data), schema: JSON.stringify(e.data, null, 2)});
+            });
+          });
+        },
 
+        isObject: function(tgt) {
+          return typeof tgt == 'object';
         }
       });
     })();
