@@ -1,0 +1,145 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!--
+@license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../elements.html">
+<link rel="import" href="../../include.html">
+
+<dom-module id="flex-item">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+    </style>
+
+    <template is="dom-repeat" items="{{data}}">
+      <paper-material class="paper-form" elevation="2">
+        <template is="dom-if" if="{{isObject(item.v)}}">
+          <div class="item" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
+            <div class="header">
+              <h4>{{item.k}}</h4>
+              <span class="space"></span>
+              <paper-icon-button icon="add" alt="New"></paper-icon-button>
+              <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+              <paper-icon-button icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
+              <input type="hidden" name="path" value="{{item.p}}">
+            </div>
+          </div>
+          <iron-collapse>
+            <flex-item data="{{item.v}}"></flex-item>
+          </iron-collapse>
+        </template>
+        <template is="dom-if" if="{{!isObject(item.v)}}">
+          <div class="item" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
+            <div class="header">
+              <span>{{item.k}}</span>
+              <span class="space"></span>
+              <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+            </div>
+            <paper-input label="Default Value" value="{{item.v}}" on-change="editItem"></paper-input>
+          </div>
+        </template>
+      </paper-material>
+    </template>
+
+    <paper-dialog id="dropDialog" modal role="alertdialog">
+      <h2>Drop {{targetType}}</h2>
+      <p>Drop "{{targetKey}}"?</p>
+      <div class="buttons">
+        <paper-button dialog-confirm on-tap="execDrop">Drop</paper-button>
+        <paper-button dialog-dismiss>Cancel</paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'flex-item',
+
+        properties: {
+          data: {
+            type: Array,
+            value: ()=>{return []},
+            notify: true
+          },
+          targetType: {
+            type: String,
+            value: ''
+          },
+          targetPath: {
+            type: String,
+            value: ''
+          },
+          targetKey: {
+            type: String,
+            value: ''
+          },
+          targetValue: {
+            type: String,
+            value: ''
+          },
+        },
+
+        isObject: function(tgt) {
+          return typeof tgt == 'object';
+        },
+
+        toggleChild: function() {
+          var btn = Polymer.dom(event).localTarget;
+          btn.icon = btn.icon.match('more') ? 'expand-less' : 'expand-more';
+          var target = $(btn).parents('paper-material').children('iron-collapse').first()[0];
+          target.toggle();
+        },
+
+        append: function() {
+          var btn = Polymer.dom(event).localTarget;
+          var target = $(btn).parents('paper-material').children('iron-collapse').first()[0];
+          if (!target.opened) {
+            target.toggle();
+          }
+          this.$$('#appendDialog').toggle();
+        },
+
+        editItem: function(e) {
+          var tgt = $(e.target).parents('div.item')[0];
+          this.targetPath = tgt.path;
+          this.targetKey = tgt.key;
+          this.targetValue = tgt.value;
+          this.targetType = 'FIELD';
+          if ($(tgt).find('h4').length) {
+            this.targetType = 'SECTION';
+          }
+
+          if (e.target.tagName.toLowerCase() == 'input') this.updateItem();
+          if (e.target.tagName.toLowerCase() == 'iron-icon') this.$$('#dropDialog').toggle();
+        },
+
+        execDrop: function() {
+          console.log('Drop', this.targetType, this.targetPath, this.targetKey, this.targetValue);
+        },
+
+        updateItem: function() {
+          console.log('Update', this.targetType, this.targetPath, this.targetKey, this.targetValue);
+        }
+      });
+    })();
+  </script>
+</dom-module>
