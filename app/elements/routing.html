@@ -41,25 +41,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       next();
     });
 
-    page('/', function() {
-      app.route = 'form';
-      app.title = 'Form';
-      app.desp = 'Manage forms';
-      setFocus(app.route);
-    });
+    page('/', homepage);
+    page(app.baseUrl, homepage);
 
-    page(app.baseUrl, function() {
+    function homepage() {
       app.route = 'form';
       app.title = 'Form';
       app.desp = 'Manage forms';
       setFocus(app.route);
-    });
+
+      formlist.reset();
+      flexModel.on('table-schema', 'value', data=>{
+        data.forEach(e=>{
+         formlist.push('forms', {name: e.key, data: flexTools.json2array(e.data), schema: JSON.stringify(e.data, null, 2)});
+        });
+      });
+    }
 
     page('/form/new', function() {
       app.route = 'form-new';
       app.title = 'New Form';
       app.desp = 'Create new form';
       setFocus(app.route);
+
+      newform.openNewDialog();
     });
 
     page('/tableview', function() {

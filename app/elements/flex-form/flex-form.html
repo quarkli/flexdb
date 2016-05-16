@@ -7,6 +7,11 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
+<!--
+@license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../bower_components/paper-styles/typography.html">
@@ -22,7 +27,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       span {
         @apply(--paper-font-body1);
       }
-      paper-material {
+      .paper-form {
         border-radius: 2px;
         height: 100%;
         padding: 16px;
@@ -30,97 +35,70 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         margin: 16px auto;
         background: var(--paper-indigo-50);
       }
-      .header {
+      .paper-form div.header {
         @apply(--layout-horizontal);
         color: var(--secondary-text-color);
       }
-      .space {
+      .paper-form span.space {
         @apply(--layout-flex);
       }
-      paper-icon-button {
+      .paper-form paper-icon-button {
         color: var(--accent-color);
+      }
+      paper-item.fancy {
+        cursor: pointer;
+        --paper-item-focused: {
+          background: var(--paper-amber-500);
+          font-weight: bold;
+        };
+        --paper-item-focused-before: {
+          opacity: 0;
+        };
       }
     </style>
 
-    <template is="dom-repeat" items="{{tables}}">
-      <paper-material elevation="1">
+    <template is="dom-repeat" items="{{forms}}">
+      <paper-material class="paper-form" elevation="1">
         <div class="header">
           <h1>{{item.name}}</h1>
           <span class="space"></span>
-          <paper-icon-button icon="add" alt="New"></paper-icon-button>
-          <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
-          <template is="dom-if" if="{{item.expand}}">
-            <paper-icon-button icon="expand-less" alt="Less"></paper-icon-button>
-          </template>
-          <template is="dom-if" if="{{!item.expand}}">
-            <paper-icon-button icon="expand-more" alt="More"></paper-icon-button>
+          <paper-icon-button icon="add" alt="New" on-tap="append"></paper-icon-button>
+          <paper-icon-button icon="clear" alt="Drop" on-tap="dropForm"></paper-icon-button>
+          <template is="dom-if" if="{{item.data.length}}">
+            <paper-icon-button icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
           </template>
         </div>
-        <template is="dom-repeat" items="{{item.data}}">
-          <paper-material elevation="2">
-            <template is="dom-if" if="{{isObject(item.v)}}">
-              <div class="header">
-                <h4>{{item.k}} : </h4>
-                <span class="space"></span>
-                <paper-icon-button icon="add" alt="New"></paper-icon-button>
-                <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
-                <template is="dom-if" if="{{item.expand}}">
-                  <paper-icon-button icon="expand-less" alt="Less"></paper-icon-button>
-                </template>
-                <template is="dom-if" if="{{!item.expand}}">
-                  <paper-icon-button icon="expand-more" alt="More"></paper-icon-button>
-                </template>
-              </div>
-              <template is="dom-repeat" items="{{item.v}}">
-                <paper-material elevation="3">
-                  <template is="dom-if" if="{{isObject(item.v)}}">
-                    <div class="header">
-                      <h4>{{item.k}} : </h4>
-                      <span class="space"></span>
-                      <paper-icon-button icon="add" alt="New"></paper-icon-button>
-                      <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
-                      <template is="dom-if" if="{{item.expand}}">
-                        <paper-icon-button icon="expand-less" alt="Less"></paper-icon-button>
-                      </template>
-                      <template is="dom-if" if="{{!item.expand}}">
-                        <paper-icon-button icon="expand-more" alt="More"></paper-icon-button>
-                      </template>
-                    </div>
-                    <template is="dom-repeat" items="{{item.v}}">
-                      <paper-material elevation="4">
-                        <div class="header">
-                          <span>{{item.k}} : </span>
-                          <span class="space"></span>
-                          <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
-                        </div>
-                        <paper-input label="Default Value" value="{{item.v}}"></paper-input>
-                      </paper-material>
-                    </template>
-                  </template>
-                  <template is="dom-if" if="{{!isObject(item.v)}}">
-                    <div class="header">
-                      <span>{{item.k}} : </span>
-                      <span class="space"></span>
-                      <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
-                    </div>
-                    <paper-input label="Default Value" value="{{item.v}}"></paper-input>
-                  </template>
-                </paper-material>
-              </template>
-            </template>
-            <template is="dom-if" if="{{!isObject(item.v)}}">
-              <div class="header">
-                <span>{{item.k}} : </span>
-                <span class="space"></span>
-                <paper-icon-button icon="clear" alt="Drop"></paper-icon-button>
-              </div>
-              <paper-input label="Default Value" value="{{item.v}}"></paper-input>
-            </template>
-          </paper-material>
-        </template>
+        <iron-collapse>
+          <flex-item data="{{item.data}}"></flex-item>
+        </iron-collapse>
         <pre>{{item.schema}}</pre>
       </paper-material>
     </template>
+
+    <paper-dialog id="appendDialog" modal role="alertdialog">
+      <h2>Select a Type</h2>
+      <div role="listbox">
+        <paper-item class="fancy" dialog-confirm>Section</paper-item>
+        <paper-item class="fancy" dialog-confirm>Field</paper-item>
+      </div>
+    </paper-dialog>
+
+    <paper-dialog id="dropDialog" modal role="alertdialog">
+      <h2>Drop FORM</h2>
+      <p>Drop "{{dropTarget}}"?</p>
+      <div class="buttons">
+        <paper-button dialog-confirm on-tap="execDrop">Drop</paper-button>
+        <paper-button dialog-dismiss>Cancel</paper-button>
+      </div>
+    </paper-dialog>
+
+    <paper-dialog id="newDialog" modal role="alertdialog">
+      <h2>New Form</h2>
+      <paper-input label="Form Name" value="{{newFormName}}"></paper-input>
+      <div class="buttons">
+        <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">OK</paper-button>
+      </div>
+    </paper-dialog>
 
   </template>
 
@@ -132,23 +110,63 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         is: 'flex-form',
 
         properties: {
-          tables: {
+          forms: {
             type: Array,
-            value: [],
+            value: ()=>{return []},
+            notify: true
+          },
+          dropTarget: {
+            type: String,
+            notify: true
+          },
+          newFormName: {
+            type: String,
             notify: true
           }
         },
 
         ready: function() {
-          flexModel.on('table-schema', 'value', data=>{
-            data.forEach(e=>{
-              this.push('tables', {name: e.key, data: flexTools.json2array(e.data), schema: JSON.stringify(e.data, null, 2)});
-            });
-          });
+
         },
 
-        isObject: function(tgt) {
-          return typeof tgt == 'object';
+        toggleChild: function() {
+          var btn = Polymer.dom(event).localTarget;
+          btn.icon = btn.icon.match('more') ? 'expand-less' : 'expand-more';
+          var target = $(btn).parents('paper-material').children('iron-collapse').first()[0];
+          target.toggle();
+        },
+
+        append: function(e) {
+          var items = $(e.target).parents('paper-material').children('iron-collapse').first()[0];
+          if (!items.opened) {
+            items.toggle();
+          }
+          this.$$('#appendDialog').toggle();
+        },
+
+        dropForm: function(e) {
+          var form = $(e.target).parents('div').children('h1').html();
+          this.dropType = 'FORM';
+          this.dropTarget = form;
+          this.$$('#dropDialog').toggle();
+        },
+
+        execDrop: function() {
+          console.log('Drop ' + this.dropTarget);
+        },
+
+        reset: function() {
+          this.newFormName = undefined;
+          this.splice('forms', 0, this.forms.length);
+        },
+
+        openNewDialog: function() {
+          this.reset();
+          this.$$('#newDialog').toggle();
+        },
+
+        newForm: function() {
+          this.push('forms', {name: this.newFormName, data: [], schema: JSON.stringify({}, null, 2)});
         }
       });
     })();

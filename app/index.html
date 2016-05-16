@@ -1,6 +1,15 @@
 <!doctype html>
 <!--
 @license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!--
+@license
 Copyright (c) 2016 Quark Li. All rights reserved.
 This code may only be used under the MIT license.
 -->
@@ -89,7 +98,7 @@ This code may only be used under the MIT license.
             <span>Compute</span>
           </a>
 
-          <a onclick="app.login()">
+          <a on-tap="login">
             <iron-icon icon="account-circle"></iron-icon>
             <span>
             <template is="dom-if" if="{{!authenticated}}">
@@ -111,7 +120,7 @@ This code may only be used under the MIT license.
           <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
         </template>
         <template is="dom-if" if="{{isChildPage(route)}}">
-          <paper-icon-button id="pageBack" icon="arrow-back" onclick="app.pageBack()"></paper-icon-button>
+          <paper-icon-button id="pageBack" icon="arrow-back" on-tap="pageBack"></paper-icon-button>
         </template>
 
           <span class="space"></span>
@@ -125,7 +134,7 @@ This code may only be used under the MIT license.
           </template>
           <!-- /form/new Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'form-new')}}">
-            <paper-icon-button icon="check" alt="Save" onclick="app.saveForm()"></paper-icon-button>
+            <paper-icon-button icon="check" alt="Save" on-tap="saveForm"></paper-icon-button>
           </template>
           <!-- /tableview Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tableview')}}">
@@ -155,14 +164,12 @@ This code may only be used under the MIT license.
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
             <section data-route="form" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-form id="fform"></flex-form>
+              <flex-form id="formlist"></flex-form>
             </section>
 
             <section data-route="form-new" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <paper-material elevation="1" onclick="app.dataChanged=true">
-                <p>Create New Form</p>
-              </paper-material>
+              <flex-form id="newform"></flex-form>
             </section>
 
             <section id="tableview" data-route="tableview" tabindex="-1">
@@ -176,6 +183,7 @@ This code may only be used under the MIT license.
               <paper-material elevation="1">
                 <h1 class="page-title" tabindex="-1">Compute</h1>
                 <p>Computing data</p>
+                <flex-item id="fitem"></flex-item>
               </paper-material>
             </section>
           </iron-pages>
@@ -191,14 +199,30 @@ This code may only be used under the MIT license.
           <paper-input label="Password" type="password" value="{{password}}"></paper-input>
         <div>
         <div class="buttons">
-          <paper-button dialog-confirm onclick="app.auth()">Login</paper-button>
+          <paper-button dialog-confirm on-tap="auth">Login</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>
     </template>
 
+    <!-- Add <paper-dialog> within <template> to avoid style inheritance and caused
+    followwing element set to be hidden -->
+    <template is="dom-if" if="{{1}}">
+      <paper-dialog id="modalConfirm" modal role="alertdialog">
+        <h2>Warning!</h2>
+        <div>
+          <p>There are unsaved changes. Leaving the page will lose all the changes.</p>
+          <p>Are you sure?</p>
+        <div>
+        <div class="buttons">
+          <paper-button dialog-confirm on-tap="forceBack">Leave</paper-button>
+          <paper-button dialog-dismiss>Stay</paper-button>
+        </div>
+      </paper-dialog>
+    </template>
+
     <paper-toast id="toast">
-      <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
+      <!-- <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">[Close]</span> -->
     </paper-toast>
 
     <!-- Uncomment next block to enable Service Worker support (1/2) -->
@@ -218,18 +242,6 @@ This code may only be used under the MIT license.
       </platinum-sw-cache>
     </platinum-sw-register>
     -->
-
-    <paper-dialog id="modalConfirm" modal role="alertdialog">
-      <h2>Warning!</h2>
-      <div>
-        <p>There are unsaved changes. Leaving the page will lose all the changes.</p>
-        <p>Are you sure?</p>
-      <div>
-      <div class="buttons">
-        <paper-button dialog-confirm onclick="app.forceBack()">Leave</paper-button>
-        <paper-button dialog-dismiss>Stay</paper-button>
-      </div>
-    </paper-dialog>
 
   </template>
 

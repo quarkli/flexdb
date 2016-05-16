@@ -29,6 +29,25 @@
       paper-spinner-lite.orange {
         --paper-spinner-color: var(--google-teal-500);
       }
+
+      .paper-form {
+        border-radius: 2px;
+        height: 100%;
+        padding: 16px;
+        width: calc(98.66% - 16px);
+        margin: 16px auto;
+        background: var(--paper-indigo-50);
+      }
+      .paper-form div.header {
+        @apply(--layout-horizontal);
+        color: var(--secondary-text-color);
+      }
+      .paper-form span.space {
+        @apply(--layout-flex);
+      }
+      .paper-form paper-icon-button {
+        color: var(--accent-color);
+      }
     </style>
   </template>
 </dom-module>
