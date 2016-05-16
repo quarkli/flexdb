@@ -63,7 +63,9 @@ This code may only be used under the MIT license.
           <h1>{{item.name}}</h1>
           <span class="space"></span>
           <paper-icon-button icon="add" alt="New" on-tap="append"></paper-icon-button>
-          <paper-icon-button icon="clear" alt="Drop" on-tap="dropForm"></paper-icon-button>
+          <template is="dom-if" if="{{!newFormName}}">
+            <paper-icon-button icon="clear" alt="Drop" on-tap="dropForm"></paper-icon-button>
+          </template>
           <template is="dom-if" if="{{item.data.length}}">
             <paper-icon-button icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
           </template>
