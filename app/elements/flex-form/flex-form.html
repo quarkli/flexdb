@@ -20,30 +20,9 @@ This code may only be used under the MIT license.
 
 <dom-module id="flex-form">
   <template>
-    <style>
+    <style include="shared-styles">
       :host {
         display: block;
-      }
-      span {
-        @apply(--paper-font-body1);
-      }
-      .paper-form {
-        border-radius: 2px;
-        height: 100%;
-        padding: 16px;
-        width: calc(98.66% - 16px);
-        margin: 16px auto;
-        background: var(--paper-indigo-50);
-      }
-      .paper-form div.header {
-        @apply(--layout-horizontal);
-        color: var(--secondary-text-color);
-      }
-      .paper-form span.space {
-        @apply(--layout-flex);
-      }
-      .paper-form paper-icon-button {
-        color: var(--accent-color);
       }
       paper-item.fancy {
         cursor: pointer;
@@ -57,48 +36,55 @@ This code may only be used under the MIT license.
       }
     </style>
 
-    <template is="dom-repeat" items="{{forms}}">
-      <paper-material class="paper-form" elevation="1">
-        <div class="header">
-          <h1>{{item.name}}</h1>
-          <span class="space"></span>
-          <paper-icon-button icon="add" alt="New" on-tap="append"></paper-icon-button>
-          <template is="dom-if" if="{{!newFormName}}">
-            <paper-icon-button icon="clear" alt="Drop" on-tap="dropForm"></paper-icon-button>
-          </template>
-          <template is="dom-if" if="{{item.data.length}}">
-            <paper-icon-button icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
-          </template>
-        </div>
-        <iron-collapse>
-          <flex-item data="{{item.data}}"></flex-item>
-        </iron-collapse>
-        <pre>{{item.schema}}</pre>
+    <template is="dom-repeat" items="{{data}}">
+      <paper-material class="paper-form" elevation="2">
+        <template is="dom-if" if="[[isObject(item.v)]]">
+          <div class="item" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
+            <div class="header">
+              <h4>{{item.k}}</h4>
+              <span class="space"></span>
+              <template is="dom-if" if="[[editMode]]">
+                <paper-icon-button icon="add" alt="New" on-tap="editItem"></paper-icon-button>
+                <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+              </template>
+              <paper-icon-button icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
+              <input type="hidden" name="path" value="{{item.p}}">
+            </div>
+          </div>
+          <iron-collapse>
+            <flex-form data="{{item.v}}" edit-mode="[[editMode]]" edit-proc="[[getEditProc()]]"></flex-form>
+          </iron-collapse>
+        </template>
+        <template is="dom-if" if="[[!isObject(item.v)]]">
+          <div class="item" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
+            <div class="header">
+              <span>{{item.k}}</span>
+              <span class="space"></span>
+              <template is="dom-if" if="[[editMode]]">
+                <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+              </template>
+            </div>
+            <paper-input label="Default Value" value="{{item.v}}" on-change="editItem" readonly="[[editMode]]"></paper-input>
+          </div>
+        </template>
       </paper-material>
     </template>
 
-    <paper-dialog id="appendDialog" modal role="alertdialog">
-      <h2>Select a Type</h2>
-      <div role="listbox">
-        <paper-item class="fancy" dialog-confirm>Section</paper-item>
-        <paper-item class="fancy" dialog-confirm>Field</paper-item>
+    <paper-dialog id="addDialog" modal role="alertdialog">
+      <h2>Add Item</h2>
+      <paper-input label="New Item Name" value="{{newItemName}}"></paper-input>
+      <div class="buttons">
+        <paper-button dialog-confirm on-tap="addItem" disabled=[[!newItemName]]>Add SECTTION</paper-button>
+        <paper-button dialog-dismiss on-tap="addItem" disabled=[[!newItemName]]>Add FIELD</paper-button>
       </div>
     </paper-dialog>
 
     <paper-dialog id="dropDialog" modal role="alertdialog">
-      <h2>Drop FORM</h2>
-      <p>Drop "{{dropTarget}}"?</p>
+      <h2>Drop {{targetType}}</h2>
+      <p>Drop "{{targetKey}}"?</p>
       <div class="buttons">
-        <paper-button dialog-confirm on-tap="execDrop">Drop</paper-button>
+        <paper-button dialog-confirm on-tap="execEdit">Drop</paper-button>
         <paper-button dialog-dismiss>Cancel</paper-button>
-      </div>
-    </paper-dialog>
-
-    <paper-dialog id="newDialog" modal role="alertdialog">
-      <h2>New Form</h2>
-      <paper-input label="Form Name" value="{{newFormName}}"></paper-input>
-      <div class="buttons">
-        <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">OK</paper-button>
       </div>
     </paper-dialog>
 
@@ -112,23 +98,54 @@ This code may only be used under the MIT license.
         is: 'flex-form',
 
         properties: {
-          forms: {
+          data: {
             type: Array,
             value: ()=>{return []},
             notify: true
           },
-          dropTarget: {
-            type: String,
+          editMode: {
+            type: Boolean,
+            value: false,
             notify: true
           },
-          newFormName: {
+          editTarget: {
+            type: Object
+          },
+          targetAct: {
             type: String,
-            notify: true
+            value: ''
+          },
+          targetForm: {
+            type: String,
+            value: ''
+          },
+          targetType: {
+            type: String,
+            value: ''
+          },
+          targetPath: {
+            type: String,
+            value: ''
+          },
+          targetKey: {
+            type: String,
+            value: ''
+          },
+          targetValue: {
+            type: String,
+            value: ''
+          },
+          newItemName: {
+            type: String,
+            value: ''
+          },
+          editProc: {
+            type: Function
           }
         },
 
-        ready: function() {
-
+        isObject: function(tgt) {
+          return typeof tgt == 'object';
         },
 
         toggleChild: function() {
@@ -138,37 +155,62 @@ This code may only be used under the MIT license.
           target.toggle();
         },
 
-        append: function(e) {
-          var items = $(e.target).parents('paper-material').children('iron-collapse').first()[0];
-          if (!items.opened) {
-            items.toggle();
+        resetEdit: function() {
+          this.editTarget = undefined;
+          this.targetForm = undefined;
+          this.targetPath = undefined;
+          this.targetKey = undefined;
+          this.targetValue = undefined;
+          this.targetType = undefined;
+          this.newItemName = '';
+        },
+
+        editItem: function(e) {
+          this.resetEdit();
+          var collap = $(e.target).parents('paper-material').first().find('iron-collapse')[0];
+          if (collap && !collap.opened) collap.toggle();
+
+          this.editTarget = $(e.target);
+          this.targetForm = $(e.target).parents('paper-material[elevation=1]').find('h1').html()
+
+          var tgt = $(e.target).parents('div.item')[0];
+          if (tgt) {
+            this.targetPath = tgt.path;
+            this.targetKey = tgt.key;
+            this.targetValue = tgt.value;
+            this.targetType = 'FIELD';
+
+            if ($(tgt).find('h4').length) {
+              this.targetType = 'SECTION';
+            }
           }
-          this.$$('#appendDialog').toggle();
+
+          if (e.target.tagName.toLowerCase() == 'input') {
+            this.targetAct = 'UPDATE';
+            this.execEdit();
+          }
+          else if ($(e.target).attr('alt') == 'Drop') {
+            this.targetAct = 'DROP';
+            this.$$('#dropDialog').toggle();
+          }
+          else {
+            this.targetAct = 'ADD';
+            this.$$('#addDialog').toggle();
+          }
         },
 
-        dropForm: function(e) {
-          var form = $(e.target).parents('div').children('h1').html();
-          this.dropType = 'FORM';
-          this.dropTarget = form;
-          this.$$('#dropDialog').toggle();
+        execEdit: function() {
+          if (this.editProc) this.editProc(this.targetAct, this.targetType, this.targetForm, this.targetPath, this.targetKey, this.targetValue);
         },
 
-        execDrop: function() {
-          console.log('Drop ' + this.dropTarget);
+        addItem: function(e) {
+          this.targetType = $(e.target).justtext().trim().split(' ')[1];
+          this.targetValue = $(e.target).parents('paper-dialog').find('paper-input')[0].value;
+          this.execEdit();
         },
 
-        reset: function() {
-          this.newFormName = undefined;
-          this.splice('forms', 0, this.forms.length);
-        },
-
-        openNewDialog: function() {
-          this.reset();
-          this.$$('#newDialog').toggle();
-        },
-
-        newForm: function() {
-          this.push('forms', {name: this.newFormName, data: [], schema: JSON.stringify({}, null, 2)});
+        getEditProc: function() {
+          return this.editProc;
         }
       });
     })();

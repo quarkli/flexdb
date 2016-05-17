@@ -164,18 +164,18 @@ This code may only be used under the MIT license.
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
             <section data-route="form" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-form id="formlist"></flex-form>
+              <flex-formpage id="formlist" ></flex-formpage>
             </section>
 
             <section data-route="form-new" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-form id="newform"></flex-form>
+              <flex-formpage id="newform"></flex-formpage>
             </section>
 
             <section id="tableview" data-route="tableview" tabindex="-1">
               <!-- <paper-material id="tableview" elevation="1"> -->
                 <span class="page-title" tabindex="-1"></span>
-                <flex-table id="ftab"></flex-table>
+                <flex-table id="flxtable"></flex-table>
               <!-- </paper-material> -->
             </section>
 
@@ -183,7 +183,6 @@ This code may only be used under the MIT license.
               <paper-material elevation="1">
                 <h1 class="page-title" tabindex="-1">Compute</h1>
                 <p>Computing data</p>
-                <flex-item id="fitem"></flex-item>
               </paper-material>
             </section>
           </iron-pages>
