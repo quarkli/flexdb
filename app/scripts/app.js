@@ -44,6 +44,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     else {
       app.authenticated = true;
       popToast('User has logged in!', '#B2DFDB');
+
+      // fetch data
+      flexModel.on('table-schema', 'value', data=>{
+        var d = []
+        data.forEach(e=>{
+         d.push({name: e.key, data: flexTools.json2array(e.data), schema: JSON.stringify(e.data, null, 2), editing: false});
+        });
+        formlist.refreshForms(d);
+      });
     }
   });
 
@@ -90,7 +99,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.authenticated = false;
 
-  app.dataChanged = false;
+  app.newFormName = '';
 
   app.login = function() {
     if (flexModel && flexModel.uid) {
@@ -112,23 +121,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return route.split('-').length > 1;
   };
 
-  app.pageBack = function() {
-    if (app.dataChanged) {
-      Polymer.dom(document).querySelector('#modalConfirm').toggle();
-    }
-    else {
-      history.back();
-    }
-  };
-
   app.forceBack = function() {
-    app.dataChanged = false;
+    console.log('No Save to firebase');
     history.back();
   };
 
-  app.saveForm = function() {
-    console.log('Save new form and go back to Form page.');
-    app.forceBack();
+  app.saveEdit = function(e) {
+    formlist.push('forms', formedit.pop('forms'));
+    console.log('Save to firebase');
+    history.back();
+  }
+
+  app.cancelEdit = function() {
+    modalConfirm.toggle();
   }
 
   app.auth = function() {
@@ -141,6 +146,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
       }
     });
+  };
+
+  app.openNewFormDialog = function() {
+    this.newFormName = '';
+    newFormDialog.toggle();
+  };
+
+  app.newForm = function(e) {
+    var data = [{name: this.newFormName, data: []}];
+    formedit.refreshForms(data);
+    page(app.baseUrl+'form/new');
   };
 
   function popToast(msg, color) {

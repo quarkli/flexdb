@@ -1,0 +1,65 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<!--
+@license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../elements.html">
+<link rel="import" href="../../include.html">
+
+<dom-module id="flex-forms">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      span {
+        @apply(--paper-font-body1);
+      }
+    </style>
+
+    <template is="dom-repeat" items="{{forms}}">
+      <flex-form id="{{item.name}}" data="{{item.data}}" is-root="true" edit-mode="{{editMode}}"></flex-form>
+    </template>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'flex-forms',
+
+        properties: {
+          forms: {
+            type: Array,
+            value: ()=>{return []},
+            notify: true
+          },
+          editMode: {
+            type: Boolean,
+            value: false,
+            notify: true
+          }
+        },
+
+        refreshForms: function(data) {
+          this.splice('forms', 0, this.forms.length);
+          data.forEach(e=>{ this.push('forms', e); });
+        }
+      });
+    })();
+  </script>
+</dom-module>

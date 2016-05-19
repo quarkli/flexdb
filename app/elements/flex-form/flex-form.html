@@ -24,57 +24,75 @@ This code may only be used under the MIT license.
       :host {
         display: block;
       }
-      paper-item.fancy {
-        cursor: pointer;
-        --paper-item-focused: {
-          background: var(--paper-amber-500);
-          font-weight: bold;
-        };
-        --paper-item-focused-before: {
-          opacity: 0;
-        };
-      }
     </style>
 
-    <template is="dom-repeat" items="{{data}}">
-      <paper-material class="paper-form" elevation="2">
-        <template is="dom-if" if="[[isObject(item.v)]]">
-          <div class="item" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
-            <div class="header">
-              <h4>{{item.k}}</h4>
-              <span class="space"></span>
-              <template is="dom-if" if="[[editMode]]">
-                <paper-icon-button icon="add" alt="New" on-tap="editItem"></paper-icon-button>
-                <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
-              </template>
-              <paper-icon-button icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
-              <input type="hidden" name="path" value="{{item.p}}">
-            </div>
-          </div>
-          <iron-collapse>
-            <flex-form data="{{item.v}}" edit-mode="[[editMode]]" edit-proc="[[getEditProc()]]"></flex-form>
-          </iron-collapse>
+    <paper-material class="paper-form" elevation="1">
+      <!-- header: form/sectioin name -->
+      <div class="header">
+        <template is="dom-if" if="{{isRoot}}">
+          <h1>{{id}}</h1>
         </template>
-        <template is="dom-if" if="[[!isObject(item.v)]]">
-          <div class="item" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
-            <div class="header">
-              <span>{{item.k}}</span>
-              <span class="space"></span>
-              <template is="dom-if" if="[[editMode]]">
-                <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
-              </template>
-            </div>
-            <paper-input label="Default Value" value="{{item.v}}" on-change="editItem" readonly="[[editMode]]"></paper-input>
-          </div>
+        <template is="dom-if" if="{{!isRoot}}">
+          <h4>{{id}}</h4>
         </template>
-      </paper-material>
-    </template>
+        <span class="space"></span>
+        <template is="dom-if" if="{{!editMode}}">
+        <template is="dom-if" if="{{isRoot}}">
+          <paper-icon-button icon="create" alt="Edit" on-tap="editForm"></paper-icon-button>
+          <paper-icon-button icon="clear" alt="Drop" on-tap="dropForm"></paper-icon-button>
+        </template>
+        </template>
+        <template is="dom-if" if="{{editMode}}">
+          <paper-icon-button icon="add" alt="New" on-tap="editItem"></paper-icon-button>
+          <template is="dom-if" if="[[!isRoot]]">
+            <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+          </template>
+          <template is="dom-if" if="[[data.length]]">
+            <paper-icon-button icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
+          </template>
+        </template>
+      </div>
+
+      <!-- data body -->
+      <template is="dom-if" if="[[data.length]]">
+        <iron-collapse>
+          <template is="dom-repeat" items="{{data}}">
+            <template is="dom-if" if="[[isObject(item.v)]]">
+              <div class="section" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
+                <flex-form id="{{item.k}}" data="{{item.v}}" edit-mode="[[editMode]]"></flex-form>
+              </div>
+            </template>
+            <template is="dom-if" if="[[!isObject(item.v)]]">
+              <paper-material class="paper-form" elevation="1">
+              <div class="field" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
+                <div class="header">
+                  <span>{{item.k}}</span>
+                  <span class="space"></span>
+                  <template is="dom-if" if="[[editMode]]">
+                    <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+                  </template>
+                </div>
+                <paper-input label="Default Value" value="{{item.v}}" readonly="[[!editMode]]"></paper-input>
+              </div>
+              </paper-material>
+            </template>
+          </template>
+        </iron-collapse>
+      </template>
+
+      <!-- FORM's JSON schema -->
+      <template is="dom-if" if="{{isRoot}}">
+      <template is="dom-if" if="{{!editMode}}">
+        <pre>{{showSchema(data)}}</pre>
+      </template>
+      </template>
+    </paper-material>
 
     <paper-dialog id="addDialog" modal role="alertdialog">
       <h2>Add Item</h2>
       <paper-input label="New Item Name" value="{{newItemName}}"></paper-input>
       <div class="buttons">
-        <paper-button dialog-confirm on-tap="addItem" disabled=[[!newItemName]]>Add SECTTION</paper-button>
+        <paper-button dialog-confirm on-tap="addItem" disabled=[[!newItemName]]>Add SECTION</paper-button>
         <paper-button dialog-dismiss on-tap="addItem" disabled=[[!newItemName]]>Add FIELD</paper-button>
       </div>
     </paper-dialog>
@@ -83,7 +101,7 @@ This code may only be used under the MIT license.
       <h2>Drop {{targetType}}</h2>
       <p>Drop "{{targetKey}}"?</p>
       <div class="buttons">
-        <paper-button dialog-confirm on-tap="execEdit">Drop</paper-button>
+        <paper-button dialog-confirm on-tap="dropItem">Drop</paper-button>
         <paper-button dialog-dismiss>Cancel</paper-button>
       </div>
     </paper-dialog>
@@ -102,6 +120,15 @@ This code may only be used under the MIT license.
             type: Array,
             value: ()=>{return []},
             notify: true
+          },
+          schema: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          isRoot: {
+            type: Boolean,
+            value: false
           },
           editMode: {
             type: Boolean,
@@ -138,9 +165,6 @@ This code may only be used under the MIT license.
           newItemName: {
             type: String,
             value: ''
-          },
-          editProc: {
-            type: Function
           }
         },
 
@@ -148,11 +172,20 @@ This code may only be used under the MIT license.
           return typeof tgt == 'object';
         },
 
-        toggleChild: function() {
-          var btn = Polymer.dom(event).localTarget;
+        toggleChild: function(e) {
+          var btn = e.target;
           btn.icon = btn.icon.match('more') ? 'expand-less' : 'expand-more';
-          var target = $(btn).parents('paper-material').children('iron-collapse').first()[0];
-          target.toggle();
+          $(btn).parents('.paper-form').children('iron-collapse').first()[0].toggle();
+        },
+
+        dropForm: function(e) {
+          this.targetType = 'FORM';
+          this.targetKey = this.id;
+          this.$$('#dropDialog').toggle();
+        },
+
+        editForm: function() {
+          page(app.baseUrl+'form/' + this.id + '/edit');
         },
 
         resetEdit: function() {
@@ -173,44 +206,55 @@ This code may only be used under the MIT license.
           this.editTarget = $(e.target);
           this.targetForm = $(e.target).parents('paper-material[elevation=1]').find('h1').html()
 
-          var tgt = $(e.target).parents('div.item')[0];
+          var tgt = $(e.target).parents('div.field')[0];
+          tgt = tgt || $(e.target).parents('div.section')[0];
           if (tgt) {
             this.targetPath = tgt.path;
             this.targetKey = tgt.key;
             this.targetValue = tgt.value;
-            this.targetType = 'FIELD';
-
-            if ($(tgt).find('h4').length) {
-              this.targetType = 'SECTION';
-            }
+            this.targetType = $(tgt).hasClass('field') ? 'FIELD' : 'SECTTION';
           }
 
-          if (e.target.tagName.toLowerCase() == 'input') {
-            this.targetAct = 'UPDATE';
-            this.execEdit();
-          }
-          else if ($(e.target).attr('alt') == 'Drop') {
+          if ($(e.target).attr('alt') == 'Drop') {
             this.targetAct = 'DROP';
             this.$$('#dropDialog').toggle();
           }
-          else {
+          else if ($(e.target).attr('alt') == 'New') {
             this.targetAct = 'ADD';
             this.$$('#addDialog').toggle();
           }
         },
 
-        execEdit: function() {
-          if (this.editProc) this.editProc(this.targetAct, this.targetType, this.targetForm, this.targetPath, this.targetKey, this.targetValue);
+        dropItem: function() {
+          var target = this;
+          if (this.targetType == 'FORM') {
+            target = $(this).parents('flex-forms').first()[0];
+            console.log(target)
+            var id = target.forms.findIndex(e=>{return e.name == this.id});
+            if (id > -1) target.splice('forms', id, 1);
+            console.log('remove from firebase');
+          }
+          else {
+            if (Array.isArray(this.targetValue)) {
+              target = $(this).parents('flex-form').first()[0];
+            }
+            var id = target.data.findIndex(e=>{return e.k == this.targetKey});
+            if (id > -1) target.splice('data', id, 1);
+          }
         },
 
         addItem: function(e) {
           this.targetType = $(e.target).justtext().trim().split(' ')[1];
           this.targetValue = $(e.target).parents('paper-dialog').find('paper-input')[0].value;
-          this.execEdit();
+          this.push('data', {p: this.taregetPath ? this.targetPath : [], k: this.targetValue, v: this.targetType == 'SECTION' ? [] : ''});
+          setTimeout(()=>{
+            var collap = $(this).find('iron-collapse')[0];
+            if (collap && !collap.opened) collap.toggle();
+          }, 100);
         },
 
-        getEditProc: function() {
-          return this.editProc;
+        showSchema: function(data) {
+          return JSON.stringify(flexTools.array2json(data), null, 2);
         }
       });
     })();

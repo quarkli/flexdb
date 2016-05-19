@@ -83,7 +83,7 @@ This code may only be used under the MIT license.
 
         <!-- Drawer Content -->
         <paper-menu class="app-menu" attr-for-selected="data-route" selected="[[route]]">
-          <a data-route="form" href="{{baseUrl}}">
+          <a data-route="forms" href="{{baseUrl}}">
             <iron-icon icon="dns"></iron-icon>
             <span>Form</span>
           </a>
@@ -119,22 +119,18 @@ This code may only be used under the MIT license.
         <template is="dom-if" if="{{!isChildPage(route)}}">
           <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
         </template>
-        <template is="dom-if" if="{{isChildPage(route)}}">
-          <paper-icon-button id="pageBack" icon="arrow-back" on-tap="pageBack"></paper-icon-button>
-        </template>
 
           <span class="space"></span>
 
           <!-- Toolbar icons -->
           <!-- /form Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'form')}}">
-            <a data-route="form-new" href="{{baseUrl}}form/new">
-              <paper-icon-button icon="add" alt="add"></paper-icon-button>
-            </a>
+          <template is="dom-if" if="{{curPage(route, 'forms')}}">
+            <paper-icon-button icon="add" alt="add" on-tap="openNewFormDialog"></paper-icon-button>
           </template>
           <!-- /form/new Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'form-new')}}">
-            <paper-icon-button icon="check" alt="Save" on-tap="saveForm"></paper-icon-button>
+          <template is="dom-if" if="{{curPage(route, 'form-edit')}}">
+            <paper-icon-button icon="check" alt="Save" on-tap="saveEdit"></paper-icon-button>
+            <paper-icon-button icon="clear" alt="Cancel" on-tap="cancelEdit"></paper-icon-button>
           </template>
           <!-- /tableview Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tableview')}}">
@@ -162,14 +158,14 @@ This code may only be used under the MIT license.
         <!-- Main Content -->
         <div class="content">
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
-            <section data-route="form" tabindex="-1">
+            <section data-route="forms" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-formpage id="formlist" ></flex-formpage>
+              <flex-forms id="formlist"></flex-forms>
             </section>
 
-            <section data-route="form-new" tabindex="-1">
+            <section data-route="form-edit" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-formpage id="newform"></flex-formpage>
+              <flex-forms id="formedit"></flex-forms>
             </section>
 
             <section id="tableview" data-route="tableview" tabindex="-1">
@@ -190,7 +186,10 @@ This code may only be used under the MIT license.
       </paper-scroll-header-panel>
     </paper-drawer-panel>
 
-    <template is="dom-if" if="{{!authenticated}}">
+
+    <!-- Add <paper-dialog> within <template> to avoid style inheritance and caused
+    followwing element set to be hidden -->
+    <template is="dom-if" if="{{1}}">
       <paper-dialog id="modalLogin" modal role="alertdialog">
         <h2>Login</h2>
         <div>
@@ -204,18 +203,26 @@ This code may only be used under the MIT license.
       </paper-dialog>
     </template>
 
-    <!-- Add <paper-dialog> within <template> to avoid style inheritance and caused
-    followwing element set to be hidden -->
     <template is="dom-if" if="{{1}}">
       <paper-dialog id="modalConfirm" modal role="alertdialog">
-        <h2>Warning!</h2>
+        <h2>Cancel Edit</h2>
         <div>
-          <p>There are unsaved changes. Leaving the page will lose all the changes.</p>
-          <p>Are you sure?</p>
+          <p>Give up current edit?</p>
         <div>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="forceBack">Leave</paper-button>
-          <paper-button dialog-dismiss>Stay</paper-button>
+          <paper-button dialog-confirm on-tap="forceBack">Yes</paper-button>
+          <paper-button dialog-dismiss>No</paper-button>
+        </div>
+      </paper-dialog>
+    </template>
+
+    <template is="dom-if" if="{{1}}">
+      <paper-dialog id="newFormDialog" modal role="alertdialog">
+        <h2>New Form</h2>
+        <paper-input label="Form Name" value="{{newFormName}}"></paper-input>
+        <div class="buttons">
+          <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">OK</paper-button>
+          <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>
     </template>

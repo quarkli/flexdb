@@ -176,6 +176,43 @@ This code may only be used under the MIT license.
       return ret;
     }
 
+    this.array2json = array2json
+    // Convert a Array data to an JSON data, the reverse function of json2array
+    function array2json(ary) {
+      function iter(ary, obj) {
+        ary.forEach(e=>{
+          if (Array.isArray(e.v)) {
+            obj[e.k] = {};
+            iter(e.v, obj[e.k]);
+          }
+          else {
+            obj[e.k] = e.v;
+          }
+        });
+        return obj;
+      }
+      return iter(ary, {});
+    }
+
+    this.disableBackspace = disableBackspace;
+    // disable Backspace key event to prevent leaving data editing page
+    function _hdlBackspace(e){
+      var rx = /INPUT|SELECT|TEXTAREA/i;
+      if( e.which == 8 ){ // 8 == backspace
+        if(!rx.test(e.target.tagName) || e.target.disabled || e.target.readOnly ){
+            e.preventDefault();
+        }
+      }
+    }
+
+    function disableBackspace(disabled){
+        if (disabled) {
+          $(document).on("keydown keypress", _hdlBackspace);
+        }
+        else {
+          $(document).off("keydown keypress", _hdlBackspace);
+        }
+    };
   }
 
   window.flexTools = window.flexTools || new FlexTools();

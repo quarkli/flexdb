@@ -45,42 +45,60 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page(app.baseUrl, homepage);
 
     function homepage() {
-      app.route = 'form';
-      app.title = 'Form';
+      flexTools.disableBackspace(0);
+      app.route = 'forms';
+      app.title = 'Forms';
       app.desp = 'Manage forms';
       setFocus(app.route);
-
-      formlist.reset();
-      flexModel.on('table-schema', 'value', data=>{
-        data.forEach(e=>{
-         formlist.push('forms', {name: e.key, data: flexTools.json2array(e.data), schema: JSON.stringify(e.data, null, 2), editing: false});
-        });
-      });
     }
 
+    page('/form/:id/edit', function(data) {
+      var id = formlist.forms.findIndex(e=>{return e.name == data.params.id;});
+      if (id < 0) {
+        page('/');
+      }
+      else {
+        flexTools.disableBackspace(1);
+        app.route = 'form-edit';
+        app.title = 'Edit Form';
+        app.desp = 'Edit form';
+        app.params = data.params;
+        setFocus(app.route);
+
+        var form = formlist.splice('forms', id, 1)
+        formedit.refreshForms(form);
+        formedit.editMode = true;
+        setTimeout(()=>{
+          var collap = $(formedit).find('iron-collapse')[0];
+          if (collap && !collap.opened) collap.toggle();
+        }, 100);
+      }
+    });
+
     page('/form/new', function() {
-      app.route = 'form-new';
+      flexTools.disableBackspace(1);
+      app.route = 'form-edit';
       app.title = 'New Form';
       app.desp = 'Create new form';
       setFocus(app.route);
 
-      newform.openNewFormDialog();
+      formedit.editMode = true;
+      setTimeout(()=>{
+          var collap = $(formedit).find('iron-collapse')[0];
+          if (collap && !collap.opened) collap.toggle();
+      }, 100);
     });
 
     page('/tableview', function() {
+      flexTools.disableBackspace(0);
       app.route = 'tableview';
       app.title = 'Table';
       app.desp = 'View tables';
       setFocus(app.route);
     });
 
-    page('/users/:name', function(data) {
-      app.route = 'user-info';
-      app.params = data.params;
-      setFocus(app.route);
-    });
-
     page('/compute', function() {
+      flexTools.disableBackspace(0);
       app.route = 'compute';
       app.title = 'Compute';
       app.desp = 'Computing data';
@@ -89,6 +107,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     // 404
     page('*', function() {
+      flexTools.disableBackspace(0);
       app.$.toast.text = 'Can\'t find: ' + window.location.href  + '. Redirected you to Home Page';
       app.$.toast.show();
       page.redirect(app.baseUrl);
