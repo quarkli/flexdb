@@ -127,11 +127,14 @@ This code may only be used under the MIT license.
           <!-- Toolbar icons -->
           <!-- /form Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'forms')}}">
+            <paper-icon-button icon="content-paste" alt="import" on-tap="popImportDialog"></paper-icon-button>
             <paper-icon-button icon="add" alt="add" on-tap="popNewFormDialog"></paper-icon-button>
           </template>
           <!-- /form/new Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'form-edit')}}">
-            <paper-icon-button icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
+            <template is="dom-if" if="{{curTitle(title, 'Edit Form')}}">
+              <paper-icon-button icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
+            </template>
             <paper-icon-button icon="check" alt="Save" on-tap="saveEdit"></paper-icon-button>
             <paper-icon-button icon="clear" alt="Cancel" on-tap="popModalConfirm"></paper-icon-button>
           </template>
@@ -223,11 +226,25 @@ This code may only be used under the MIT license.
     </template>
 
     <template is="dom-if" if="{{1}}">
+      <paper-dialog id="importDialog" modal role="alertdialog">
+        <h2>New Form from JSON</h2>
+        <div>
+          <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
+          <iron-autogrow-textarea label="JSON Data" style="max-height: 50px;" value="{{extjson}}" placeholder="Paste your JSON data here"></iron-autogrow-textarea>
+        <div>
+        <div class="buttons">
+          <paper-button dialog-confirm on-tap="newImport" disabled="[[!newFormName]]">New</paper-button>
+          <paper-button dialog-dismiss>Cancel</paper-button>
+        </div>
+      </paper-dialog>
+    </template>
+
+    <template is="dom-if" if="{{1}}">
       <paper-dialog id="newFormDialog" modal role="alertdialog">
         <h2>New Form</h2>
         <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">OK</paper-button>
+          <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">New</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>

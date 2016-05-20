@@ -46,14 +46,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       app.username = flexModel.uname;
       popToast('User has logged in!', '#B2DFDB');
 
-      // fetch data
-      flexModel.on('table-schema', 'value', data=>{
-        var d = []
-        data.forEach(e=>{
-         d.push({name: e.key, data: flexTools.json2array(e.data)});
-        });
-        formlist.refreshForms(d);
-      });
+      app.fetchData();
     }
   });
 
@@ -104,6 +97,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.newFormName = '';
 
+  app.extjson = '';
+
   app.guest = {email: 'guest@demo.flexdb', pwd: '0000'};
 
   app.login = function() {
@@ -119,8 +114,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.closeDrawer();
   };
 
+  app.fetchData = function() {
+    // fetch data
+    flexModel.on('table-schema', 'value', data=>{
+      var d = []
+      data.forEach(e=>{
+       d.push({name: e.key, data: flexTools.json2array(e.data)});
+      });
+      formlist.refreshForms(d);
+    });
+  };
+
   app.curPage = function(route, target) {
     return route == target;
+  };
+
+  app.curTitle = function(title, target) {
+    return title == target;
   };
 
   app.resetChanges = function() {
@@ -133,7 +143,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.cancelEdit = function() {
     app.resetChanges();
     flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
-    app.saveEdit();
+    if (app.title == 'Edit Form') {
+      app.saveEdit();
+    }
+    else {
+      history.back();
+    }
   };
 
   app.saveEdit = function() {
@@ -152,6 +167,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         app.authenticated = true;
         app.username = flexModel.uname;
         popToast('User has logged in!', '#B2DFDB');
+        app.fetchData();
       }
       else {
         popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
@@ -160,14 +176,30 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.popNewFormDialog = function() {
-    this.newFormName = '';
+    app.newFormName = '';
     newFormDialog.toggle();
   };
 
+  app.popImportDialog = function() {
+    app.newFormName = '';
+    app.extjson = '';
+    importDialog.toggle();
+  };
+
   app.newForm = function(e) {
-    var data = [{name: this.newFormName, data: []}];
+    var data = [{name: app.newFormName, data: []}];
     formedit.refreshForms(data);
     page(app.baseUrl+'form/new');
+  };
+
+  app.newImport = function() {
+    // console.log(flexTools.json2array(JSON.parse(app.extjson)))
+    try {
+      var data = [{name: app.newFormName, data: flexTools.json2array(JSON.parse(app.extjson))}];
+      formedit.refreshForms(data);
+      page(app.baseUrl+'form/new');
+    }
+    catch(e) {}
   };
 
   app.guestLogin = function() {
