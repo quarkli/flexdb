@@ -106,6 +106,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       flexModel.unauth();
       app.authenticated = false;
       app.username = '';
+      formlist.splice('forms', 0);
       popToast('User has logged out!');
     }
     else {
@@ -191,9 +192,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.newUser = function() {
-    flexModel.newUser(app.email, app.password, d=>{
-      app.auth();
-      page('/');
+    flexModel.newUser(app.email, app.password, (e,d)=>{
+      if (e) {
+        popToast(e, '#F48FB1');
+      }
+      else {
+        popToast('Rgistration completed! Redirect to homepage.', '#B2DFDB');
+        app.auth();
+        page('/');
+      }
     });
   };
 
@@ -217,7 +224,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.email = app.guest.email;
     app.password = app.guest.pwd;
     app.auth();
-    modalLogin.toggle();
+    page('/');
   };
 
   function popToast(msg, color) {

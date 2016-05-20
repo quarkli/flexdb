@@ -159,23 +159,35 @@ This code may only be used under the MIT license.
         email: email,
         password: pass
       }, function(error, userData) {
+        var err = null;
+        var uid = null;
         if (error) {
           switch (error.code) {
             case "EMAIL_TAKEN":
-              console.log("The new user account cannot be created because the email is already in use.");
+              err = "The new user account cannot be created because the email is already in use.";
               break;
             case "INVALID_EMAIL":
-              console.log("The specified email is not a valid email.");
+              err = "The specified email is not a valid email.";
               break;
             default:
-              console.log("Error creating user:", error);
+              err = "Error creating user:" + error.toString();
           }
         } else {
-          if (cb) cb(userData);
-          console.log("Successfully created user account with uid:", userData.uid);
+          uid = userData.uid;
         }
+        if (cb) cb(err, uid);
       });
     };
+
+    this.oauthLogin = function(provider) {
+      fbase.authWithOAuthPopup("facebook", function(error, authData) {
+        if (error) {
+          console.log("Login Failed!", error);
+        } else {
+          console.log("Authenticated successfully with payload:", authData);
+        }
+      });
+    }
   }
 
 
