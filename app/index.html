@@ -121,22 +121,28 @@ This code may only be used under the MIT license.
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
           <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
+          <paper-tooltip for="paperToggle">Menu</paper-tooltip>
 
           <span class="space"></span>
 
           <!-- Toolbar icons -->
           <!-- /form Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'forms')}}">
-            <paper-icon-button icon="content-paste" alt="import" on-tap="popImportDialog"></paper-icon-button>
-            <paper-icon-button icon="add" alt="add" on-tap="popNewFormDialog"></paper-icon-button>
+            <paper-icon-button id="btn-import" icon="content-paste" alt="import" on-tap="popImportDialog"></paper-icon-button>
+            <paper-tooltip for="btn-import">Import</paper-tooltip>
+            <paper-icon-button id="btn-newform" icon="add" alt="add" on-tap="popNewFormDialog"></paper-icon-button>
+            <paper-tooltip for="btn-newform">New Form</paper-tooltip>
           </template>
           <!-- /form/new Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'form-edit')}}">
             <template is="dom-if" if="{{curTitle(title, 'Edit Form')}}">
-              <paper-icon-button icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
+              <paper-icon-button id="btn-restore" icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
+              <paper-tooltip for="btn-restore">Restore</paper-tooltip>
             </template>
-            <paper-icon-button icon="check" alt="Save" on-tap="saveEdit"></paper-icon-button>
-            <paper-icon-button icon="clear" alt="Cancel" on-tap="popModalConfirm"></paper-icon-button>
+            <paper-icon-button id="btn-saveform" icon="check" alt="Save" on-tap="saveEdit"></paper-icon-button>
+            <paper-tooltip for="btn-saveform">Save</paper-tooltip>
+            <paper-icon-button id="btn-canceledit" icon="clear" alt="Cancel" on-tap="popModalConfirm"></paper-icon-button>
+            <paper-tooltip for="btn-canceledit">Cancel Edit</paper-tooltip>
           </template>
           <!-- /tableview Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tableview')}}">
@@ -206,7 +212,7 @@ This code may only be used under the MIT license.
                 <p>
                   If you want to take a look of the application features before 
                   creating an account, you can click below link to login as a guest 
-                  and play with flexdb a little bit first.
+                  and play with flexdb a little bit first.f
                 </p>
                 <div align="right">
                   <a href="#" on-tap="guestLogin">Login as Guest (Demo & Test)</a>
@@ -253,7 +259,7 @@ This code may only be used under the MIT license.
         <h2>New Form from JSON</h2>
         <div>
           <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
-          <iron-autogrow-textarea label="JSON Data" style="max-height: 50px;" value="{{extjson}}" placeholder="Paste your JSON data here"></iron-autogrow-textarea>
+          <iron-autogrow-textarea label="JSON Data" style="max-height: 90px;max-width: 240px;" value="{{extjson}}" placeholder="Paste your JSON data here"></iron-autogrow-textarea>
         <div>
         <div class="buttons">
           <paper-button dialog-confirm on-tap="newImport" disabled="[[!newFormName]]">New</paper-button>
