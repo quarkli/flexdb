@@ -94,7 +94,7 @@ This code may only be used under the MIT license.
 
           <a data-route="tableview" href="{{baseUrl}}tableview">
             <iron-icon icon="editor:border-all"></iron-icon>
-            <span>Table</span>
+            <span>Data</span>
           </a>
 
           <a data-route="compute" href="{{baseUrl}}compute">
@@ -187,6 +187,32 @@ This code may only be used under the MIT license.
                 <p>Computing data</p>
               </paper-material>
             </section>
+
+            <section data-route="reguser" tabindex="-1">
+              <paper-material elevation="1">
+                <h1 class="page-title" tabindex="-1">Registration</h1>
+                <p>
+                  This application is open for test without any service 
+                  warranty. By creating a private account, you can manage 
+                  your own data with access privilege to only authenticated 
+                  users. 
+                </p>
+                <h3>Register New User</h3>
+                <paper-input label="Email" type="email" value="{{email}}" autofocus></paper-input>
+                <paper-input label="Password" type="password" value="{{password}}"></paper-input>
+                <div align="right">
+                  <paper-button on-tap="newUser">Submit</paper-button>
+                </div>
+                <p>
+                  If you want to take a look of the application features before 
+                  creating an account, you can click below link to login as a guest 
+                  and play with flexdb a little bit first.
+                </p>
+                <div align="right">
+                  <a href="#" on-tap="guestLogin">Login as Guest (Demo & Test)</a>
+                </div>
+              </paper-material>
+            </section>
           </iron-pages>
         </div>
       </paper-scroll-header-panel>
@@ -204,10 +230,7 @@ This code may only be used under the MIT license.
         <div>
         <div class="buttons">
           <paper-button dialog-confirm on-tap="auth">Login</paper-button>
-          <paper-button dialog-dismiss>Cancel</paper-button>
-        </div>
-        <div align="right">
-          <a href="#" on-tap="guestLogin">Guest Login (Demo)</a>
+          <paper-button dialog-confirm on-tap="regUser">Register</paper-button>
         </div>
       </paper-dialog>
     </template>

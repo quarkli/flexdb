@@ -33,7 +33,7 @@ This code may only be used under the MIT license.
           <h1>{{id}}</h1>
         </template>
         <template is="dom-if" if="{{!isRoot}}">
-          <h4>{{id}}</h4>
+          <h3>{{id}}</h3>
         </template>
         <span class="space"></span>
         <template is="dom-if" if="{{!editMode}}">
@@ -66,7 +66,7 @@ This code may only be used under the MIT license.
               <paper-material class="paper-form" elevation="1">
               <div class="field" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
                 <div class="header">
-                  <span>{{item.k}}</span>
+                  <h4>{{item.k}}</h4>
                   <span class="space"></span>
                   <template is="dom-if" if="[[editMode]]">
                     <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>

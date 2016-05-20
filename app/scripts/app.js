@@ -186,6 +186,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     importDialog.toggle();
   };
 
+  app.regUser = function() {
+    page('/registration');
+  };
+
+  app.newUser = function() {
+    flexModel.newUser(app.email, app.password, d=>{
+      app.auth();
+      page('/');
+    });
+  };
+
   app.newForm = function(e) {
     var data = [{name: app.newFormName, data: []}];
     formedit.refreshForms(data);

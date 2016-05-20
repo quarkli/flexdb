@@ -110,6 +110,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
+    page('/registration', function() {
+      flexTools.disableBackspace(0);
+      app.email = '';
+      app.password = '';
+      app.route = 'reguser';
+      app.title = 'Registration';
+      app.desp = 'Register New User';
+      setFocus(app.route);
+    });
+
     // 404
     page('*', function() {
       flexTools.disableBackspace(0);
