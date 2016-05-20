@@ -43,13 +43,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     else {
       app.authenticated = true;
+      app.username = flexModel.uname;
       popToast('User has logged in!', '#B2DFDB');
 
       // fetch data
       flexModel.on('table-schema', 'value', data=>{
         var d = []
         data.forEach(e=>{
-         d.push({name: e.key, data: flexTools.json2array(e.data), schema: JSON.stringify(e.data, null, 2), editing: false});
+         d.push({name: e.key, data: flexTools.json2array(e.data)});
         });
         formlist.refreshForms(d);
       });
@@ -93,6 +94,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.$.paperDrawerPanel.closeDrawer();
   };
 
+  app.username = '';
+
   app.email = '';
 
   app.password = '';
@@ -101,10 +104,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.newFormName = '';
 
+  app.guest = {email: 'guest@demo.flexdb', pwd: '0000'};
+
   app.login = function() {
     if (flexModel && flexModel.uid) {
       flexModel.unauth();
       app.authenticated = false;
+      app.username = '';
       popToast('User has logged out!');
     }
     else {
@@ -117,22 +123,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return route == target;
   };
 
-  app.isChildPage = function(route) {
-    return route.split('-').length > 1;
+  app.resetChanges = function() {
+    formedit.$$('flex-form').pop('data');
+    flexModel.get('table-schema/' + formedit.$$('flex-form').id, (d, o)=>{
+      formedit.refreshForms([{name: formedit.$$('flex-form').id, data: flexTools.json2array(o)}]);
+    });
   };
 
-  app.forceBack = function() {
-    console.log('No Save to firebase');
-    history.back();
+  app.cancelEdit = function() {
+    app.resetChanges();
+    flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
+    app.saveEdit();
   };
 
-  app.saveEdit = function(e) {
-    formlist.push('forms', formedit.pop('forms'));
-    console.log('Save to firebase');
+  app.saveEdit = function() {
+    flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
+    flexModel.set('table-schema/' + formedit.$$('flex-form').id, flexTools.array2json(formedit.forms[0].data));
     history.back();
   }
 
-  app.cancelEdit = function() {
+  app.popModalConfirm = function() {
     modalConfirm.toggle();
   }
 
@@ -140,6 +150,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{
       if (uid) {
         app.authenticated = true;
+        app.username = flexModel.uname;
         popToast('User has logged in!', '#B2DFDB');
       }
       else {
@@ -148,7 +159,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   };
 
-  app.openNewFormDialog = function() {
+  app.popNewFormDialog = function() {
     this.newFormName = '';
     newFormDialog.toggle();
   };
@@ -159,9 +170,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page(app.baseUrl+'form/new');
   };
 
+  app.guestLogin = function() {
+    app.email = app.guest.email;
+    app.password = app.guest.pwd;
+    app.auth();
+    modalLogin.toggle();
+  };
+
   function popToast(msg, color) {
-    app.$.toast.text = msg;
-    app.$.toast.$$('span').style = "color: " + (color ? color : 'white');
-    app.$.toast.show();
+    toast.text = msg;
+    toast.$$('span').style = "color: " + (color ? color : 'white');
+    toast.show();
   }
 })(document);

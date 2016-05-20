@@ -34,7 +34,11 @@ This code may only be used under the MIT license.
     //  start - the start index of range of array to be calculated, starts from 1, default: 1
     //  len - the length of range of array from start index to be calculated, default: array size
     //  incEmpty - if a node has no value, whether to count it in as average divider, default: true
-    function avg(data, node, start = 1, len = data.length, incEmpty = true) {
+    function avg(data, node, start, len, incEmpty) {
+      start = start || 1;
+      len = len || data.length;
+      incEmpty = incEmpty  === undefined ? true : incEmpty;
+
       var path = _getPath(data, node);
       var count = len;
       if (!incEmpty) {
@@ -53,7 +57,10 @@ This code may only be used under the MIT license.
     //  node - the specific node to be calculated
     //  start - the start index of range of array to be calculated, starts from 1, default: 1
     //  len - the length of range of array from start index to be calculated, default: array size
-    function sum(data, node, start = 1, len = data.length) {
+    function sum(data, node, start, len) {
+      start = start || 1;
+      len = len || data.length;
+
       var path = _getPath(data, node);
       return data.reduce((e1, e2, i)=>{
         // console.log(i, (i < start || i > end), e1)
@@ -68,7 +75,9 @@ This code may only be used under the MIT license.
     //  data - source data of object array
     //  node - the specific node to be sorted
     //  ascending - the sort order is ascending or descending, default ascending
-    function sort(data, node, ascending = true) {
+    function sort(data, node, ascending) {
+      ascending = ascending  === undefined ? true : ascending;
+
       var path = _getPath(data, node);
       data.sort((a,b)=>{
         // compare numbers
@@ -100,7 +109,11 @@ This code may only be used under the MIT license.
     //    each Array node, if FALSE, iterator treat Array as value
     //  path - internal use for recursive tracking, should not be set by application call.
     //  cache - internal use for recursive tracking, should not be set by application call.
-    function objectNodeIterator(obj, cb, leafOnly = true, arrayAsObj = false, path = [], cache) {
+    function objectNodeIterator(obj, cb, leafOnly, arrayAsObj, path, cache) {
+      leafOnly = leafOnly === undefined ? true : leafOnly;
+      arrayAsObj = arrayAsObj === undefined ? false : arrayAsObj;
+      path = path || [];
+
       if (typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
         cache = cache || [obj];
         Object.keys(obj).forEach(key=>{

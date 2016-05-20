@@ -90,7 +90,7 @@ This code may only be used under the MIT license.
 
     <paper-dialog id="addDialog" modal role="alertdialog">
       <h2>Add Item</h2>
-      <paper-input label="New Item Name" value="{{newItemName}}"></paper-input>
+      <paper-input label="New Item Name" value="{{newItemName}}" maxlength="20"></paper-input>
       <div class="buttons">
         <paper-button dialog-confirm on-tap="addItem" disabled=[[!newItemName]]>Add SECTION</paper-button>
         <paper-button dialog-dismiss on-tap="addItem" disabled=[[!newItemName]]>Add FIELD</paper-button>
@@ -119,11 +119,6 @@ This code may only be used under the MIT license.
           data: {
             type: Array,
             value: ()=>{return []},
-            notify: true
-          },
-          schema: {
-            type: String,
-            value: '',
             notify: true
           },
           isRoot: {
@@ -229,10 +224,10 @@ This code may only be used under the MIT license.
           var target = this;
           if (this.targetType == 'FORM') {
             target = $(this).parents('flex-forms').first()[0];
-            console.log(target)
             var id = target.forms.findIndex(e=>{return e.name == this.id});
             if (id > -1) target.splice('forms', id, 1);
-            console.log('remove from firebase');
+
+            flexModel.remove('table-schema/' + this.id);
           }
           else {
             if (Array.isArray(this.targetValue)) {
@@ -248,8 +243,8 @@ This code may only be used under the MIT license.
           this.targetValue = $(e.target).parents('paper-dialog').find('paper-input')[0].value;
           this.push('data', {p: this.taregetPath ? this.targetPath : [], k: this.targetValue, v: this.targetType == 'SECTION' ? [] : ''});
           setTimeout(()=>{
-            var collap = $(this).find('iron-collapse')[0];
-            if (collap && !collap.opened) collap.toggle();
+            var collap = this.$$('iron-collapse');
+            if (collap) collap.opened = true;
           }, 100);
         },
 

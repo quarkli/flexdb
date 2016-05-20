@@ -78,7 +78,11 @@ This code may only be used under the MIT license.
 
         <!-- Drawer Toolbar -->
         <paper-toolbar id="drawerToolbar">
-          <span class="menu-name">flexdb</span>
+          <span class="menu-name">flexdb </span>
+          <span class="space"></span>
+          <span>
+            <template is="dom-if" if="{{username}}">({{username}})</template>
+          </span>
         </paper-toolbar>
 
         <!-- Drawer Content -->
@@ -116,21 +120,20 @@ This code may only be used under the MIT license.
       <paper-scroll-header-panel main id="headerPanelMain" fixed>
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar">
-        <template is="dom-if" if="{{!isChildPage(route)}}">
           <paper-icon-button id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
-        </template>
 
           <span class="space"></span>
 
           <!-- Toolbar icons -->
           <!-- /form Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'forms')}}">
-            <paper-icon-button icon="add" alt="add" on-tap="openNewFormDialog"></paper-icon-button>
+            <paper-icon-button icon="add" alt="add" on-tap="popNewFormDialog"></paper-icon-button>
           </template>
           <!-- /form/new Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'form-edit')}}">
+            <paper-icon-button icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
             <paper-icon-button icon="check" alt="Save" on-tap="saveEdit"></paper-icon-button>
-            <paper-icon-button icon="clear" alt="Cancel" on-tap="cancelEdit"></paper-icon-button>
+            <paper-icon-button icon="clear" alt="Cancel" on-tap="popModalConfirm"></paper-icon-button>
           </template>
           <!-- /tableview Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tableview')}}">
@@ -200,6 +203,9 @@ This code may only be used under the MIT license.
           <paper-button dialog-confirm on-tap="auth">Login</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
+        <div align="right">
+          <a href="#" on-tap="guestLogin">Guest Login (Demo)</a>
+        </div>
       </paper-dialog>
     </template>
 
@@ -210,7 +216,7 @@ This code may only be used under the MIT license.
           <p>Give up current edit?</p>
         <div>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="forceBack">Yes</paper-button>
+          <paper-button dialog-confirm on-tap="cancelEdit">Yes</paper-button>
           <paper-button dialog-dismiss>No</paper-button>
         </div>
       </paper-dialog>
@@ -219,7 +225,7 @@ This code may only be used under the MIT license.
     <template is="dom-if" if="{{1}}">
       <paper-dialog id="newFormDialog" modal role="alertdialog">
         <h2>New Form</h2>
-        <paper-input label="Form Name" value="{{newFormName}}"></paper-input>
+        <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
         <div class="buttons">
           <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">OK</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>

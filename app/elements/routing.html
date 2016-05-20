@@ -56,26 +56,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var id = formlist.forms.findIndex(e=>{return e.name == data.params.id;});
       if (id < 0) {
         page('/');
+        return ;
       }
-      else {
-        flexTools.disableBackspace(1);
-        app.route = 'form-edit';
-        app.title = 'Edit Form';
-        app.desp = 'Edit form';
-        app.params = data.params;
-        setFocus(app.route);
 
-        var form = formlist.splice('forms', id, 1)
-        formedit.refreshForms(form);
-        formedit.editMode = true;
-        setTimeout(()=>{
-          var collap = $(formedit).find('iron-collapse')[0];
-          if (collap && !collap.opened) collap.toggle();
-        }, 100);
-      }
+      flexTools.disableBackspace(1);
+      app.route = 'form-edit';
+      app.title = 'Edit Form';
+      app.desp = 'Edit form';
+      app.params = data.params;
+      setFocus(app.route);
+
+      var form = formlist.splice('forms', id, 1)
+      formedit.refreshForms(form);
+      formedit.editMode = true;
+      setTimeout(()=>{
+        var collap = $(formedit).find('iron-collapse')[0];
+        if (collap && !collap.opened) collap.toggle();
+      }, 100);
     });
 
     page('/form/new', function() {
+      if (!formedit.forms.length) {
+        page('/');
+        return;
+      }
+
       flexTools.disableBackspace(1);
       app.route = 'form-edit';
       app.title = 'New Form';

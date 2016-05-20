@@ -47,6 +47,11 @@ th.sec {
   cursor: auto;
 }
 
+pre{
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 .page-title {
   outline: none;
 }

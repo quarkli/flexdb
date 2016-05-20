@@ -12,13 +12,14 @@ This code may only be used under the MIT license.
     var me = this;
     var url = 'https://luminous-inferno-3027.firebaseio.com';
     var uid = null;
+    var uname = '';
     var cbCache = [];
     var ubase = null;
     var fbase = new Firebase(url);
 
     // --- must be removed for production
-    uid = "abb11a6c-fd31-4b3d-be34-5fc261b80810";
-    _initUbase(uid);
+    // uid = "abb11a6c-fd31-4b3d-be34-5fc261b80810";
+    // _initUbase(uid);
     // --- must be removed for production
 
     fbase.onAuth(authDataCallback);
@@ -41,6 +42,7 @@ This code may only be used under the MIT license.
           provider: authData.provider,
           name: getName(authData)
         });
+        uname = getName(authData);
         _initUbase(authData.uid);
       }
     }
@@ -70,7 +72,7 @@ This code may only be used under the MIT license.
         else {
           data.push(ret);
         }
-        if (cb) cb(data);
+        if (cb) cb(data, ret);
       }
     }
 
@@ -85,6 +87,10 @@ This code may only be used under the MIT license.
 
     Object.defineProperty(this, 'uid', {
       get: ()=>{return uid}
+    });
+
+    Object.defineProperty(this, 'uname', {
+      get: ()=>{return uname}
     });
 
     // Authentication method, only authenticated user gets 'userdb' accessbility
@@ -102,6 +108,7 @@ This code may only be used under the MIT license.
     this.unauth = function() {
       fbase.unauth();
       uid = null;
+      uname = '';
     };
 
     // push data into specific path with auto-generated id
