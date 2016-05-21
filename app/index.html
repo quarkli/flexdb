@@ -81,7 +81,9 @@ This code may only be used under the MIT license.
           <span class="menu-name">flexdb </span>
           <span class="space"></span>
           <span>
-            <template is="dom-if" if="{{username}}">({{username}})</template>
+            <template is="dom-if" if="{{username}}">
+            (<a href="{{baseUrl}}account" data-route="accout" tabindex="-1">{{username}}</a>)
+            </template>
           </span>
         </paper-toolbar>
 
@@ -155,6 +157,13 @@ This code may only be used under the MIT license.
             <paper-icon-button icon="add" alt="add"></paper-icon-button>
             <paper-icon-button icon="save" alt="save"></paper-icon-button>
           </template>
+          <!-- /account Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'account')}}">
+            <a data-route="forms" href="{{baseUrl}}">
+              <paper-icon-button id="btn-acctdone" icon="check" alt="Done"></paper-icon-button>
+              <paper-tooltip for="btn-acctdone">Done</paper-tooltip>
+            </a>
+          </template>
 
           <!-- Application name -->
           <div class="middle middle-container">
@@ -191,6 +200,32 @@ This code may only be used under the MIT license.
               <paper-material elevation="1">
                 <h1 class="page-title" tabindex="-1">Compute</h1>
                 <p>Computing data</p>
+              </paper-material>
+            </section>
+
+            <section data-route="account" tabindex="-1">
+              <paper-material elevation="1">
+                <h1 class="page-title" tabindex="-1">Change Password</h1>
+                <div>
+                  <paper-input type="password" label="Old Password" value="{{password}}"></paper-input>
+                  <paper-input type="password" label="New Password" value="{{newPassword}}"></paper-input>
+                  <paper-input type="password" label="Confirm New Password" value="{{cfmNewPassword}}"></paper-input>
+                  <div align="right">
+                    <paper-button on-tap="chgPwd" disabled="{{!pwdMatched(newPassword, cfmNewPassword)}}">Change Password</paper-button>
+                  </div>
+                </div>
+                <h1 class="page-title" tabindex="-1">Delete Account</h1>
+                <p style="color: red;">
+                By deleting your account, all the data you have created and
+                saved will be deleted altogether. If you are sure to delete 
+                your account and data, please enter your password again and click 'Delete Account'
+                </p>
+                <div>
+                  <paper-input type="password" label="Password" value="{{password}}"></paper-input>
+                  <div align="right">
+                    <paper-button on-tap="delAccount" disabled="[[!password]]">Delete Account</paper-button>
+                  </div>
+                </div>
               </paper-material>
             </section>
 

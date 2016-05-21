@@ -42,11 +42,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       Polymer.dom(document).querySelector('#modalLogin').toggle();
     }
     else {
-      app.authenticated = true;
-      app.username = flexModel.uname;
-      popToast('User has logged in!', '#B2DFDB');
-
-      app.fetchData();
+      initApp();
     }
   });
 
@@ -87,27 +83,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.$.paperDrawerPanel.closeDrawer();
   };
 
-  app.username = '';
+  app.resetDefaultValues = function() {
+    app.username = '';
+    app.email = '';
+    app.password = '';
+    app.authenticated = false;
+    app.newFormName = '';
+    app.extjson = '';
+    app.guest = {email: 'guest@demo.flexdb', pwd: '0000'};
+    app.newPassword = '';
+    app.cfmNewPassword = '';
 
-  app.email = '';
+  };
+  app.resetDefaultValues();
 
-  app.password = '';
-
-  app.authenticated = false;
-
-  app.newFormName = '';
-
-  app.extjson = '';
-
-  app.guest = {email: 'guest@demo.flexdb', pwd: '0000'};
+  // clear all binded data
+  app.resetModels = function() {
+    formlist.splice('forms', 0);
+  };
 
   app.login = function() {
     if (flexModel && flexModel.uid) {
-      flexModel.unauth();
-      app.authenticated = false;
-      app.username = '';
-      formlist.splice('forms', 0);
-      popToast('User has logged out!');
+      logoutApp();
     }
     else {
       Polymer.dom(document).querySelector('#modalLogin').toggle();
@@ -165,10 +162,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.auth = function() {
     if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{
       if (uid) {
-        app.authenticated = true;
-        app.username = flexModel.uname;
-        popToast('User has logged in!', '#B2DFDB');
-        app.fetchData();
+        initApp();
       }
       else {
         popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
@@ -220,6 +214,42 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     catch(e) {}
   };
 
+  app.pwdMatched = function(pwd, cfm) {
+    return pwd && pwd.length && pwd == cfm;
+  };
+
+  app.chgPwd = function() {
+    if (app.email == 'guest@demo.flexdb') {
+      popToast("You cannot change password of guest account!", '#F48FB1');
+    }
+    else {
+      flexModel.changePassword(app.password, app.newPassword, e=>{
+        if (e) {
+          popToast("Passowrd change failed! Reason: " + e, '#F48FB1');
+        }
+        else {
+          popToast('Password changed! Please use new password at next login.', '#B2DFDB');
+        }
+      });
+    }
+  };
+
+  app.delAccount = function() {
+    if (app.email == 'guest@demo.flexdb') {
+      popToast("You cannot delete guest account!", '#F48FB1');
+    }
+    else {
+      flexModel.deleteAccount(app.password, e=>{
+        if (e) {
+          popToast("Deleting account failed! Reason: " + e, '#F48FB1');
+        }
+        else {
+          logoutApp();
+        }
+      });
+    }
+  };
+
   app.guestLogin = function() {
     app.email = app.guest.email;
     app.password = app.guest.pwd;
@@ -231,5 +261,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     toast.text = msg;
     toast.$$('span').style = "color: " + (color ? color : 'white');
     toast.show();
+  }
+
+  function initApp() {
+    app.resetDefaultValues();
+
+    app.authenticated = true;
+    app.username = flexModel.username;
+    app.email = flexModel.authentication.password.email;
+    popToast('User has logged in!', '#B2DFDB');
+
+    app.fetchData();
+    page('/');
+  }
+
+  function logoutApp() {
+    flexModel.unauth();
+    popToast('User has logged out!');
+    app.resetModels();
+    app.resetDefaultValues();
+    page('/');
   }
 })(document);

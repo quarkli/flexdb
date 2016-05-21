@@ -12,7 +12,8 @@ This code may only be used under the MIT license.
     var me = this;
     var url = 'https://luminous-inferno-3027.firebaseio.com';
     var uid = null;
-    var uname = '';
+    var authentication = null;
+    var username = '';
     var cbCache = [];
     var ubase = null;
     var fbase = new Firebase(url);
@@ -42,7 +43,8 @@ This code may only be used under the MIT license.
           provider: authData.provider,
           name: getName(authData)
         });
-        uname = getName(authData);
+        authentication = authData;
+        username = getName(authData);
         _initUbase(authData.uid);
       }
     }
@@ -89,8 +91,12 @@ This code may only be used under the MIT license.
       get: ()=>{return uid}
     });
 
-    Object.defineProperty(this, 'uname', {
-      get: ()=>{return uname}
+    Object.defineProperty(this, 'authentication', {
+      get: ()=>{return authentication}
+    });
+
+    Object.defineProperty(this, 'username', {
+      get: ()=>{return username}
     });
 
     // Authentication method, only authenticated user gets 'userdb' accessbility
@@ -108,7 +114,8 @@ This code may only be used under the MIT license.
     this.unauth = function() {
       fbase.unauth();
       uid = null;
-      uname = '';
+      authentication = null;
+      username = '';
     };
 
     // push data into specific path with auto-generated id
@@ -185,6 +192,34 @@ This code may only be used under the MIT license.
           console.log("Login Failed!", error);
         } else {
           console.log("Authenticated successfully with payload:", authData);
+        }
+      });
+    };
+
+    this.changePassword = function(oldpwd, newpwd, cb) {
+      fbase.changePassword({
+        email       : authentication.password.email,
+        oldPassword : oldpwd,
+        newPassword : newpwd
+      }, function(error) {
+        if (cb) cb(error);
+      });
+    };
+
+    this.deleteAccount = function(pwd, cb) {
+      this.changePassword(pwd, pwd, e=>{
+        if (e) {
+          if (cb) cb(e);
+        }
+        else {
+          fbase.child('users/' + authentication.uid).remove();
+          fbase.child('userdb/' + authentication.uid).remove();
+          fbase.removeUser({
+            email    : authentication.password.email,
+            password : pwd
+          }, function(error) {
+            if (cb) cb(error);
+          });
         }
       });
     }
