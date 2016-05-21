@@ -83,31 +83,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.$.paperDrawerPanel.closeDrawer();
   };
 
-  app.formExists = function(name) {
-    return formlist.forms.find(e=>{return e.name == name}) || 
-      formedit.forms.find(e=>{return e.name == name});
+  // Evaluation Functions
+  app.curPage = function(route, target) {
+    return route == target;
   };
 
-  app.resetDefaultValues = function() {
-    app.username = '';
-    app.email = '';
-    app.password = '';
-    app.authenticated = false;
-    app.newFormName = '';
-    app.extjson = '';
-    app.guest = {email: 'guest@demo.flexdb', pwd: '0000'};
-    app.newPassword = '';
-    app.cfmNewPassword = '';
-
-  };
-  app.resetDefaultValues();
-
-  // clear all binded data
-  app.resetModels = function() {
-    formlist.splice('forms', 0);
+  app.curTitle = function(title, target) {
+    return title == target;
   };
 
-  app.login = function() {
+  app.pwdMatched = function(pwd, cfm) {
+    return pwd && pwd.length && pwd == cfm;
+  };
+
+  // Tap-triggered Functions
+  app.login = function(event, object, params) {
     if (flexModel && flexModel.uid) {
       logoutApp();
     }
@@ -117,79 +107,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.closeDrawer();
   };
 
-  app.fetchData = function() {
-    // fetch data
-    flexModel.on('table-schema', 'value', data=>{
-      var d = []
-      data.forEach(e=>{
-       d.push({name: e.key, data: flexTools.json2array(e.data)});
-      });
-      formlist.refreshForms(d);
-    });
-  };
-
-  app.curPage = function(route, target) {
-    return route == target;
-  };
-
-  app.curTitle = function(title, target) {
-    return title == target;
-  };
-
-  app.resetChanges = function() {
-    formedit.$$('flex-form').pop('data');
-    flexModel.get('table-schema/' + formedit.$$('flex-form').id, (d, o)=>{
-      formedit.refreshForms([{name: formedit.$$('flex-form').id, data: flexTools.json2array(o)}]);
-    });
-  };
-
-  app.cancelEdit = function() {
-    app.resetChanges();
-    flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
-    if (app.title == 'Edit Form') {
-      app.saveEdit();
-    }
-    else {
-      history.back();
-    }
-  };
-
-  app.saveEdit = function(saveas) {
-    var table = saveas || formedit.$$('flex-form').id;
-    flexModel.set('table-schema/' + table, {});
-    flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
-    history.back();
-  };
-
-  app.saveas = function() {
-    if (app.formExists(app.newFormName)) {
-        popToast("Form name duplicated!", '#F48FB1');
-        return;
-    }
-    app.saveEdit(app.newFormName);
-  };
-
-  app.popModalConfirm = function() {
-    modalConfirm.toggle();
-  }
-
-  app.popSaveAsDialog = function() {
-    app.newFormName = '';
-    saveasDialog.toggle();
-  }
-
-  app.popNewFormDialog = function() {
-    app.newFormName = '';
-    newFormDialog.toggle();
-  };
-
-  app.popImportDialog = function() {
-    app.newFormName = '';
-    app.extjson = '';
-    importDialog.toggle();
-  };
-
-  app.auth = function() {
+  app.auth = function(event, object, params) {
     if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{
       if (uid) {
         initApp();
@@ -200,11 +118,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   };
 
-  app.regUser = function() {
+  app.regUser = function(event, object, params) {
     page('/registration');
   };
 
-  app.newUser = function() {
+  app.newUser = function(event, object, params) {
     flexModel.newUser(app.email, app.password, (e,d)=>{
       if (e) {
         popToast("Registration failed! Reason: " + e, '#F48FB1');
@@ -217,35 +135,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   };
 
-  app.newForm = function() {
-    if (app.formExists(app.newFormName)) {
-        popToast("Form name duplicated!", '#F48FB1');
-        return;
-    }
-    var data = [{name: app.newFormName, data: []}];
-    formedit.refreshForms(data);
-    page(app.baseUrl+'form/new');
-  };
-
-  app.newImport = function() {
-    if (app.formExists(app.newFormName)) {
-        popToast("Form name duplicated!", '#F48FB1');
-        return;
-    }
-    // console.log(flexTools.json2array(JSON.parse(app.extjson)))
-    try {
-      var data = [{name: app.newFormName, data: flexTools.json2array(JSON.parse(app.extjson))}];
-      formedit.refreshForms(data);
-      page(app.baseUrl+'form/new');
-    }
-    catch(e) {}
-  };
-
-  app.pwdMatched = function(pwd, cfm) {
-    return pwd && pwd.length && pwd == cfm;
-  };
-
-  app.chgPwd = function() {
+  app.chgPwd = function(event, object, params) {
     if (app.email == 'guest@demo.flexdb') {
       popToast("You cannot change password of guest account!", '#F48FB1');
     }
@@ -261,7 +151,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.delAccount = function() {
+  app.delAccount = function(event, object, params) {
     if (app.email == 'guest@demo.flexdb') {
       popToast("You cannot delete guest account!", '#F48FB1');
     }
@@ -277,36 +167,143 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.guestLogin = function() {
+  app.guestLogin = function(event, object, params) {
     app.email = app.guest.email;
     app.password = app.guest.pwd;
     app.auth();
     page('/');
   };
 
-  function popToast(msg, color) {
-    toast.text = msg;
-    toast.$$('span').style = "color: " + (color ? color : 'white');
-    toast.show();
+  app.newForm = function(event, object, params) {
+    if (formExists(app.newFormName)) {
+        popToast("Form name duplicated!", '#F48FB1');
+        return;
+    }
+    var data = [{name: app.newFormName, data: []}];
+    formedit.refreshForms(data);
+    page(app.baseUrl+'form/new');
+  };
+
+  app.newImport = function(event, object, params) {
+    if (formExists(app.newFormName)) {
+        popToast("Form name duplicated!", '#F48FB1');
+        return;
+    }
+    // console.log(flexTools.json2array(JSON.parse(app.extjson)))
+    try {
+      var data = [{name: app.newFormName, data: flexTools.json2array(JSON.parse(app.extjson))}];
+      formedit.refreshForms(data);
+      page(app.baseUrl+'form/new');
+    }
+    catch(e) {}
+  };
+
+  app.resetChanges = function(event, object, params) {
+    formedit.$$('flex-form').pop('data');
+    flexModel.get('table-schema/' + formedit.$$('flex-form').id, (d, o)=>{
+      formedit.refreshForms([{name: formedit.$$('flex-form').id, data: flexTools.json2array(o)}]);
+    });
+  };
+
+  app.cancelEdit = function(event, object, params) {
+    app.resetChanges();
+    flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
+    if (app.title == 'Edit Form') {
+      app.saveEdit();
+    }
+    else {
+      history.back();
+    }
+    formedit.refreshForms([]);
+  };
+
+  app.saveEdit = function(event, object, params) {
+    if (formedit)
+    var table = params || formedit.$$('flex-form').id;
+    flexModel.set('table-schema/' + table, {});
+    flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
+    formedit.refreshForms([]);
+    history.back();
+  };
+
+  app.saveas = function(event, object, params) {
+    if (formExists(app.newFormName)) {
+        popToast("Form name duplicated!", '#F48FB1');
+        return;
+    }
+    app.saveEdit(event, object, app.newFormName);
+  };
+
+  app.popModalConfirm = function(event, object, params) {
+    modalConfirm.toggle();
   }
 
+  app.popSaveAsDialog = function(event, object, params) {
+    app.newFormName = '';
+    saveasDialog.toggle();
+  }
+
+  app.popNewFormDialog = function(event, object, params) {
+    app.newFormName = '';
+    newFormDialog.toggle();
+  };
+
+  app.popImportDialog = function(event, object, params) {
+    app.newFormName = '';
+    app.extjson = '';
+    importDialog.toggle();
+  };
+
+  // Private Functions
+  function resetDefaultValues() {
+    app.username = '';
+    app.email = '';
+    app.password = '';
+    app.authenticated = false;
+    app.newFormName = '';
+    app.extjson = '';
+    app.guest = {email: 'guest@demo.flexdb', pwd: '0000'};
+    app.newPassword = '';
+    app.cfmNewPassword = '';
+  };
+
   function initApp() {
-    app.resetDefaultValues();
+    resetDefaultValues();
 
     app.authenticated = true;
     app.username = flexModel.username;
     app.email = flexModel.authentication.password.email;
     popToast('User has logged in!', '#B2DFDB');
 
-    app.fetchData();
+    // fetch data
+    flexModel.on('table-schema', 'value', data=>{
+      var d = []
+      data.forEach(e=>{
+       d.push({name: e.key, data: flexTools.json2array(e.data)});
+      });
+      formlist.refreshForms(d);
+    });
+
     page('/');
   }
 
   function logoutApp() {
     flexModel.unauth();
     popToast('User has logged out!');
-    app.resetModels();
-    app.resetDefaultValues();
+
+    formlist.splice('forms', 0);
+    resetDefaultValues();
     page('/');
+  }
+
+  function formExists(name) {
+    return formlist.forms.find(e=>{return e.name == name}) || 
+      formedit.forms.find(e=>{return e.name == name});
+  }
+
+  function popToast(msg, color) {
+    toast.text = msg;
+    toast.$$('span').style = "color: " + (color ? color : 'white');
+    toast.show();
   }
 })(document);
