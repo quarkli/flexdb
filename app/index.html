@@ -80,11 +80,11 @@ This code may only be used under the MIT license.
         <paper-toolbar id="drawerToolbar">
           <span class="menu-name">flexdb </span>
           <span class="space"></span>
-          <span>
+          <div class="username">
             <template is="dom-if" if="{{username}}">
             (<a href="{{baseUrl}}account" data-route="accout" tabindex="-1">{{username}}</a>)
             </template>
-          </span>
+          </div>
         </paper-toolbar>
 
         <!-- Drawer Content -->

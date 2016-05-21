@@ -67,3 +67,17 @@ pre{
 #tableview {
   overflow: auto;
 }
+
+div.username {
+  @apply(--layout-horizontal);
+
+  max-width: 150px;
+}
+
+div.username a {
+  display: inline-block;
+  max-width: 130px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
