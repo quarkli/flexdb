@@ -83,6 +83,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.$.paperDrawerPanel.closeDrawer();
   };
 
+  app.formExists = function(name) {
+    return formlist.forms.find(e=>{return e.name == name}) || 
+      formedit.forms.find(e=>{return e.name == name});
+  };
+
   app.resetDefaultValues = function() {
     app.username = '';
     app.email = '';
@@ -149,26 +154,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.saveEdit = function() {
-    flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
-    flexModel.set('table-schema/' + formedit.$$('flex-form').id, flexTools.array2json(formedit.forms[0].data));
+  app.saveEdit = function(saveas) {
+    var table = saveas || formedit.$$('flex-form').id;
+    flexModel.set('table-schema/' + table, {});
+    flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
     history.back();
-  }
+  };
+
+  app.saveas = function() {
+    if (app.formExists(app.newFormName)) {
+        popToast("Form name duplicated!", '#F48FB1');
+        return;
+    }
+    app.saveEdit(app.newFormName);
+  };
 
   app.popModalConfirm = function() {
     modalConfirm.toggle();
   }
 
-  app.auth = function() {
-    if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{
-      if (uid) {
-        initApp();
-      }
-      else {
-        popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
-      }
-    });
-  };
+  app.popSaveAsDialog = function() {
+    app.newFormName = '';
+    saveasDialog.toggle();
+  }
 
   app.popNewFormDialog = function() {
     app.newFormName = '';
@@ -181,6 +189,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     importDialog.toggle();
   };
 
+  app.auth = function() {
+    if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{
+      if (uid) {
+        initApp();
+      }
+      else {
+        popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
+      }
+    });
+  };
+
   app.regUser = function() {
     page('/registration');
   };
@@ -188,23 +207,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.newUser = function() {
     flexModel.newUser(app.email, app.password, (e,d)=>{
       if (e) {
-        popToast(e, '#F48FB1');
+        popToast("Registration failed! Reason: " + e, '#F48FB1');
       }
       else {
-        popToast('Rgistration completed! Redirect to homepage.', '#B2DFDB');
+        popToast('Registration completed! Redirect to homepage.', '#B2DFDB');
         app.auth();
         page('/');
       }
     });
   };
 
-  app.newForm = function(e) {
+  app.newForm = function() {
+    if (app.formExists(app.newFormName)) {
+        popToast("Form name duplicated!", '#F48FB1');
+        return;
+    }
     var data = [{name: app.newFormName, data: []}];
     formedit.refreshForms(data);
     page(app.baseUrl+'form/new');
   };
 
   app.newImport = function() {
+    if (app.formExists(app.newFormName)) {
+        popToast("Form name duplicated!", '#F48FB1');
+        return;
+    }
     // console.log(flexTools.json2array(JSON.parse(app.extjson)))
     try {
       var data = [{name: app.newFormName, data: flexTools.json2array(JSON.parse(app.extjson))}];

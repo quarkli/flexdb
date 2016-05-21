@@ -138,6 +138,8 @@ This code may only be used under the MIT license.
           <!-- /form/new Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'form-edit')}}">
             <template is="dom-if" if="{{curTitle(title, 'Edit Form')}}">
+              <paper-icon-button id="btn-saveas" icon="assignment-turned-in" alt="Sava as" on-tap="popSaveAsDialog"></paper-icon-button>
+              <paper-tooltip for="btn-saveas">Save as</paper-tooltip>
               <paper-icon-button id="btn-restore" icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
               <paper-tooltip for="btn-restore">Restore</paper-tooltip>
             </template>
@@ -309,6 +311,17 @@ This code may only be used under the MIT license.
         <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
         <div class="buttons">
           <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">New</paper-button>
+          <paper-button dialog-dismiss>Cancel</paper-button>
+        </div>
+      </paper-dialog>
+    </template>
+
+    <template is="dom-if" if="{{1}}">
+      <paper-dialog id="saveasDialog" modal role="alertdialog">
+        <h2>Save as New Form</h2>
+        <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
+        <div class="buttons">
+          <paper-button dialog-confirm on-tap="saveas" disabled="[[!newFormName]]">Save as</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>
