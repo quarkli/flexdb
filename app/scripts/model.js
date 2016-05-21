@@ -120,6 +120,7 @@ This code may only be used under the MIT license.
 
     // push data into specific path with auto-generated id
     this.push = function(path, data) {
+      if (!uid) return;
       if (ubase) {
         ubase.child(path).push(data);
       }
@@ -127,6 +128,7 @@ This code may only be used under the MIT license.
 
     // set data value at specific path
     this.set = function(path, data) {
+      if (!uid) return;
       if (ubase) {
         ubase.child(path).set(data);
       }
@@ -134,6 +136,7 @@ This code may only be used under the MIT license.
 
     // get data from specific path
     this.get = function(path, cb) {
+      if (!uid) return;
       if (ubase) {
         ubase.child(path).once('value', snap=>{
           snapCb(snap, cb)
@@ -156,6 +159,7 @@ This code may only be used under the MIT license.
 
     // remove node at specific path
     this.remove = function(path) {
+      if (!uid) return;
       if (ubase) {
         ubase.child(path).remove();
       }
@@ -197,6 +201,7 @@ This code may only be used under the MIT license.
     };
 
     this.changePassword = function(oldpwd, newpwd, cb) {
+      if (!uid) return;
       fbase.changePassword({
         email       : authentication.password.email,
         oldPassword : oldpwd,
@@ -207,6 +212,7 @@ This code may only be used under the MIT license.
     };
 
     this.deleteAccount = function(pwd, cb) {
+      if (!uid) return;
       this.changePassword(pwd, pwd, e=>{
         if (e) {
           if (cb) cb(e);
