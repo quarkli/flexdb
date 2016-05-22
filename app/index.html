@@ -1,6 +1,12 @@
 <!doctype html>
 <!--
 @license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
+
+<!--
+@license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -8,11 +14,7 @@ The complete set of contributors may be found at http://polymer.github.io/CONTRI
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
 -->
-<!--
-@license
-Copyright (c) 2016 Quark Li. All rights reserved.
-This code may only be used under the MIT license.
--->
+
 
 <html lang="en">
 
@@ -96,7 +98,7 @@ This code may only be used under the MIT license.
 
           <a data-route="tableview" href="{{baseUrl}}tableview">
             <iron-icon icon="editor:border-all"></iron-icon>
-            <span>Data</span>
+            <span>Table</span>
           </a>
 
           <a data-route="compute" href="{{baseUrl}}compute">
@@ -150,9 +152,6 @@ This code may only be used under the MIT license.
           </template>
           <!-- /tableview Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tableview')}}">
-            <paper-icon-button icon="search" alt="search"></paper-icon-button>
-            <paper-icon-button icon="filter-list" alt="fliter-list"></paper-icon-button>
-            <paper-icon-button icon="save" alt="save"></paper-icon-button>
           </template>
           <!-- /compute Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'compute')}}">
@@ -192,12 +191,15 @@ This code may only be used under the MIT license.
             </section>
 
             <section id="tableview" data-route="tableview" tabindex="-1">
-              <!-- <paper-material id="tableview" elevation="1"> -->
-                <span class="page-title" tabindex="-1"></span>
-                <flex-table id="flxtable"></flex-table>
-              <!-- </paper-material> -->
+              <span class="page-title" tabindex="-1"></span>
+              <flex-tables id="flxtv" on-act="tableAct"></flex-tables>
             </section>
 
+<!--             <section id="tableview" data-route="tableview" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-tableview id="flxtv"></flex-tableview>
+            </section>
+ -->
             <section data-route="compute" tabindex="-1">
               <paper-material elevation="1">
                 <h1 class="page-title" tabindex="-1">Compute</h1>
@@ -265,63 +267,83 @@ This code may only be used under the MIT license.
     <!-- Add <paper-dialog> within <template> to avoid style inheritance and caused
     followwing element set to be hidden -->
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="modalLogin" modal role="alertdialog">
-        <h2>Login</h2>
+      <paper-dialog id="modalLogin" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+        <div class="header">
+          <h2>Login</h2>
+          <span class="space"></span>
+          <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        </div>
         <div>
-          <paper-input label="Email" type="email" value="{{email}}" autofocus></paper-input>
+          <paper-input class="defaultFocus" label="Email" type="email" value="{{email}}" autofocus></paper-input>
           <paper-input label="Password" type="password" value="{{password}}"></paper-input>
         <div>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="auth">Login</paper-button>
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="auth">Login</paper-button>
           <paper-button dialog-confirm on-tap="regUser">Register</paper-button>
         </div>
       </paper-dialog>
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="modalConfirm" modal role="alertdialog">
-        <h2>Cancel Edit</h2>
+      <paper-dialog id="modalConfirm" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+        <div class="header">
+          <h2>Cancel Edit</h2>
+          <span class="space"></span>
+          <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        </div>
         <div>
           <p>Give up current edit?</p>
         <div>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="cancelEdit">Yes</paper-button>
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="cancelEdit">Yes</paper-button>
           <paper-button dialog-dismiss>No</paper-button>
         </div>
       </paper-dialog>
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="importDialog" modal role="alertdialog">
-        <h2>New Form from JSON</h2>
+      <paper-dialog id="importDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+        <div class="header">
+          <h2>New Form from JSON</h2>
+          <span class="space"></span>
+          <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        </div>
         <div>
-          <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
+          <paper-input class="defaultFocus" label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
           <iron-autogrow-textarea label="JSON Data" style="max-height: 90px;max-width: 240px;" value="{{extjson}}" placeholder="Paste your JSON data here"></iron-autogrow-textarea>
         <div>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="newImport" disabled="[[!newFormName]]">New</paper-button>
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="newImport" disabled="[[!newFormName]]">New</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="newFormDialog" modal role="alertdialog">
-        <h2>New Form</h2>
-        <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
+      <paper-dialog id="newFormDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+        <div class="header">
+          <h2>New Form</h2>
+          <span class="space"></span>
+          <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        </div>
+        <paper-input class="defaultFocus" label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">New</paper-button>
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="newForm" disabled="[[!newFormName]]">New</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="saveasDialog" modal role="alertdialog">
-        <h2>Save as New Form</h2>
-        <paper-input label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
+      <paper-dialog id="saveasDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+        <div class="header">
+          <h2>Save as New Form</h2>
+          <span class="space"></span>
+          <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        </div>
+        <paper-input class="defaultFocus" label="Form Name" value="{{newFormName}}" maxlength="20"></paper-input>
         <div class="buttons">
-          <paper-button dialog-confirm on-tap="saveas" disabled="[[!newFormName]]">Save as</paper-button>
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="saveas" disabled="[[!newFormName]]">Save as</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>

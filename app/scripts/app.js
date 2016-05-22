@@ -1,3 +1,8 @@
+
+// @license
+// Copyright (c) 2016 Quark Li. All rights reserved.
+// This code may only be used under the MIT license.
+
 /*
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
@@ -14,6 +19,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // and give it some initial binding values
   // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
   var app = document.querySelector('#app');
+
+  // Initialize Applicaiton defalut values
+  resetDefaultValues();
 
   // Sets app default base URL
   app.baseUrl = '/';
@@ -254,6 +262,48 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     importDialog.toggle();
   };
 
+  app.tableAct = function(event, object, params) {
+    var table = event.target.id;
+    switch(object.cmd) {
+      case 'add':
+        console.log('open form in append mode');
+        break;
+      case 'view':
+        console.log('switch to tableview');
+        break;
+      case 'search':
+        console.log('pop seach dialog');
+        break;
+    }
+  };
+
+  app.dialogKeyHandle = function(event, object, params) {
+    var target = event.target;
+    var btn = null;
+
+    if (target.tagName.toLowerCase() !== 'paper-dialog') {
+      target = $(target).parents('paper-dialog')[0];
+    }
+
+    if (!target) return;
+
+    switch(event.keyCode) {
+      case 13:
+        btn = $(target).find('.defaultConfirm')[0];
+        break;
+      case 27:
+        btn = $(target).find('.defaultCancel')[0];
+        break;
+    }
+
+    if (btn && !btn.disabled) btn.click();
+  };
+
+  app.setFocus = function(event, object, params) {
+    var target = $(event.target).find('.defaultFocus')[0];
+    if (target) target.focus();
+  };
+
   // Private Functions
   function resetDefaultValues() {
     app.username = '';
@@ -278,8 +328,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // fetch data
     flexModel.on('table-schema', 'value', data=>{
       var d = []
+      flxtv.splice('tables', 0);
       data.forEach(e=>{
        d.push({name: e.key, data: flexTools.json2array(e.data)});
+       flxtv.push('tables', e.key);
       });
       formlist.refreshForms(d);
     });

@@ -30,22 +30,36 @@
         --paper-spinner-color: var(--google-teal-500);
       }
 
+      div.header {
+        @apply(--layout-horizontal);
+        color: var(--secondary-text-color);
+      }
+      div span.space {
+        @apply(--layout-flex);
+      }
+      paper-dialog {
+        min-width: 240px;
+      }
+      .paper-table {
+        border-radius: 4px;
+        height: 100%;
+        padding: 8px;
+        width: calc(98.66% - 16px);
+        margin: 8px auto;
+      }
       .paper-form {
         border-radius: 2px;
-        height: 100%;
-        padding: 16px;
+        height: 80%;
+        padding: 4px 12px;
         width: calc(98.66% - 16px);
         margin: 16px auto;
         background: var(--paper-indigo-50);
       }
-      .paper-form div.header {
-        @apply(--layout-horizontal);
-        color: var(--secondary-text-color);
-      }
-      .paper-form span.space {
-        @apply(--layout-flex);
-      }
       .paper-form paper-icon-button {
+        color: var(--accent-color);
+      }
+      .paper-table paper-icon-button {
+        margin-top: 12px;
         color: var(--accent-color);
       }
     </style>

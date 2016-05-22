@@ -1,16 +1,17 @@
 <!--
 @license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
+
+<!--
+@license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-<!--
-@license
-Copyright (c) 2016 Quark Li. All rights reserved.
-This code may only be used under the MIT license.
 -->
 
 <link rel="import" href="../../bower_components/polymer/polymer.html">
@@ -33,13 +34,13 @@ This code may only be used under the MIT license.
       <!-- header: form/sectioin name -->
       <div class="header">
         <template is="dom-if" if="{{isRoot}}">
-          <h1>{{id}}</h1>
+          <h2>{{id}}</h2>
         </template>
         <template is="dom-if" if="{{!isRoot}}">
           <h3>{{id}}</h3>
         </template>
         <span class="space"></span>
-        <template is="dom-if" if="{{!editMode}}">
+        <template is="dom-if" if="{{curMode(mode, 'default')}}">
         <template is="dom-if" if="{{isRoot}}">
           <paper-icon-button id="btn-editform" icon="create" alt="Edit" on-tap="editForm"></paper-icon-button>
           <paper-tooltip for="btn-editform">Edit Form</paper-tooltip>
@@ -47,7 +48,7 @@ This code may only be used under the MIT license.
           <paper-tooltip for="btn-dropform">Drop Form</paper-tooltip>
         </template>
         </template>
-        <template is="dom-if" if="{{editMode}}">
+        <template is="dom-if" if="{{curMode(mode, 'edit')}}">
           <paper-icon-button id="btn-additem" icon="add" alt="New" on-tap="editItem"></paper-icon-button>
           <paper-tooltip for="btn-additem">Add Item</paper-tooltip>
           <template is="dom-if" if="[[!isRoot]]">
@@ -63,27 +64,32 @@ This code may only be used under the MIT license.
 
       <!-- data body -->
       <template is="dom-if" if="[[data.length]]">
-        <iron-collapse>
+        <iron-collapse opened="[[curMode(mode, 'input')]]">
           <template is="dom-repeat" items="{{data}}">
             <template is="dom-if" if="[[isObject(item.v)]]">
               <div class="section" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
-                <flex-form id="{{item.k}}" data="{{item.v}}" edit-mode="[[editMode]]"></flex-form>
+                <flex-form id="{{item.k}}" data="{{item.v}}" mode="[[mode]]"></flex-form>
               </div>
             </template>
             <template is="dom-if" if="[[!isObject(item.v)]]">
               <paper-material class="paper-form" elevation="1">
               <div class="field" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
-                <div class="header">
-                  <h4>{{item.k}}</h4>
-                  <span class="space"></span>
-                  <template is="dom-if" if="[[editMode]]">
-                    <div>
-                      <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
-                      <paper-tooltip position="left">Drop Field</paper-tooltip>
-                    </div>
-                  </template>
-                </div>
-                <paper-input label="Default Value" value="{{item.v}}" readonly="[[!editMode]]"></paper-input>
+                <template is="dom-if" if="[[curMode(mode, 'edit')]]">
+                  <div class="header">
+                    <h4>{{item.k}}</h4>
+                    <span class="space"></span>
+                    <template is="dom-if" if="[[curMode(mode, 'edit')]]">
+                      <div>
+                        <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+                        <paper-tooltip position="left">Drop Field</paper-tooltip>
+                      </div>
+                    </template>
+                  </div>
+                  <paper-input label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]"></paper-input>
+                </template>
+                <template is="dom-if" if="[[curMode(mode, 'input')]]">
+                  <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]"></paper-input>
+                </template>
               </div>
               </paper-material>
             </template>
@@ -93,26 +99,41 @@ This code may only be used under the MIT license.
 
       <!-- FORM's JSON schema -->
       <template is="dom-if" if="{{isRoot}}">
-      <template is="dom-if" if="{{!editMode}}">
-        <pre>{{showSchema(data)}}</pre>
+      <template is="dom-if" if="{{curMode(mode, 'default')}}">
+        <div class="form-schema">
+          <div align="center">
+            <paper-icon-button id="btn-collap" icon="expand-more" alt="More" on-tap="toggleSchema"></paper-icon-button>
+          </div>
+          <iron-collapse>
+            <pre>{{showSchema(data)}}</pre>
+          </iron-collapse>
+        </div>
       </template>
       </template>
     </paper-material>
 
-    <paper-dialog id="addDialog" modal role="alertdialog">
-      <h2>Add Item</h2>
-      <paper-input label="New Item Name" value="{{newItemName}}" maxlength="20"></paper-input>
+    <paper-dialog id="addDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+      <div class="header">
+        <h2>Add Item</h2>
+        <span class="space"></span>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+      </div>
+      <paper-input class="defaultFocus" label="New Item Name" value="{{newItemName}}" maxlength="20"></paper-input>
       <div class="buttons">
         <paper-button dialog-confirm on-tap="addItem" disabled=[[!newItemName]]>Add SECTION</paper-button>
         <paper-button dialog-dismiss on-tap="addItem" disabled=[[!newItemName]]>Add FIELD</paper-button>
       </div>
     </paper-dialog>
 
-    <paper-dialog id="dropDialog" modal role="alertdialog">
-      <h2>Drop {{targetType}}</h2>
+    <paper-dialog id="dropDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+      <div class="header">
+        <h2>Drop {{targetType}}</h2>
+        <span class="space"></span>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+      </div>
       <p>Drop "{{targetKey}}"?</p>
       <div class="buttons">
-        <paper-button dialog-confirm on-tap="dropItem">Drop</paper-button>
+        <paper-button class="defaultConfirm" dialog-confirm on-tap="dropItem">Drop</paper-button>
         <paper-button dialog-dismiss>Cancel</paper-button>
       </div>
     </paper-dialog>
@@ -136,9 +157,9 @@ This code may only be used under the MIT license.
             type: Boolean,
             value: false
           },
-          editMode: {
-            type: Boolean,
-            value: false,
+          mode: {
+            type: String,
+            value: 'default',
             notify: true
           },
           editTarget: {
@@ -176,6 +197,10 @@ This code may only be used under the MIT license.
 
         isObject: function(tgt) {
           return typeof tgt == 'object';
+        },
+
+        curMode: function(mode, tgt) {
+          return mode == tgt;
         },
 
         toggleChild: function(e) {
@@ -261,6 +286,12 @@ This code may only be used under the MIT license.
 
         showSchema: function(data) {
           return JSON.stringify(flexTools.array2json(data), null, 2);
+        },
+
+        toggleSchema: function(e) {
+          var btn = e.target;
+          btn.icon = btn.icon.match('more') ? 'expand-less' : 'expand-more';
+          $(btn).parents('.form-schema').find('iron-collapse')[0].toggle();
         }
       });
     })();
