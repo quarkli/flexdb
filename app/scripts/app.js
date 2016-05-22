@@ -217,21 +217,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.resetChanges();
     flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
     if (app.title == 'Edit Form') {
-      app.saveEdit();
+      app.saveEdit(event, object, params);
     }
     else {
-      history.back();
+      if (event) page.back();   // if event is undefineed, cancel is triggered by page switch
+      formedit.refreshForms([]);
     }
-    formedit.refreshForms([]);
   };
 
   app.saveEdit = function(event, object, params) {
-    if (formedit)
     var table = params || formedit.$$('flex-form').id;
     flexModel.set('table-schema/' + table, {});
     flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
     formedit.refreshForms([]);
-    history.back();
+    if (event) page.back();   // if event is undefineed, cancel is triggered by page switch
   };
 
   app.saveas = function(event, object, params) {
@@ -268,11 +267,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       case 'add':
         console.log('open form in append mode');
         break;
-      case 'view':
+      case 'tableview':
         console.log('switch to tableview');
-        break;
-      case 'search':
-        console.log('pop seach dialog');
         break;
     }
   };

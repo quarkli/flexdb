@@ -51,7 +51,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page(app.baseUrl, homepage);
 
     function homepage() {
-      flexTools.disableBackspace(0);
+      if (formedit.forms.length) app.cancelEdit();
       app.route = 'forms';
       app.title = 'Form';
       app.desp = 'Manage forms';
@@ -65,7 +65,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return ;
       }
 
-      flexTools.disableBackspace(1);
       app.route = 'form-edit';
       app.title = 'Edit Form';
       app.desp = 'Edit form';
@@ -87,7 +86,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return;
       }
 
-      flexTools.disableBackspace(1);
       app.route = 'form-edit';
       app.title = 'New Form';
       app.desp = 'Create new form';
@@ -101,7 +99,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/tableview', function() {
-      flexTools.disableBackspace(0);
+      if (formedit.forms.length) app.cancelEdit();
       app.route = 'tableview';
       app.title = 'Table';
       app.desp = 'View tables';
@@ -109,7 +107,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/compute', function() {
-      flexTools.disableBackspace(0);
+      if (formedit.forms.length) app.cancelEdit();
       app.route = 'compute';
       app.title = 'Compute';
       app.desp = 'Computing data';
@@ -117,11 +115,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/account', function() {
+      if (formedit.forms.length) app.cancelEdit();
       if (!app.username) {
         page('/');
         return;
       }
-      flexTools.disableBackspace(0);
       app.route = 'account';
       app.title = 'Account';
       app.desp = 'Manage account';
@@ -129,7 +127,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/registration', function() {
-      flexTools.disableBackspace(0);
+      if (formedit.forms.length) app.cancelEdit();
       app.email = '';
       app.password = '';
       app.route = 'reguser';
@@ -140,7 +138,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     // 404
     page('*', function() {
-      flexTools.disableBackspace(0);
       app.$.toast.text = 'Can\'t find: ' + window.location.href  + '. Redirected you to Home Page';
       app.$.toast.show();
       page.redirect(app.baseUrl);

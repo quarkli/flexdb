@@ -206,26 +206,6 @@ This code may only be used under the MIT license.
       }
       return iter(ary, {});
     }
-
-    this.disableBackspace = disableBackspace;
-    // disable Backspace key event to prevent leaving data editing page
-    function _hdlBackspace(e){
-      var rx = /INPUT|SELECT|TEXTAREA/i;
-      if( e.which == 8 ){ // 8 == backspace
-        if(!rx.test(e.target.tagName) || e.target.disabled || e.target.readOnly ){
-            e.preventDefault();
-        }
-      }
-    }
-
-    function disableBackspace(disabled){
-        if (disabled) {
-          $(document).on("keydown keypress", _hdlBackspace);
-        }
-        else {
-          $(document).off("keydown keypress", _hdlBackspace);
-        }
-    };
   }
 
   window.flexTools = window.flexTools || new FlexTools();
