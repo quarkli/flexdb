@@ -215,6 +215,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.cancelEdit = function(event, object, params) {
     app.resetChanges();
+    page.back();
     flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
     if (app.title == 'Edit Form') {
       app.saveEdit(event, object, params);
@@ -229,6 +230,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var table = params || formedit.$$('flex-form').id;
     flexModel.set('table-schema/' + table, {});
     flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
+    page.back();
     formedit.refreshForms([]);
     if (event) page.back();   // if event is undefineed, cancel is triggered by page switch
   };
@@ -265,10 +267,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var table = event.target.id;
     switch(object.cmd) {
       case 'add':
-        console.log('open form in append mode');
+        page('/form/' + table + '/input');
         break;
       case 'tableview':
-        console.log('switch to tableview');
+        tableview.curtable = table;
+        page('/tableview');
         break;
     }
   };
@@ -323,11 +326,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     // fetch data
     flexModel.on('table-schema', 'value', data=>{
-      var d = []
-      flxtv.splice('tables', 0);
+      var d = [];
+      tablelist.splice('tables', 0);
       data.forEach(e=>{
-       d.push({name: e.key, data: flexTools.json2array(e.data)});
-       flxtv.push('tables', e.key);
+        var form = {name: e.key, data: flexTools.json2array(e.data)};
+        d.push(form);
+        tablelist.push('tables', form.name);
       });
       formlist.refreshForms(d);
     });

@@ -20,15 +20,7 @@ This code may only be used under the MIT license.
       }
 
     </style>
-
-    <paper-dropdown-menu label="select a table" name="table" required value="{{curtable}}">
-      <paper-menu class="dropdown-content">
-        <template is="dom-repeat" items="{{tables}}">
-          <paper-item value="{{item}}">{{item}}</paper-item>
-        </template>
-      </paper-menu>
-    </paper-dropdown-menu>
-
+    <h2>{{curtable}}</h2>
     <paper-material elevation="1">
       <table id="ftab-table"></table>
     </paper-material>
@@ -185,11 +177,6 @@ This code may only be used under the MIT license.
             value: null,
             observer: 'showTable'
           },
-          tables: {
-            type: Array,
-            value: [],
-            notify: true
-          },
           data: {
             type: Array,
             value: [],
@@ -197,26 +184,16 @@ This code may only be used under the MIT license.
           }
         },
 
-        ready: function() {
-          flexModel.on('table-schema', 'value', data=>{
-            data.forEach(e=>{
-              this.push('tables', e.key);
-            });
-          });
-        },
-
-        showTable: function(value) {
+        showTable: function() {
           srcData.splice(0);
           refreshTable();
 
-          if (value) {
-            flexModel.get('source-data/' + value, data=>{
-                data.forEach(e=>{
-                    srcData.push({key: e.key, data: e.data});
-                });
-                refreshTable();
-            });
-          }
+          flexModel.get('source-data/' + this.curtable, data=>{
+              data.forEach(e=>{
+                  srcData.push({key: e.key, data: e.data});
+              });
+              refreshTable();
+          });
         }
       });
     })();

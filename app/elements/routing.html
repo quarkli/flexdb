@@ -73,35 +73,46 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       var form = formlist.splice('forms', id, 1)
       formedit.refreshForms(form);
-      formedit.mode = 'edit';
-      setTimeout(()=>{
-        var collap = $(formedit).find('iron-collapse')[0];
-        if (collap && !collap.opened) collap.toggle();
-      }, 100);
     });
 
     page('/form/new', function() {
       if (!formedit.forms.length) {
         page('/');
-        return;
+        return ;
       }
 
       app.route = 'form-edit';
       app.title = 'New Form';
       app.desp = 'Create new form';
       setFocus(app.route);
+    });
 
-      formedit.mode = 'edit';
-      setTimeout(()=>{
-          var collap = $(formedit).find('iron-collapse')[0];
-          if (collap && !collap.opened) collap.toggle();
-      }, 100);
+    page('/form/:id/input', function(data) {
+      var id = formlist.forms.findIndex(e=>{return e.name == data.params.id;});
+      if (id < 0) {
+        page('/');
+        return ;
+      }
+
+      app.route = 'form-input';
+      app.title = 'Input Data';
+      app.desp = 'Data Input';
+      setFocus(app.route);
+      var form = formlist.splice('forms', id, 1)
+      formedit.refreshForms(form);
+    });
+
+    page('/tables', function() {
+      app.route = 'tables';
+      app.title = 'Table';
+      app.desp = 'List tables';
+      setFocus(app.route);
     });
 
     page('/tableview', function() {
       if (formedit.forms.length) app.cancelEdit();
       app.route = 'tableview';
-      app.title = 'Table';
+      app.title = 'Table View';
       app.desp = 'View tables';
       setFocus(app.route);
     });

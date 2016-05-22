@@ -64,7 +64,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <!-- data body -->
       <template is="dom-if" if="[[data.length]]">
-        <iron-collapse opened="[[curMode(mode, 'input')]]">
+        <iron-collapse opened="[[!curMode(mode, 'default')]]">
           <template is="dom-repeat" items="{{data}}">
             <template is="dom-if" if="[[isObject(item.v)]]">
               <div class="section" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">

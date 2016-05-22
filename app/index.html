@@ -96,7 +96,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <span>Form</span>
           </a>
 
-          <a data-route="tableview" href="{{baseUrl}}tableview">
+          <a data-route="tables" href="{{baseUrl}}tables">
             <iron-icon icon="editor:border-all"></iron-icon>
             <span>Table</span>
           </a>
@@ -150,8 +150,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-icon-button id="btn-canceledit" icon="clear" alt="Cancel" on-tap="popModalConfirm"></paper-icon-button>
             <paper-tooltip for="btn-canceledit">Cancel Edit</paper-tooltip>
           </template>
-          <!-- /tableview Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'tableview')}}">
+          <!-- /tables Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'tables')}}">
           </template>
           <!-- /compute Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'compute')}}">
@@ -182,24 +182,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
             <section data-route="forms" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-forms id="formlist"></flex-forms>
+              <flex-forms id="formlist" mode="default"></flex-forms>
             </section>
 
             <section data-route="form-edit" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-forms id="formedit"></flex-forms>
+              <flex-forms id="formedit" mode="edit"></flex-forms>
             </section>
 
-            <section id="tableview" data-route="tableview" tabindex="-1">
+            <section data-route="form-input" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-tables id="flxtv" on-act="tableAct"></flex-tables>
+              <flex-forms id="forminput" mode="input"></flex-forms>
             </section>
 
-<!--             <section id="tableview" data-route="tableview" tabindex="-1">
+            <section data-route="tables" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-tableview id="flxtv"></flex-tableview>
+              <flex-tables id="tablelist" on-act="tableAct"></flex-tables>
             </section>
- -->
+
+            <section data-route="tableview" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-tableview id="tableview"></flex-tables>
+            </section>
+
             <section data-route="compute" tabindex="-1">
               <paper-material elevation="1">
                 <h1 class="page-title" tabindex="-1">Compute</h1>
