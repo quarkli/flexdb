@@ -1,0 +1,224 @@
+<!--
+@license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../elements.html">
+<link rel="import" href="../../include.html">
+
+<dom-module id="flex-tableview">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      span {
+        @apply(--paper-font-body1);
+      }
+
+    </style>
+
+    <paper-dropdown-menu label="select a table" name="table" required value="{{curtable}}">
+      <paper-menu class="dropdown-content">
+        <template is="dom-repeat" items="{{tables}}">
+          <paper-item value="{{item}}">{{item}}</paper-item>
+        </template>
+      </paper-menu>
+    </paper-dropdown-menu>
+
+    <paper-material elevation="1">
+      <table id="ftab-table"></table>
+    </paper-material>
+
+  </template>
+  <script>
+    (function() {
+      'use strict';
+
+      var srcData = [];
+
+      function refreshTable(sortNode, descending){
+        $('#ftab-table').empty();
+
+        srcData.forEach((e,i)=>{
+          if (i == 0) {
+            $('<tr>').attr('id', 'tb-head').appendTo('table');
+            flexTools.objectNodeIterator(e.data, (e,k,p,o)=>{
+              var header = $('<th>').html(k);
+              var cls = p.join('-');
+              header.addClass(cls);
+              if (typeof e == 'object') {
+                header.attr('rowspan', srcData.length+1);
+                header.on('click', e=>{
+                  if ($('.' + p.join('-')).first().is(":visible")) {
+                    $('.' + p.join('-')).hide();
+                  }
+                  else {
+                    $('.' + p.join('-')).show();
+                  }
+                });
+              }
+              else {
+                header.on('click', sortTable);
+                if (k == sortNode) {
+                  if (descending) {
+                    header.append($('<iron-icon icon="arrow-drop-down">'));
+                  }
+                  else {
+                    header.append($('<iron-icon icon="arrow-drop-up">'));
+                  }
+                }
+
+                var cls = '';
+                p.forEach(path=>{
+                  cls += path;
+                  header.addClass(cls);
+                  cls += '-';
+                });
+              }
+              header.appendTo('#tb-head');
+            }, false);
+          }
+          var tr = $('<tr>').attr('id', e.key).appendTo('table');
+          flexTools.objectNodeIterator(e.data, (e,k,p,o)=>{
+            var nodePath = p.slice();
+            nodePath.push(k);
+            nodePath = nodePath.join('-');
+
+            var format = isNaN(e) ? isNaN((new Date(e)).valueOf()) ? 'text' : 'date' : 'number';
+
+            var cell =$('<td>').attr('name', nodePath).addClass(format).html(e);
+            cell.on('click',editField);
+            cell.appendTo(tr);
+
+            var cls = '';
+            p.forEach(path=>{
+              cls += path;
+              cell.addClass(cls);
+              cls += '-';
+            });
+          });
+        });
+
+        function sortTable(e) {
+          e.preventDefault();
+          var curNode = $(e.target);
+          if (curNode.prop('tagName') != 'TH') curNode = curNode.parents('th');
+
+          var nodeIcon = $($('iron-icon[icon="arrow-drop-down"]')[0] ||
+            $('iron-icon[icon="arrow-drop-up"]')[0]);
+
+          var descending = (nodeIcon.length && nodeIcon.parent()[0] == curNode[0] &&
+            nodeIcon.attr('icon') == 'arrow-drop-up');
+
+          nodeIcon.remove();
+
+          var node = curNode.html();
+
+          if (descending) {
+            curNode.append($('<iron-icon icon="arrow-drop-down">'));
+          }
+          else {
+            curNode.append($('<iron-icon icon="arrow-drop-up">'));
+          }
+
+          flexTools.sort(srcData, node, !descending);
+          refreshTable(node, descending);
+        }
+
+      }
+
+      function editField(e) {
+          var td = $(e.target);
+          var val = td.html();
+          var ipt = $('<input>').width(td.width()).val(val).on('keydown blur', endEdit);
+          if (!isNaN(val)) ipt.css('text-align', 'right');
+          td.attr('value', val).html('').append(ipt);
+          ipt.focus().select();
+      }
+
+      function endEdit(e) {
+          var ipt = $(e.target);
+          var td = ipt.parent('td');
+          var kc = e.keyCode;
+          if (kc && kc != 9 && kc != 13 && kc != 27) return;
+          e.preventDefault();
+
+          if (kc == 27) ipt.val(td.attr('value'));
+          td.html(ipt.val());
+
+          // if user changed value, update to the cloud DB
+          if (ipt.val() != td.attr('value')) {
+            var curtable =  $('flex-tableview')[0].curtable;
+            var path = td.parent().attr('id');
+            var key = td.attr('name');
+            var field = (['source-data', curtable, path, key]).join('/');
+            flexModel.set(field, ipt.val());
+
+            // refecth data to keep local copy in-sync, but not refresh dom
+            flexModel.get('source-data/' + curtable, data=>{
+                data.forEach(e=>{
+                    srcData.push({key: e.key, data: e.data});
+                });
+            });
+          }
+          ipt.remove();
+          if (kc == 9) {
+            if (td.next().length) {
+              td.next().click();
+            }
+            else {
+              td.parent().next().find('td').first().click();
+            }
+          }
+      }
+
+      Polymer({
+        is: 'flex-tableview',
+
+        properties: {
+          curtable: {
+            type: String,
+            value: null,
+            observer: 'showTable'
+          },
+          tables: {
+            type: Array,
+            value: [],
+            notify: true
+          },
+          data: {
+            type: Array,
+            value: [],
+            notify: true
+          }
+        },
+
+        ready: function() {
+          flexModel.on('table-schema', 'value', data=>{
+            data.forEach(e=>{
+              this.push('tables', e.key);
+            });
+          });
+        },
+
+        showTable: function(value) {
+          srcData.splice(0);
+          refreshTable();
+
+          if (value) {
+            flexModel.get('source-data/' + value, data=>{
+                data.forEach(e=>{
+                    srcData.push({key: e.key, data: e.data});
+                });
+                refreshTable();
+            });
+          }
+        }
+      });
+    })();
+  </script>
+</dom-module>
