@@ -42,21 +42,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <span class="space"></span>
         <template is="dom-if" if="{{curMode(mode, 'default')}}">
         <template is="dom-if" if="{{isRoot}}">
-          <paper-icon-button id="btn-editform" icon="create" alt="Edit" on-tap="editForm"></paper-icon-button>
+          <paper-icon-button id="btn-editform" icon="create" alt="Edit" on-tap="editForm" tabIndex="-1"></paper-icon-button>
           <paper-tooltip for="btn-editform">Edit Form</paper-tooltip>
-          <paper-icon-button id="btn-dropform" icon="clear" alt="Drop" on-tap="dropForm"></paper-icon-button>
+          <paper-icon-button id="btn-dropform" icon="clear" alt="Drop" on-tap="dropForm" tabIndex="-1"></paper-icon-button>
           <paper-tooltip for="btn-dropform">Drop Form</paper-tooltip>
         </template>
         </template>
         <template is="dom-if" if="{{curMode(mode, 'edit')}}">
-          <paper-icon-button id="btn-additem" icon="add" alt="New" on-tap="editItem"></paper-icon-button>
+          <paper-icon-button id="btn-additem" icon="add" alt="New" on-tap="editItem" tabIndex="-1"></paper-icon-button>
           <paper-tooltip for="btn-additem">Add Item</paper-tooltip>
           <template is="dom-if" if="[[!isRoot]]">
-            <paper-icon-button id="btn-dropsec" icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+            <paper-icon-button id="btn-dropsec" icon="clear" alt="Drop" on-tap="editItem" tabIndex="-1"></paper-icon-button>
             <paper-tooltip for="btn-dropsec">Drop Section</paper-tooltip>
           </template>
           <template is="dom-if" if="[[data.length]]">
-            <paper-icon-button id="btn-collap" icon="expand-more" alt="More" on-tap="toggleChild"></paper-icon-button>
+            <paper-icon-button id="btn-collap" icon="expand-more" alt="More" on-tap="toggleChild" tabIndex="-1"></paper-icon-button>
             <paper-tooltip for="btn-collap">Collapse</paper-tooltip>
           </template>
         </template>
@@ -80,15 +80,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <span class="space"></span>
                     <template is="dom-if" if="[[curMode(mode, 'edit')]]">
                       <div>
-                        <paper-icon-button icon="clear" alt="Drop" on-tap="editItem"></paper-icon-button>
+                        <paper-icon-button icon="clear" alt="Drop" on-tap="editItem" tabIndex="-1"></paper-icon-button>
                         <paper-tooltip position="left">Drop Field</paper-tooltip>
                       </div>
                     </template>
                   </div>
-                  <paper-input label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]"></paper-input>
+                  <paper-input label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
                 </template>
                 <template is="dom-if" if="[[curMode(mode, 'input')]]">
-                  <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]"></paper-input>
+                  <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
                 </template>
               </div>
               </paper-material>
@@ -102,7 +102,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <template is="dom-if" if="{{curMode(mode, 'default')}}">
         <div class="form-schema">
           <div align="center">
-            <paper-icon-button id="btn-collap" icon="expand-more" alt="More" on-tap="toggleSchema"></paper-icon-button>
+            <paper-icon-button id="btn-collap" icon="expand-more" alt="More" on-tap="toggleSchema" tabIndex="-1"></paper-icon-button>
           </div>
           <iron-collapse>
             <pre>{{showSchema(data)}}</pre>
@@ -116,7 +116,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div class="header">
         <h2>Add Item</h2>
         <span class="space"></span>
-        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss  tabIndex="-1"></paper-icon-button>
       </div>
       <paper-input class="defaultFocus" label="New Item Name" value="{{newItemName}}" maxlength="20"></paper-input>
       <div class="buttons">
@@ -129,11 +129,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div class="header">
         <h2>Drop {{targetType}}</h2>
         <span class="space"></span>
-        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss tabIndex="-1"></paper-icon-button>
       </div>
       <p>Drop "{{targetKey}}"?</p>
       <div class="buttons">
         <paper-button class="defaultConfirm" dialog-confirm on-tap="dropItem">Drop</paper-button>
+        <paper-button dialog-dismiss>Cancel</paper-button>
+      </div>
+    </paper-dialog>
+
+    <paper-dialog id="saveDataDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
+      <div class="header">
+        <h2>Save Input Data?</h2>
+        <span class="space"></span>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss tabIndex="-1"></paper-icon-button>
+      </div>
+      <div class="buttons">
+        <paper-button class="defaultConfirm" dialog-confirm on-tap="saveData">Save</paper-button>
         <paper-button dialog-dismiss>Cancel</paper-button>
       </div>
     </paper-dialog>
@@ -193,6 +205,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             type: String,
             value: ''
           }
+        },
+
+        listeners: {
+          'keydown': 'ctrlKeyHandle'
         },
 
         isObject: function(tgt) {
@@ -292,6 +308,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var btn = e.target;
           btn.icon = btn.icon.match('more') ? 'expand-less' : 'expand-more';
           $(btn).parents('.form-schema').find('iron-collapse')[0].toggle();
+        },
+
+        inputKeyHandle: function(e) {
+          if (e.keyCode == 13) {
+            var target = $(e.target).parents('paper-input')[0];
+            var rootform = $(target).parents('flex-forms').find('flex-form')[0];
+            var inputs = $(rootform).find('.field>paper-input');
+            for (var i = 0;i < inputs.length; i++) {
+              if (inputs[i] == target) break;
+            }
+            if (++i < inputs.length) {
+              inputs[i].focus();
+            }
+            else {
+              this.$$('#saveDataDialog').toggle();
+            }
+          }
+        },
+
+        ctrlKeyHandle: function(e) {
+          if (this.mode == 'input' && e.ctrlKey && e.keyCode == 83) {
+            this.$$('#saveDataDialog').toggle();
+            e.preventDefault();
+          }
+        },
+
+        saveData: function() {
+          this.fire('completed');
         }
       });
     })();

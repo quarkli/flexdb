@@ -232,6 +232,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.saveEdit(event, object, app.newFormName);
   };
 
+  app.finishInput = function(event, object, params) {
+    page('/tables');
+  };
+
+  app.saveData = function(event, object, params) {
+    var table = forminput.$$('flex-form').id;
+    var hasData = false;
+    var data = flexTools.array2json(forminput.forms[0].data);
+    flexTools.objectNodeIterator(data, e=>{hasData = hasData || e.length > 0});
+    if (hasData) {
+      flexModel.push('source-data/' + table, flexTools.array2json(forminput.forms[0].data));
+      page('/form/' + table + '/input');
+    }
+    else {
+      popToast("No data inputed, save skipped!", '#F48FB1');
+    }
+  };
+
   app.popModalConfirm = function(event, object, params) {
     modalConfirm.toggle();
   }
@@ -316,13 +334,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // fetch data
     flexModel.on('table-schema', 'value', data=>{
       var d = [];
-      tablelist.splice('tables', 0);
       data.forEach(e=>{
         var form = {name: e.key, data: flexTools.json2array(e.data)};
         d.push(form);
-        tablelist.push('tables', form.name);
       });
       formlist.refreshForms(d);
+    });
+
+    flexModel.on('source-data', 'value', data=>{
+      tablelist.splice('tables', 0);
+      data.forEach(e=>{
+        tablelist.push('tables', {name: e.key, rows: flexTools.json2array(e.data).length});
+      });
     });
 
     page('/');

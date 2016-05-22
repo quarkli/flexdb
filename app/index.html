@@ -150,6 +150,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-icon-button id="btn-canceledit" icon="clear" alt="Cancel" on-tap="popModalConfirm"></paper-icon-button>
             <paper-tooltip for="btn-canceledit">Cancel Edit</paper-tooltip>
           </template>
+          <!-- /form/input Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'form-input')}}">
+            <paper-icon-button id="btn-savedata" icon="save" alt="save" on-tap="saveData"></paper-icon-button>
+            <paper-tooltip for="btn-savedata">Save Data</paper-tooltip>
+            <paper-icon-button id="btn-finished" icon="check" alt="finished" on-tap="finishInput"></paper-icon-button>
+            <paper-tooltip for="btn-finished">Input Finished</paper-tooltip>
+          </template>
           <!-- /tables Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tables')}}">
           </template>
@@ -192,7 +199,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             <section data-route="form-input" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-forms id="forminput" mode="input"></flex-forms>
+              <flex-forms id="forminput" mode="input" on-completed="saveData"></flex-forms>
             </section>
 
             <section data-route="tables" tabindex="-1">

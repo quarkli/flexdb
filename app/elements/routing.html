@@ -130,7 +130,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/account', function() {
-      if (!app.authented) {
+      if (!app.authenticated) {
         page('/');
         return;
       }
