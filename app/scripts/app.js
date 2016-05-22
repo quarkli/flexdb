@@ -197,7 +197,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         popToast("Form name duplicated!", '#F48FB1');
         return;
     }
-    // console.log(flexTools.json2array(JSON.parse(app.extjson)))
+
     try {
       var data = [{name: app.newFormName, data: flexTools.json2array(JSON.parse(app.extjson))}];
       formedit.refreshForms(data);
@@ -214,25 +214,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.cancelEdit = function(event, object, params) {
-    app.resetChanges();
-    page.back();
-    flexModel.set('table-schema/' + formedit.$$('flex-form').id, {});
-    if (app.title == 'Edit Form') {
-      app.saveEdit(event, object, params);
-    }
-    else {
-      if (event) page.back();   // if event is undefineed, cancel is triggered by page switch
-      formedit.refreshForms([]);
-    }
+    page('/');
   };
 
   app.saveEdit = function(event, object, params) {
     var table = params || formedit.$$('flex-form').id;
     flexModel.set('table-schema/' + table, {});
     flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
-    page.back();
-    formedit.refreshForms([]);
-    if (event) page.back();   // if event is undefineed, cancel is triggered by page switch
+    page('/');
   };
 
   app.saveas = function(event, object, params) {
@@ -298,7 +287,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     if (btn && !btn.disabled) btn.click();
   };
 
-  app.setFocus = function(event, object, params) {
+  app.setDialogFocus = function(event, object, params) {
     var target = $(event.target).find('.defaultFocus')[0];
     if (target) target.focus();
   };

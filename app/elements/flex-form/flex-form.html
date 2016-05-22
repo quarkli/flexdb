@@ -112,7 +112,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </template>
     </paper-material>
 
-    <paper-dialog id="addDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+    <paper-dialog id="addDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
       <div class="header">
         <h2>Add Item</h2>
         <span class="space"></span>
@@ -125,7 +125,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </div>
     </paper-dialog>
 
-    <paper-dialog id="dropDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+    <paper-dialog id="dropDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
       <div class="header">
         <h2>Drop {{targetType}}</h2>
         <span class="space"></span>

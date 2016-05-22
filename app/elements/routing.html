@@ -51,7 +51,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page(app.baseUrl, homepage);
 
     function homepage() {
-      if (formedit.forms.length) app.cancelEdit();
       app.route = 'forms';
       app.title = 'Form';
       app.desp = 'Manage forms';
@@ -71,8 +70,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       app.params = data.params;
       setFocus(app.route);
 
-      var form = formlist.splice('forms', id, 1)
-      formedit.refreshForms(form);
+      try{
+        var form = JSON.parse(JSON.stringify(formlist.forms[id]));
+        formedit.refreshForms([form]);
+      }
+      catch(e) {}
     });
 
     page('/form/new', function() {
@@ -98,8 +100,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       app.title = 'Input Data';
       app.desp = 'Data Input';
       setFocus(app.route);
-      var form = formlist.splice('forms', id, 1)
-      formedit.refreshForms(form);
+
+      try{
+        var form = JSON.parse(JSON.stringify(formlist.forms[id]));
+        forminput.refreshForms([form]);
+      }
+      catch(e) {}
     });
 
     page('/tables', function() {
@@ -110,7 +116,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/tableview', function() {
-      if (formedit.forms.length) app.cancelEdit();
       app.route = 'tableview';
       app.title = 'Table View';
       app.desp = 'View tables';
@@ -118,7 +123,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/compute', function() {
-      if (formedit.forms.length) app.cancelEdit();
       app.route = 'compute';
       app.title = 'Compute';
       app.desp = 'Computing data';
@@ -126,8 +130,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/account', function() {
-      if (formedit.forms.length) app.cancelEdit();
-      if (!app.username) {
+      if (!app.authented) {
         page('/');
         return;
       }
@@ -138,7 +141,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/registration', function() {
-      if (formedit.forms.length) app.cancelEdit();
       app.email = '';
       app.password = '';
       app.route = 'reguser';

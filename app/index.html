@@ -272,7 +272,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <!-- Add <paper-dialog> within <template> to avoid style inheritance and caused
     followwing element set to be hidden -->
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="modalLogin" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+      <paper-dialog id="modalLogin" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
         <div class="header">
           <h2>Login</h2>
           <span class="space"></span>
@@ -290,7 +290,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="modalConfirm" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+      <paper-dialog id="modalConfirm" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
         <div class="header">
           <h2>Cancel Edit</h2>
           <span class="space"></span>
@@ -307,7 +307,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="importDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+      <paper-dialog id="importDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
         <div class="header">
           <h2>New Form from JSON</h2>
           <span class="space"></span>
@@ -325,7 +325,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="newFormDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+      <paper-dialog id="newFormDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
         <div class="header">
           <h2>New Form</h2>
           <span class="space"></span>
@@ -340,7 +340,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </template>
 
     <template is="dom-if" if="{{1}}">
-      <paper-dialog id="saveasDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setFocus(event)">
+      <paper-dialog id="saveasDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
         <div class="header">
           <h2>Save as New Form</h2>
           <span class="space"></span>
