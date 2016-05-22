@@ -346,6 +346,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       data.forEach(e=>{
         tablelist.push('tables', {name: e.key, rows: flexTools.json2array(e.data).length});
       });
+      formlist.forms.forEach(e=>{
+        if (!tablelist.tables.find(f=>{return f.name == e.name})) {
+          tablelist.push('tables', {name: e.name, rows: 0});
+        }
+      });
     });
 
     page('/');
@@ -356,6 +361,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     popToast('User has logged out!');
 
     formlist.splice('forms', 0);
+    tablelist.splice('tables', 0);
     resetDefaultValues();
     page('/');
   }
