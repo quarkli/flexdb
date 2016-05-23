@@ -47,7 +47,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   window.addEventListener('WebComponentsReady', function() {
     // imports are loaded and elements have been registered
      if (flexModel && !flexModel.uid) {
-      Polymer.dom(document).querySelector('#modalLogin').toggle();
+       $('#modalLogin')[0].toggle();
     }
     else {
       initApp();
@@ -104,19 +104,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return pwd && pwd.length && pwd == cfm;
   };
 
+  // Generic Functions
+  app.getForm = function(name) {
+    var id = formlist.forms.findIndex(function(e){return e.name == name;});
+    try{
+      return id > -1 ?　JSON.parse(JSON.stringify(formlist.forms[id])) : undefined;
+    }
+    catch(e) {
+      return undefined;
+    }
+  };
+
+  app.getData = function(tablename, cb) {
+    flexModel.get('source-data/' + tablename, function(data) {
+      if (cb) cb(data);
+    });
+  };
+
   // Tap-triggered Functions
   app.login = function(event, object, params) {
     if (flexModel && flexModel.uid) {
       logoutApp();
     }
     else {
-      Polymer.dom(document).querySelector('#modalLogin').toggle();
+      $('#modalLogin')[0].toggle();
     }
     app.closeDrawer();
   };
 
   app.auth = function(event, object, params) {
-    if (flexModel) flexModel.auth(app.email, app.password, (err, uid)=>{
+    if (flexModel) flexModel.auth(app.email, app.password, function(err, uid){
       if (uid) {
         initApp();
       }
@@ -131,7 +148,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.newUser = function(event, object, params) {
-    flexModel.newUser(app.email, app.password, (e,d)=>{
+    flexModel.newUser(app.email, app.password, function(e,d){
       if (e) {
         popToast("Registration failed! Reason: " + e, '#F48FB1');
       }
@@ -148,7 +165,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       popToast("You cannot change password of guest account!", '#F48FB1');
     }
     else {
-      flexModel.changePassword(app.password, app.newPassword, e=>{
+      flexModel.changePassword(app.password, app.newPassword, function(e){
         if (e) {
           popToast("Passowrd change failed! Reason: " + e, '#F48FB1');
         }
@@ -164,7 +181,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       popToast("You cannot delete guest account!", '#F48FB1');
     }
     else {
-      flexModel.deleteAccount(app.password, e=>{
+      flexModel.deleteAccount(app.password, function(e){
         if (e) {
           popToast("Deleting account failed! Reason: " + e, '#F48FB1');
         }
@@ -208,7 +225,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.resetChanges = function(event, object, params) {
     formedit.$$('flex-form').pop('data');
-    flexModel.get('table-schema/' + formedit.$$('flex-form').id, (d, o)=>{
+    flexModel.get('table-schema/' + formedit.$$('flex-form').id, function(d, o){
       formedit.refreshForms([{name: formedit.$$('flex-form').id, data: flexTools.json2array(o)}]);
     });
   };
@@ -233,15 +250,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.finishInput = function(event, object, params) {
-    page('/tables');
+    page('/tableview/' + forminput.forms[0].name);
   };
 
   app.saveData = function(event, object, params) {
-    var table = forminput.$$('flex-form').id;
+    var table = forminput.forms[0].name;
     var hasData = false;
     var data = flexTools.array2json(forminput.forms[0].data);
-    flexTools.objectNodeIterator(data, e=>{hasData = hasData || e.length > 0});
-    if (hasData) {
+    flexTools.objectNodeIterator(data, function(e){hasData = hasData || e.length > 0});
+
+    if (formExists(table) && hasData) {
       flexModel.push('source-data/' + table, flexTools.array2json(forminput.forms[0].data));
       page('/form/' + table + '/input');
     }
@@ -277,8 +295,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         page('/form/' + table + '/input');
         break;
       case 'tableview':
-        tableview.curtable = table;
-        page('/tableview');
+        page('/tableview/' + table);
         break;
     }
   };
@@ -332,26 +349,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     popToast('User has logged in!', '#B2DFDB');
 
     // fetch data
-    flexModel.on('table-schema', 'value', data=>{
+    flexModel.on('table-schema', 'value', function(data){
       var d = [];
-      data.forEach(e=>{
+      data.forEach(function(e){
         var form = {name: e.key, data: flexTools.json2array(e.data)};
         d.push(form);
       });
       formlist.refreshForms(d);
+      updateTablelist();
     });
 
-    flexModel.on('source-data', 'value', data=>{
+    flexModel.on('source-data', 'value', function(data){
       tablelist.splice('tables', 0);
-      data.forEach(e=>{
+      data.forEach(function(e){
         tablelist.push('tables', {name: e.key, rows: flexTools.json2array(e.data).length});
       });
-      formlist.forms.forEach(e=>{
-        if (!tablelist.tables.find(f=>{return f.name == e.name})) {
+      updateTablelist();
+    });
+
+    function updateTablelist() {
+      formlist.forms.forEach(function(e){
+        if (!tablelist.tables.find(function(f){return f.name == e.name})) {
           tablelist.push('tables', {name: e.name, rows: 0});
         }
       });
-    });
+    }
 
     page('/');
   }
@@ -367,8 +389,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   }
 
   function formExists(name) {
-    return formlist.forms.find(e=>{return e.name == name}) || 
-      formedit.forms.find(e=>{return e.name == name});
+    return formlist.forms.find(function(e){return e.name == name}) || 
+      formedit.forms.find(function(e){return e.name == name});
   }
 
   function popToast(msg, color) {

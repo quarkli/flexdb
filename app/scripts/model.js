@@ -28,7 +28,7 @@ This code may only be used under the MIT license.
     function _initUbase(id) {
           uid = id;
           ubase = new Firebase(([url, 'userdb', uid]).join('/'));
-          cbCache.forEach(e=>{
+          cbCache.forEach(function(e){
             me.on(e.path, e.event, e.cb)
           });
           cbCache.splice(0);
@@ -67,7 +67,7 @@ This code may only be used under the MIT license.
       var data = [];
       if (ret) {
         if (typeof ret == 'object') {
-          Object.keys(ret).forEach(k=>{
+          Object.keys(ret).forEach(function(k){
             data.push({key: k, data: ret[k]});
           });
         }
@@ -80,23 +80,23 @@ This code may only be used under the MIT license.
 
     //  export below properties only for development convenience
     Object.defineProperty(this, 'fbase', {
-      get: ()=>{return fbase}
+      get: function(){return fbase}
     });
 
     Object.defineProperty(this, 'ubase', {
-      get: ()=>{return ubase}
+      get: function(){return ubase}
     });
 
     Object.defineProperty(this, 'uid', {
-      get: ()=>{return uid}
+      get: function(){return uid}
     });
 
     Object.defineProperty(this, 'authentication', {
-      get: ()=>{return authentication}
+      get: function(){return authentication}
     });
 
     Object.defineProperty(this, 'username', {
-      get: ()=>{return username}
+      get: function(){return username}
     });
 
     // Authentication method, only authenticated user gets 'userdb' accessbility
@@ -104,7 +104,7 @@ This code may only be used under the MIT license.
       fbase.authWithPassword({
         email    : eml,
         password : pwd
-      }, (err, authData)=>{
+      }, function(err, authData){
         if (authData) _initUbase(authData.uid);
         if (cb) cb(err, authData ? authData.uid : null);
       });
@@ -138,9 +138,19 @@ This code may only be used under the MIT license.
     this.get = function(path, cb) {
       if (!uid) return;
       if (ubase) {
-        ubase.child(path).once('value', snap=>{
-          snapCb(snap, cb)
-        });
+        if (cb) {
+          ubase.child(path).once('value', function(snap){
+            snapCb(snap, cb)
+          });
+        }
+        else {
+          return new Promise(function(resolv, reject){
+            ubase.child(path).once('value', function(snap, err){
+              if (snap) snapCb(snap, resolv);
+              else reject(err);
+            });
+          });
+        }
       }
     }
 
@@ -148,7 +158,7 @@ This code may only be used under the MIT license.
     // if not authenticated, callback(s) will be cached and set after authenticated
     this.on = function(path, event, cb) {
       if (ubase) {
-        ubase.child(path).on(event, snap=>{
+        ubase.child(path).on(event, function(snap){
           snapCb(snap, cb);
         });
       }
@@ -213,7 +223,7 @@ This code may only be used under the MIT license.
 
     this.deleteAccount = function(pwd, cb) {
       if (!uid) return;
-      this.changePassword(pwd, pwd, e=>{
+      this.changePassword(pwd, pwd, function(e){
         if (e) {
           if (cb) cb(e);
         }

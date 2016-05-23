@@ -29,7 +29,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <paper-material class="paper-table" elevation="1">
       <div class="header">
-        <h3>{{id}}: {{rows}} rows</h3>
+        <h3>
+          <iron-icon icon="dns"></iron-icon>
+          {{id}}: {{rows}} rows
+        </h3>
         <span class="space"></span>
         <paper-icon-button icon="editor:border-all" alt="tableview" on-tap="fireActEvent"></paper-icon-button>
         <paper-icon-button icon="add" alt="add" on-tap="fireActEvent"></paper-icon-button>

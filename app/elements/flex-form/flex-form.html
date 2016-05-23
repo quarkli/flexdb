@@ -28,13 +28,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       h3 {
         color: var(--paper-indigo-500);
       }
+      p.warning {
+        color: red;
+      }
     </style>
 
     <paper-material class="paper-form" elevation="1">
       <!-- header: form/sectioin name -->
       <div class="header">
         <template is="dom-if" if="{{isRoot}}">
-          <h2>{{id}}</h2>
+          <h2>
+            <iron-icon icon="class"></iron-icon>
+            {{id}}
+          </h2>
         </template>
         <template is="dom-if" if="{{!isRoot}}">
           <h3>{{id}}</h3>
@@ -131,7 +137,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <span class="space"></span>
         <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss tabIndex="-1"></paper-icon-button>
       </div>
-      <p>Drop "{{targetKey}}"?</p>
+      <template is="dom-if" if="[[isTagetForm(targetType)]]">
+        <p class="warning">
+          When a FORM is dropped, all the DATA created with the form will be DELETED!!
+          This is an irrevocable action. Please be careful! Are you sure to drop the form?
+        </p>
+      </template>
+      <template is="dom-if" if="[[!isTagetForm(targetType)]]">
+        <p>Drop "{{targetKey}}"?</p>
+      </template>
       <div class="buttons">
         <paper-button class="defaultConfirm" dialog-confirm on-tap="dropItem">Drop</paper-button>
         <paper-button dialog-dismiss>Cancel</paper-button>
@@ -162,7 +176,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         properties: {
           data: {
             type: Array,
-            value: ()=>{return []},
+            value: function(){return []},
             notify: true
           },
           isRoot: {
@@ -213,6 +227,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         isObject: function(tgt) {
           return typeof tgt == 'object';
+        },
+
+        isTagetForm: function(name) {
+          return name == 'FORM';
         },
 
         curMode: function(mode, tgt) {
@@ -276,26 +294,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var target = this;
           if (this.targetType == 'FORM') {
             target = $(this).parents('flex-forms').first()[0];
-            var id = target.forms.findIndex(e=>{return e.name == this.id});
+            var id = target.forms.findIndex(function(e){return e.name == target.id});
             if (id > -1) target.splice('forms', id, 1);
 
             flexModel.remove('table-schema/' + this.id);
+            flexModel.remove('source-data/' + this.id);
           }
           else {
             if (Array.isArray(this.targetValue)) {
               target = $(this).parents('flex-form').first()[0];
             }
-            var id = target.data.findIndex(e=>{return e.k == this.targetKey});
+            var id = target.data.findIndex(function(e){return e.k == target.targetKey});
             if (id > -1) target.splice('data', id, 1);
           }
         },
 
         addItem: function(e) {
+          var target = this;
           this.targetType = $(e.target).justtext().trim().split(' ')[1];
           this.targetValue = $(e.target).parents('paper-dialog').find('paper-input')[0].value;
           this.push('data', {p: this.taregetPath ? this.targetPath : [], k: this.targetValue, v: this.targetType == 'SECTION' ? [] : ''});
-          setTimeout(()=>{
-            var collap = this.$$('iron-collapse');
+          setTimeout(function(){
+            var collap = target.$$('iron-collapse');
             if (collap) collap.opened = true;
           }, 100);
         },

@@ -20,7 +20,7 @@ This code may only be used under the MIT license.
       }
 
     </style>
-    <h2>{{curtable}}</h2>
+    <h2>{{form.name}}</h2>
     <paper-material elevation="1">
       <table id="ftab-table"></table>
     </paper-material>
@@ -144,14 +144,14 @@ This code may only be used under the MIT license.
 
           // if user changed value, update to the cloud DB
           if (ipt.val() != td.attr('value')) {
-            var curtable =  $('flex-tableview')[0].curtable;
+            var tablename =  $('#tableview')[0].form.name;
             var path = td.parent().attr('id');
             var key = td.attr('name');
-            var field = (['source-data', curtable, path, key]).join('/');
+            var field = (['source-data', tablename, path, key]).join('/');
             flexModel.set(field, ipt.val());
 
             // refecth data to keep local copy in-sync, but not refresh dom
-            flexModel.get('source-data/' + curtable, data=>{
+            flexModel.get('source-data/' + tablename, data=>{
                 data.forEach(e=>{
                     srcData.push({key: e.key, data: e.data});
                 });
@@ -172,9 +172,9 @@ This code may only be used under the MIT license.
         is: 'flex-tableview',
 
         properties: {
-          curtable: {
-            type: String,
-            value: null,
+          form: {
+            type: Object,
+            notify: true,
             observer: 'showTable'
           },
           data: {
@@ -188,11 +188,17 @@ This code may only be used under the MIT license.
           srcData.splice(0);
           refreshTable();
 
-          flexModel.get('source-data/' + this.curtable, data=>{
+          flexModel.get('source-data/' + this.form.name, data=>{
               data.forEach(e=>{
                   srcData.push({key: e.key, data: e.data});
               });
               refreshTable();
+          });
+        },
+
+        refreshData: function(data) {
+          data.forEach(e=>{
+            this.push('data', e);
           });
         }
       });

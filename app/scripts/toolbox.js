@@ -14,7 +14,7 @@ This code may only be used under the MIT license.
     function _getPath(data, node) {
       var path = [];
       var key = '';
-      objectNodeIterator(data, (e,k,p,o)=>{
+      objectNodeIterator(data, function(e,k,p,o){
         if (k == node) {
           path = p.slice();
           key = k;
@@ -22,7 +22,7 @@ This code may only be used under the MIT license.
       },true,true);
       path.push(key);
       path.splice(0, 1);
-      path = path.map((a,b)=>{return '["'+a+'"]'}).reduce((a,b)=>{return a+b}, '');
+      path = path.map(function(a,b){return '["'+a+'"]'}).reduce(function(a,b){return a+b}, '');
       return path;
     }
 
@@ -42,7 +42,7 @@ This code may only be used under the MIT license.
       var path = _getPath(data, node);
       var count = len;
       if (!incEmpty) {
-        count = data.reduce((e1, e2, i)=>{
+        count = data.reduce(function(e1, e2, i){
           if (i < start - 1 || i > start + len - 2) return e1;
           return eval('e2' + path).length || isNaN(eval('e2' + path)) ? ++e1 : e1;
         }, 0);
@@ -62,7 +62,7 @@ This code may only be used under the MIT license.
       len = len || data.length;
 
       var path = _getPath(data, node);
-      return data.reduce((e1, e2, i)=>{
+      return data.reduce(function(e1, e2, i){
         // console.log(i, (i < start || i > end), e1)
         if (i < start - 1 || i > start + len - 2) return e1;
         return e1 + (isNaN(eval('e2' + path)) ? 0 : 1 * eval('e2' + path));
@@ -79,7 +79,7 @@ This code may only be used under the MIT license.
       ascending = ascending  === undefined ? true : ascending;
 
       var path = _getPath(data, node);
-      data.sort((a,b)=>{
+      data.sort(function(a,b){
         // compare numbers
         if (!isNaN(eval('a' + path)) && !isNaN(eval('a' + path))) {
           return ascending ? eval('a' + path) - eval('b' + path) : eval('b' + path)　- eval('a' + path);
@@ -116,7 +116,7 @@ This code may only be used under the MIT license.
 
       if (typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
         cache = cache || [obj];
-        Object.keys(obj).forEach(key=>{
+        Object.keys(obj).forEach(function(key){
           if (cache.indexOf(obj[key]) < 0) {
             var p = path.slice();
             if (typeof obj[key] !== 'object' || (Array.isArray(obj[key]) && !arrayAsObj)) {
@@ -162,7 +162,7 @@ This code may only be used under the MIT license.
 
       function findNode(p, a) {
         var realNode = null;
-        var rootNode = a.find(e=>{
+        var rootNode = a.find(function(e){
           if (Array.isArray(e.v)) {
             if (e.v.length) realNode = findNode(p, e.v);
             if (!realNode) {
@@ -176,7 +176,7 @@ This code may only be used under the MIT license.
         return realNode || rootNode;
       }
 
-      flexTools.objectNodeIterator(jsn, (e,k,p,o)=>{
+      flexTools.objectNodeIterator(jsn, function(e,k,p,o){
         var path = p.slice();
         var node = findNode(path, ret);
         if (node) {
@@ -193,7 +193,7 @@ This code may only be used under the MIT license.
     // Convert a Array data to an JSON data, the reverse function of json2array
     function array2json(ary) {
       function iter(ary, obj) {
-        ary.forEach(e=>{
+        ary.forEach(function(e){
           if (Array.isArray(e.v)) {
             obj[e.k] = {};
             iter(e.v, obj[e.k]);

@@ -46,7 +46,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         properties: {
           forms: {
             type: Array,
-            value: ()=>{return []},
+            value: function(){return []},
             notify: true
           },
           mode: {
@@ -57,8 +57,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         refreshForms: function(data) {
+          var target = this;
           this.splice('forms', 0, this.forms.length);
-          data.forEach(e=>{ this.push('forms', e); });
+          data.forEach(function(e){ target.push('forms', e); });
         }
       });
     })();
