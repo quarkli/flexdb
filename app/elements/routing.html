@@ -58,23 +58,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
 
     page('/form/:id/edit', function(data) {
-      var id = formlist.forms.findIndex(e=>{return e.name == data.params.id;});
-      if (id < 0) {
+      var form = app.getForm(data.params.id);
+      if (!form) {
         page('/');
-        return ;
+        return;
       }
+      formedit.refreshForms([form]);
 
       app.route = 'form-edit';
       app.title = 'Edit Form';
       app.desp = 'Edit form';
       app.params = data.params;
       setFocus(app.route);
-
-      try{
-        var form = JSON.parse(JSON.stringify(formlist.forms[id]));
-        formedit.refreshForms([form]);
-      }
-      catch(e) {}
     });
 
     page('/form/new', function() {
@@ -90,22 +85,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/form/:id/input', function(data) {
-      var id = formlist.forms.findIndex(e=>{return e.name == data.params.id;});
-      if (id < 0) {
-        page('/');
-        return ;
+      var form = app.getForm(data.params.id);
+      if (!form) {
+        page('/tables');
+        return;
       }
+      forminput.refreshForms([form]);
 
       app.route = 'form-input';
       app.title = 'Input Data';
       app.desp = 'Data Input';
       setFocus(app.route);
-
-      try{
-        var form = JSON.parse(JSON.stringify(formlist.forms[id]));
-        forminput.refreshForms([form]);
-      }
-      catch(e) {}
     });
 
     page('/tables', function() {
@@ -115,7 +105,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/tableview', function() {
+    page('/tableview/:id', function(data) {
+      var form = app.getForm(data.params.id);
+      if (!form) {
+        page('/tables');
+        return;
+      }
+      tableview.form = form;
+      app.getData(form.name, function(data){
+        tableview.refreshData(data);
+      });
+
       app.route = 'tableview';
       app.title = 'Table View';
       app.desp = 'View tables';
