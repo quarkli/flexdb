@@ -105,7 +105,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/tableview/:id', function(data) {
+    page('/table/:id', function(data) {
       var form = app.getForm(data.params.id);
       if (!form) {
         page('/tables');
@@ -117,7 +117,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       app.route = 'tableview';
-      app.title = 'Table View';
+      app.title = data.params.id;
       app.desp = 'View tables';
       setFocus(app.route);
     });

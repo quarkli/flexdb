@@ -19,7 +19,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../elements.html">
 <link rel="import" href="../../include.html">
 
-<dom-module id="flex-tables">
+<dom-module id="flex-tr">
   <template>
     <style>
       :host {
@@ -28,10 +28,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       span {
         @apply(--paper-font-body1);
       }
+      tr, td {
+        width: 100%;
+        border-style: solid;
+        border-width: 0px;
+        text-align: right;
+      }
     </style>
 
-    <template is="dom-repeat" items="{{tables}}">
-      <flex-tablebanner id="{{item.name}}" rows="{{item.rows}}"></flex-tablebanner>
+    <template is="dom-repeat" items="{{form}}">
+      <template is="dom-if" if="[[hasChild(item)]]">
+        <flex-tr form="[[item.v]]"></flex-tr>
+      </template>
+      <template is="dom-if" if="[[!hasChild(item)]]">
+        <tr>
+          <td>[[item.k]]</td>
+        </tr>
+      </template>
     </template>
 
   </template>
@@ -41,14 +54,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       'use strict';
 
       Polymer({
-        is: 'flex-tables',
+        is: 'flex-tr',
 
         properties: {
-          tables: {
+          form: {
+            type: Object,
+            notify: true,
+            // observer: 'showTable'
+          },
+          data: {
             type: Array,
-            value: function(){return []},
+            value: [],
             notify: true
           }
+        },
+
+        hasChild: function(item) {
+          return typeof item.v == 'object';
         }
       });
     })();

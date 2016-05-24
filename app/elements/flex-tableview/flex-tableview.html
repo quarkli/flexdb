@@ -18,155 +18,44 @@ This code may only be used under the MIT license.
       span {
         @apply(--paper-font-body1);
       }
-
+      .headerfield, td {
+        text-align: right;
+      }
+      table.main {
+        width: 100%;
+      }
     </style>
-    <h2>{{form.name}}</h2>
     <paper-material elevation="1">
-      <table id="ftab-table"></table>
+      <table class="main">
+        <tr>
+          <th>
+            <paper-icon-button icon="menu"></paper-icon-button>
+          </th>
+          <template is="dom-repeat" items="[[data]]">
+            <th>{{getIdx(index)}}</th>
+          </template>
+          <th>
+            <paper-icon-button icon="add"></paper-icon-button>
+          </th>
+        </tr>
+        <template is="dom-repeat" items="[[headerfields]]">
+          <tr>
+              <td class="headerfield">
+                <a href="#" onclick="return false;">{{item.key}}</a>
+              </td>
+              <template is="dom-repeat" items="[[data]]" as="doc">
+                <td>[[getField(doc, item)]]</td>
+              </template>
+              <td></td>
+          </tr>
+        </template>
+      </table>
     </paper-material>
 
   </template>
   <script>
     (function() {
       'use strict';
-
-      var srcData = [];
-
-      function refreshTable(sortNode, descending){
-        $('#ftab-table').empty();
-
-        srcData.forEach((e,i)=>{
-          if (i == 0) {
-            $('<tr>').attr('id', 'tb-head').appendTo('table');
-            flexTools.objectNodeIterator(e.data, (e,k,p,o)=>{
-              var header = $('<th>').html(k);
-              var cls = p.join('-');
-              header.addClass(cls);
-              if (typeof e == 'object') {
-                header.attr('rowspan', srcData.length+1);
-                header.on('click', e=>{
-                  if ($('.' + p.join('-')).first().is(":visible")) {
-                    $('.' + p.join('-')).hide();
-                  }
-                  else {
-                    $('.' + p.join('-')).show();
-                  }
-                });
-              }
-              else {
-                header.on('click', sortTable);
-                if (k == sortNode) {
-                  if (descending) {
-                    header.append($('<iron-icon icon="arrow-drop-down">'));
-                  }
-                  else {
-                    header.append($('<iron-icon icon="arrow-drop-up">'));
-                  }
-                }
-
-                var cls = '';
-                p.forEach(path=>{
-                  cls += path;
-                  header.addClass(cls);
-                  cls += '-';
-                });
-              }
-              header.appendTo('#tb-head');
-            }, false);
-          }
-          var tr = $('<tr>').attr('id', e.key).appendTo('table');
-          flexTools.objectNodeIterator(e.data, (e,k,p,o)=>{
-            var nodePath = p.slice();
-            nodePath.push(k);
-            nodePath = nodePath.join('-');
-
-            var format = isNaN(e) ? isNaN((new Date(e)).valueOf()) ? 'text' : 'date' : 'number';
-
-            var cell =$('<td>').attr('name', nodePath).addClass(format).html(e);
-            cell.on('click',editField);
-            cell.appendTo(tr);
-
-            var cls = '';
-            p.forEach(path=>{
-              cls += path;
-              cell.addClass(cls);
-              cls += '-';
-            });
-          });
-        });
-
-        function sortTable(e) {
-          e.preventDefault();
-          var curNode = $(e.target);
-          if (curNode.prop('tagName') != 'TH') curNode = curNode.parents('th');
-
-          var nodeIcon = $($('iron-icon[icon="arrow-drop-down"]')[0] ||
-            $('iron-icon[icon="arrow-drop-up"]')[0]);
-
-          var descending = (nodeIcon.length && nodeIcon.parent()[0] == curNode[0] &&
-            nodeIcon.attr('icon') == 'arrow-drop-up');
-
-          nodeIcon.remove();
-
-          var node = curNode.html();
-
-          if (descending) {
-            curNode.append($('<iron-icon icon="arrow-drop-down">'));
-          }
-          else {
-            curNode.append($('<iron-icon icon="arrow-drop-up">'));
-          }
-
-          flexTools.sort(srcData, node, !descending);
-          refreshTable(node, descending);
-        }
-
-      }
-
-      function editField(e) {
-          var td = $(e.target);
-          var val = td.html();
-          var ipt = $('<input>').width(td.width()).val(val).on('keydown blur', endEdit);
-          if (!isNaN(val)) ipt.css('text-align', 'right');
-          td.attr('value', val).html('').append(ipt);
-          ipt.focus().select();
-      }
-
-      function endEdit(e) {
-          var ipt = $(e.target);
-          var td = ipt.parent('td');
-          var kc = e.keyCode;
-          if (kc && kc != 9 && kc != 13 && kc != 27) return;
-          e.preventDefault();
-
-          if (kc == 27) ipt.val(td.attr('value'));
-          td.html(ipt.val());
-
-          // if user changed value, update to the cloud DB
-          if (ipt.val() != td.attr('value')) {
-            var tablename =  $('#tableview')[0].form.name;
-            var path = td.parent().attr('id');
-            var key = td.attr('name');
-            var field = (['source-data', tablename, path, key]).join('/');
-            flexModel.set(field, ipt.val());
-
-            // refecth data to keep local copy in-sync, but not refresh dom
-            flexModel.get('source-data/' + tablename, data=>{
-                data.forEach(e=>{
-                    srcData.push({key: e.key, data: e.data});
-                });
-            });
-          }
-          ipt.remove();
-          if (kc == 9) {
-            if (td.next().length) {
-              td.next().click();
-            }
-            else {
-              td.parent().next().find('td').first().click();
-            }
-          }
-      }
 
       Polymer({
         is: 'flex-tableview',
@@ -175,31 +64,55 @@ This code may only be used under the MIT license.
           form: {
             type: Object,
             notify: true,
-            observer: 'showTable'
+            observer: 'buildHeaders'
           },
           data: {
             type: Array,
-            value: [],
+            value: function(){return []},
+            notify: true
+          },
+          headerfields: {
+            type: Array,
+            value: function(){return []},
             notify: true
           }
         },
 
-        showTable: function() {
-          srcData.splice(0);
-          refreshTable();
-
-          flexModel.get('source-data/' + this.form.name, data=>{
-              data.forEach(e=>{
-                  srcData.push({key: e.key, data: e.data});
-              });
-              refreshTable();
+        buildHeaders: function() {
+          var me = this;
+          var obj = flexTools.array2json(this.form.data);
+          this.splice('headerfields', 0);
+          flexTools.objectNodeIterator(obj, function(e, k, p, o){
+            me.push('headerfields', {key: k, path: p, value: e});
           });
         },
 
         refreshData: function(data) {
+          this.splice('data', 0);
           data.forEach(e=>{
             this.push('data', e);
           });
+        },
+
+        getIdx: function(id) {
+          return id + 1;
+        },
+
+        getField: function(data, head) {
+          var ret = undefined;
+          flexTools.objectNodeIterator(data.data, function(e, k, p, o) {
+            if (k == head.key  && JSON.stringify(p) == JSON.stringify(head.path)) {
+              ret = e;
+            }
+          });
+          return ret;
+        },
+
+        getRows: function(form) {
+          var obj = flexTools.array2json(form.data);
+          var rows = 0;
+          flexTools.objectNodeIterator(obj, function(){rows++;});
+          return rows + 1;
         }
       });
     })();

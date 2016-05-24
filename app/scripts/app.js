@@ -104,6 +104,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return pwd && pwd.length && pwd == cfm;
   };
 
+  app.isRootPage = function() {
+    return page.current.split('/').length == 2;
+  };
+
   // Generic Functions
   app.getForm = function(name) {
     var id = formlist.forms.findIndex(function(e){return e.name == name;});
@@ -268,8 +272,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.popModalConfirm = function(event, object, params) {
-    modalConfirm.toggle();
+  app.popCancelEditDialog = function(event, object, params) {
+    cancelEditDialog.toggle();
   }
 
   app.popSaveAsDialog = function(event, object, params) {
@@ -288,15 +292,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     importDialog.toggle();
   };
 
-  app.tableAct = function(event, object, params) {
-    var table = event.target.id;
-    switch(object.cmd) {
-      case 'add':
-        page('/form/' + table + '/input');
-        break;
-      case 'tableview':
-        page('/tableview/' + table);
-        break;
+  app.pageBack = function(event, object, params) {
+    if (app.route == 'form-input' || app.route == 'form-edit') {
+      app.popCancelEditDialog();
+    }
+    else {
+      history.back();
     }
   };
 
