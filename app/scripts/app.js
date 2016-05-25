@@ -234,8 +234,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.resetChanges = function(event, params) {
     formedit.$$('flex-form').pop('data');
-    flexModel.get('table-schema/' + formedit.$$('flex-form').id, function(d, o){
-      formedit.refreshForms([{name: formedit.$$('flex-form').id, data: flexTools.json2array(o)}]);
+    flexModel.get('table-schema/' + formedit.forms[0].name, function(d, o){
+      formedit.refreshForms([{name: formedit.forms[0].name, data: flexTools.json2array(o)}]);
     });
   };
 
@@ -245,7 +245,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.saveEdit = function(event, params) {
-    var table = params || formedit.$$('flex-form').id;
+    var table = params.formname || formedit.forms[0].name;
     flexModel.set('table-schema/' + table, {});
     flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
     page('/');
@@ -256,7 +256,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         popToast("Form name duplicated!", '#F48FB1');
         return;
     }
-    app.saveEdit(event, app.newFormName);
+    if (!params) params = {};
+    params.formname = app.newFormName;
+    app.saveEdit(event, params);
   };
 
   app.finishInput = function(event, params) {
