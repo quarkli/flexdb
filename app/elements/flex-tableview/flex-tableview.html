@@ -204,7 +204,7 @@ This code may only be used under the MIT license.
           var key = target.innerText.split(' ')[1];
 
           var data = this.splice('data', 0);
-          flexTools.sort(data, key, target.innerText.search('<<'));
+          flexTools.sort(data, key, !target.innerText.match('<<'));
           data.forEach(function(e){
             me.push('data', e);
           });

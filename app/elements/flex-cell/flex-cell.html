@@ -25,6 +25,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       :host {
         display: block;
       }
+      div {
+        display: inline-block;
+        widows: 98%
+      }
       input {
         width: 98%;
       }
@@ -38,7 +42,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </style>
 
     <template is="dom-if" if="[[!editing]]">
-      <span>[[value]]</span>
+      <div> [[value]]</div>
     </template>
     <template is="dom-if" if="[[editing]]">
       <input type="text" value="[[value]]" on-blur="endEdit">

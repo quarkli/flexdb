@@ -79,16 +79,19 @@ This code may only be used under the MIT license.
       ascending = ascending  === undefined ? true : ascending;
 
       var path = _getPath(data, node);
+
       data.sort(function(a,b){
         // compare numbers
-        if (!isNaN(eval('a' + path)) && !isNaN(eval('a' + path))) {
-          return ascending ? eval('a' + path) - eval('b' + path) : eval('b' + path)　- eval('a' + path);
+        var aval = eval('a' + path);
+        var bval = eval('b' + path)
+        if (!isNaN(aval) && !isNaN(bval)) {
+          return ascending ? aval - bval : bval　- aval;
         }
         else {
-          var ad = (new Date(eval('a' + path))).valueOf();
-          var bd = (new Date(eval('b' + path))).valueOf();
+          var ad = (new Date(aval)).valueOf();
+          var bd = (new Date(bval)).valueOf();
           if (isNaN(ad) || isNaN(bd)) {
-            return (eval('a' + path) > eval('b' + path)) == ascending ? 1 : -1;
+            return aval + '' > bval + '' == ascending ? 1 : -1;
           }
           else {
             return ascending ? ad - bd : bd - ad;
