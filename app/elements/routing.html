@@ -48,6 +48,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/', homepage);
+    page('/forms', homepage);
     page(app.baseUrl, homepage);
 
     function homepage() {
@@ -57,7 +58,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     }
 
-    page('/form/:id/edit', function(data) {
+    page('/forms/:id/edit', function(data) {
       var form = app.getForm(data.params.id);
       if (!form) {
         page('/');
@@ -72,7 +73,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/form/new', function() {
+    page('/forms/new', function() {
       if (!formedit.forms.length) {
         page('/');
         return ;
@@ -84,7 +85,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/form/:id/input', function(data) {
+    page('/tables/:id/input', function(data) {
       var form = app.getForm(data.params.id);
       if (!form) {
         page('/tables');
@@ -105,7 +106,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/table/:id', function(data) {
+    page('/tables/:id', function(data) {
       var form = app.getForm(data.params.id);
       if (!form) {
         page('/tables');

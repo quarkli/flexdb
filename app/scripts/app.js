@@ -126,7 +126,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   // Tap-triggered Functions
-  app.login = function(event, object, params) {
+  app.login = function(event, params) {
     if (flexModel && flexModel.uid) {
       logoutApp();
     }
@@ -136,7 +136,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.closeDrawer();
   };
 
-  app.auth = function(event, object, params) {
+  app.auth = function(event, params) {
     if (flexModel) flexModel.auth(app.email, app.password, function(err, uid){
       if (uid) {
         initApp();
@@ -147,11 +147,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   };
 
-  app.regUser = function(event, object, params) {
+  app.regUser = function(event, params) {
     page('/registration');
   };
 
-  app.newUser = function(event, object, params) {
+  app.newUser = function(event, params) {
     flexModel.newUser(app.email, app.password, function(e,d){
       if (e) {
         popToast("Registration failed! Reason: " + e, '#F48FB1');
@@ -164,7 +164,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
   };
 
-  app.chgPwd = function(event, object, params) {
+  app.chgPwd = function(event, params) {
     if (app.email == 'guest@demo.flexdb') {
       popToast("You cannot change password of guest account!", '#F48FB1');
     }
@@ -180,7 +180,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.delAccount = function(event, object, params) {
+  app.delAccount = function(event, params) {
     if (app.email == 'guest@demo.flexdb') {
       popToast("You cannot delete guest account!", '#F48FB1');
     }
@@ -196,24 +196,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.guestLogin = function(event, object, params) {
+  app.guestLogin = function(event, params) {
     app.email = app.guest.email;
     app.password = app.guest.pwd;
     app.auth();
     page('/');
   };
 
-  app.newForm = function(event, object, params) {
+  app.newForm = function(event, params) {
     if (formExists(app.newFormName)) {
         popToast("Form name duplicated!", '#F48FB1');
         return;
     }
     var data = [{name: app.newFormName, data: []}];
     formedit.refreshForms(data);
-    page(app.baseUrl+'form/new');
+    page('/forms/new');
   };
 
-  app.newImport = function(event, object, params) {
+  app.newData = function(event, params) {
+    var table = tableview.form.name;
+    if (table) page('/tables/' + table + '/input');
+  };
+
+  app.newImport = function(event, params) {
     if (formExists(app.newFormName)) {
         popToast("Form name duplicated!", '#F48FB1');
         return;
@@ -222,42 +227,43 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     try {
       var data = [{name: app.newFormName, data: flexTools.json2array(JSON.parse(app.extjson))}];
       formedit.refreshForms(data);
-      page(app.baseUrl+'form/new');
+      page('/forms/new');
     }
     catch(e) {}
   };
 
-  app.resetChanges = function(event, object, params) {
+  app.resetChanges = function(event, params) {
     formedit.$$('flex-form').pop('data');
     flexModel.get('table-schema/' + formedit.$$('flex-form').id, function(d, o){
       formedit.refreshForms([{name: formedit.$$('flex-form').id, data: flexTools.json2array(o)}]);
     });
   };
 
-  app.cancelEdit = function(event, object, params) {
-    page('/');
+  app.pageBack = function(event, params) {
+    var parent = page.current.split('/').slice(0,2).join('/');
+    page(parent);
   };
 
-  app.saveEdit = function(event, object, params) {
+  app.saveEdit = function(event, params) {
     var table = params || formedit.$$('flex-form').id;
     flexModel.set('table-schema/' + table, {});
     flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
     page('/');
   };
 
-  app.saveas = function(event, object, params) {
+  app.saveas = function(event, params) {
     if (formExists(app.newFormName)) {
         popToast("Form name duplicated!", '#F48FB1');
         return;
     }
-    app.saveEdit(event, object, app.newFormName);
+    app.saveEdit(event, app.newFormName);
   };
 
-  app.finishInput = function(event, object, params) {
-    page('/tableview/' + forminput.forms[0].name);
+  app.finishInput = function(event, params) {
+    page('/tables/' + forminput.forms[0].name);
   };
 
-  app.saveData = function(event, object, params) {
+  app.saveData = function(event, params) {
     var table = forminput.forms[0].name;
     var hasData = false;
     var data = flexTools.array2json(forminput.forms[0].data);
@@ -265,43 +271,69 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     if (formExists(table) && hasData) {
       flexModel.push('source-data/' + table, flexTools.array2json(forminput.forms[0].data));
-      page('/form/' + table + '/input');
+      page('/tables/' + table + '/input');
     }
     else {
       popToast("No data inputed, save skipped!", '#F48FB1');
     }
   };
 
-  app.popCancelEditDialog = function(event, object, params) {
+  app.updateDocument = function(event, params) {
+    var form = event.target.form ? event.target.form.name :
+      $(event.target).parents('flex-tableview')[0].form.name;
+    if (!form) return;
+
+    var path = params.field.path.slice(0);
+    path.splice(0, 0, params.key);
+    path.splice(0, 0, form);
+    path.push(params.field.key);
+    path = path.join('/');
+
+    flexModel.set('source-data/' + path, params.value);
+  };
+
+  app.deleteDocument = function(event, params) {
+    var form = event.target.form ? event.target.form.name :
+      $(event.target).parents('flex-tableview')[0].form.name;
+    if (!form) return;
+
+    var path = [form];
+    path.push(params.key);
+    path = path.join('/');
+    flexModel.remove('source-data/' + path);
+  };
+
+  app.popCancelEditDialog = function(event, params) {
     cancelEditDialog.toggle();
   }
 
-  app.popSaveAsDialog = function(event, object, params) {
+  app.popSaveAsDialog = function(event, params) {
     app.newFormName = '';
     saveasDialog.toggle();
   }
 
-  app.popNewFormDialog = function(event, object, params) {
+  app.popNewFormDialog = function(event, params) {
     app.newFormName = '';
+    formedit.splice('forms', 0);
     newFormDialog.toggle();
   };
 
-  app.popImportDialog = function(event, object, params) {
+  app.popImportDialog = function(event, params) {
     app.newFormName = '';
     app.extjson = '';
     importDialog.toggle();
   };
 
-  app.pageBack = function(event, object, params) {
-    if (app.route == 'form-input' || app.route == 'form-edit') {
+  app.cancelEdit = function(event, params) {
+    if (app.route == 'form-edit') {
       app.popCancelEditDialog();
     }
     else {
-      history.back();
+      app.pageBack();
     }
   };
 
-  app.dialogKeyHandle = function(event, object, params) {
+  app.dialogKeyHandle = function(event, params) {
     var target = event.target;
     var btn = null;
 
@@ -323,7 +355,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     if (btn && !btn.disabled) btn.click();
   };
 
-  app.setDialogFocus = function(event, object, params) {
+  app.setDialogFocus = function(event, params) {
     var target = $(event.target).find('.defaultFocus')[0];
     if (target) target.focus();
   };
@@ -372,6 +404,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       formlist.forms.forEach(function(e){
         if (!tablelist.tables.find(function(f){return f.name == e.name})) {
           tablelist.push('tables', {name: e.name, rows: 0});
+        }
+      });
+
+      tablelist.tables.forEach(function(e, i){
+        if (!formlist.forms.find(function(f){return f.name == e.name})) {
+          tablelist.splice('tables', i, 1);
         }
       });
     }

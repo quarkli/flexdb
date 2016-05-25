@@ -15,14 +15,39 @@ This code may only be used under the MIT license.
       :host {
         display: block;
       }
-      span {
-        @apply(--paper-font-body1);
-      }
       .headerfield, td {
+        font-size: 10px;
         text-align: right;
+        white-space: nowrap;
       }
       table.main {
         width: 100%;
+      }
+      th {
+        position: relative;
+      }
+      th paper-icon-button[icon=clear] {
+        position: absolute;
+        top: -10px;
+        right: 0px;
+        margin: 0px;
+        padding: 0px;
+        width: 20px;
+      }
+      div.header {
+        @apply(--layout-horizontal);
+        color: var(--secondary-text-color);
+      }
+      div span.space {
+        @apply(--layout-flex);
+      }
+      #deleteDataDialog {
+        width: 280px;
+      }
+      .fieldKey {
+        font-weight: bold;
+        text-decoration: underline;
+        cursor: pointer;
       }
     </style>
     <paper-material elevation="1">
@@ -32,25 +57,39 @@ This code may only be used under the MIT license.
             <paper-icon-button icon="menu"></paper-icon-button>
           </th>
           <template is="dom-repeat" items="[[data]]">
-            <th>{{getIdx(index)}}</th>
+            <th>
+              {{getIdx(index)}}
+              <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
+              <paper-tooltip>Delete Data</paper-tooltip>
+            </th>
           </template>
-          <th>
-            <paper-icon-button icon="add"></paper-icon-button>
-          </th>
         </tr>
         <template is="dom-repeat" items="[[headerfields]]">
           <tr>
               <td class="headerfield">
-                <a href="#" onclick="return false;">{{item.key}}</a>
+                <span class="fieldKey" on-tap="sortData">{{item.key}}</span>
               </td>
               <template is="dom-repeat" items="[[data]]" as="doc">
-                <td>[[getField(doc, item)]]</td>
+                <td>
+                  <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
+                </td>
               </template>
-              <td></td>
           </tr>
         </template>
       </table>
     </paper-material>
+
+    <paper-dialog id="deleteDataDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
+      <div class="header">
+        <h2>Delete Selected Data?</h2>
+        <span class="space"></span>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss tabIndex="-1"></paper-icon-button>
+      </div>
+      <div class="buttons">
+        <paper-button dialog-confirm on-tap="fireDelEvent">Delete</paper-button>
+        <paper-button class="defaultConfirm" dialog-dismiss on-tap="cancelDelete">Cancel</paper-button>
+      </div>
+    </paper-dialog>
 
   </template>
   <script>
@@ -75,6 +114,16 @@ This code may only be used under the MIT license.
             type: Array,
             value: function(){return []},
             notify: true
+          },
+          selectedDoc: {
+            type: Object,
+            value: null,
+            notify: true
+          },
+          sortKey: {
+            type: Object,
+            value: null,
+            notify: true
           }
         },
 
@@ -85,6 +134,9 @@ This code may only be used under the MIT license.
           flexTools.objectNodeIterator(obj, function(e, k, p, o){
             me.push('headerfields', {key: k, path: p, value: e});
           });
+          this.sortKey = null;
+          this.selectedDoc = null;
+          $('td').css('color', '');
         },
 
         refreshData: function(data) {
@@ -98,14 +150,26 @@ This code may only be used under the MIT license.
           return id + 1;
         },
 
-        getField: function(data, head) {
+        getField: function(data, item) {
           var ret = undefined;
           flexTools.objectNodeIterator(data.data, function(e, k, p, o) {
-            if (k == head.key  && JSON.stringify(p) == JSON.stringify(head.path)) {
+            if (k == item.key  && JSON.stringify(p) == JSON.stringify(item.path)) {
               ret = e;
             }
           });
           return ret;
+        },
+
+        setField: function(event, params) {
+          var data = this.data.find(function(e){
+            return e.key == params.key;
+          });
+
+          flexTools.objectNodeIterator(data.data, function(e, k, p, o) {
+            if (k == params.field.key  && JSON.stringify(p) == JSON.stringify(params.field.path)) {
+              o[k] = params.value;
+            }
+          });
         },
 
         getRows: function(form) {
@@ -113,6 +177,115 @@ This code may only be used under the MIT license.
           var rows = 0;
           flexTools.objectNodeIterator(obj, function(){rows++;});
           return rows + 1;
+        },
+
+        sortData: function(e) {
+          var me = this;
+          var target = e.target;
+          if (target != this.sortKey) {
+            if (this.sortKey) {
+              this.sortKey.innerText = this.sortKey.innerText.split(' ')[1];
+              $(this.sortKey).parents('tr').children('td').css('color', '');
+            }
+          }
+
+          this.sortKey = target;
+          $(target).parents('tr').children('td').css('color', 'green');
+          if (!target.innerText.match('<<') && !target.innerText.match('>>')) {
+            target.innerText = '>> ' + target.innerText;
+          }
+          else if (target.innerText.match('<<')) {
+            target.innerText = target.innerText.replace('<< ', '>> ');
+          }
+          else {
+            target.innerText = target.innerText.replace('>> ', '<< ');
+          }
+
+          var key = target.innerText.split(' ')[1];
+
+          var data = this.splice('data', 0);
+          flexTools.sort(data, key, target.innerText.search('<<'));
+          data.forEach(function(e){
+            me.push('data', e);
+          });
+        },
+
+        cellKeyDown: function(e) {
+          var td = $(e.target).parents('td').first();
+          var tr = td.parents('tr').first();
+          var id = tr.children('td').index(td);
+          var nextcell;
+
+          switch(e.keyCode) {
+            case 13:
+              e.target.blur();
+              break;
+            case 9:
+              if (e.shiftKey) {
+                nextcell = tr.prev('tr').children('td').eq(id).find('flex-cell')[0];
+                if (!nextcell && !tr.prev('tr').children('td').length) {
+                    if (id > 0) id--;
+                    if (id == 0) id = this.data.length;
+                    tr = tr.parent().children('tr').last();
+                    nextcell = tr.children('td').eq(id).find('flex-cell')[0];
+                }
+              }
+              else {
+                nextcell = tr.next('tr').children('td').eq(id).find('flex-cell')[0];
+                if (!nextcell && !tr.next('tr').length) {
+                    if (td.next('td').length) {
+                      id++;
+                    }
+                    else {
+                      id = 1;
+                    }
+                    tr = tr.parent().children('tr').eq(1);
+                    nextcell = tr.children('td').eq(id).find('flex-cell')[0];
+                }
+              }
+              if (nextcell) nextcell.click();
+              break;
+          }
+        },
+
+        deletDoc: function(e) {
+          var target = $(e.target).parents('paper-icon-button')[0]
+          var doc = this.selectedDoc = target.doc;
+          var id = target.idx;
+
+          this.highlightColumn(id + 2, true);
+          this.$$('#deleteDataDialog').toggle();
+        },
+
+        cancelDelete: function(e) {
+          var doc = this.selectedDoc;
+          var id = this.data.findIndex(function(e){return e == doc;});
+          this.highlightColumn(id + 2);
+          this.selectedDoc = null;
+        },
+
+        fireDelEvent: function() {
+          var params = {key: this.selectedDoc.key};
+
+          this.fire('deletedoc', params);
+
+          var doc = this.selectedDoc;
+          var id = this.data.findIndex(function(e){return e == doc;});
+          this.splice('data', id, 1);
+        },
+
+        highlightColumn: function(col, onoff) {
+          var cols = 'tr td:nth-child(' + col + ')';
+          if (onoff) {
+            $(cols).first().css('border-top', '2px solid blue');
+            $(cols).last().css('border-bottom', '2px solid blue');
+            $(cols).css('border-left', '2px solid blue').css('border-right', '2px solid blue');
+          }
+          else {
+            $(cols).first().css('border-top', '');
+            $(cols).last().css('border-bottom', '');
+            $(cols).css('border-left', '').css('border-right', '');
+          }
         }
       });
     })();

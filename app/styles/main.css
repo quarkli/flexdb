@@ -13,6 +13,10 @@ body {
   color: #333;
 }
 
+#tableview {
+  overflow: auto;
+}
+
 table, tr, td, th {
   border-style: solid;
   border-width: 1px;
@@ -37,10 +41,6 @@ table th {
   background-color: #5C6BC0;
 }
 
-th {
-  cursor: pointer;
-}
-
 th.sec {
   width: 16px;
   word-wrap: break-word;
@@ -62,10 +62,6 @@ pre{
 
 .date {
   text-align: center;
-}
-
-#tableview {
-  overflow: auto;
 }
 
 div.username {

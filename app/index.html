@@ -129,7 +129,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <paper-tooltip for="paperToggle">Menu</paper-tooltip>
         </template>
         <template is="dom-if" if="[[!isRootPage(route)]]">
-          <paper-icon-button id="pageback" icon="arrow-back" on-tap="pageBack"></paper-icon-button>
+          <paper-icon-button id="pageback" icon="arrow-back" on-tap="cancelEdit"></paper-icon-button>
           <paper-tooltip for="pageback">Back</paper-tooltip>
         </template>
 
@@ -165,6 +165,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </template>
           <!-- /tables Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tables')}}">
+          </template>
+          <!-- /tables Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'tableview')}}">
+            <paper-icon-button id="btn-newdata" icon="add" alt="add" on-tap="newData"></paper-icon-button>
+            <paper-tooltip for="btn-newdata">Input Data</paper-tooltip>
           </template>
           <!-- /compute Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'compute')}}">
@@ -215,7 +220,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             <section data-route="tableview" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-tableview id="tableview"></flex-tables>
+              <flex-tableview id="tableview" on-datachanged="updateDocument" on-deletedoc="deleteDocument"></flex-tables>
             </section>
 
             <section data-route="compute" tabindex="-1">
@@ -313,7 +318,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <p>Give up current edit?</p>
         <div>
         <div class="buttons">
-          <paper-button class="defaultConfirm" dialog-confirm on-tap="cancelEdit">Yes</paper-button>
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="pageBack">Yes</paper-button>
           <paper-button dialog-dismiss>No</paper-button>
         </div>
       </paper-dialog>

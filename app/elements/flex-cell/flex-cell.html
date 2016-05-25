@@ -1,0 +1,105 @@
+<!--
+@license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
+
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../elements.html">
+<link rel="import" href="../../include.html">
+
+<dom-module id="flex-cell">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      input {
+        width: 98%;
+      }
+      span {
+        @apply(--paper-font-body1);
+      }
+      input {
+        @apply(--paper-font-body1);
+        text-align: right;
+      }
+    </style>
+
+    <template is="dom-if" if="[[!editing]]">
+      <span>[[value]]</span>
+    </template>
+    <template is="dom-if" if="[[editing]]">
+      <input type="text" value="[[value]]" on-blur="endEdit">
+    </template>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'flex-cell',
+
+        properties: {
+          key: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          field: {
+            type: Object,
+            notify: true
+          },
+          value: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          editing: {
+            type: Boolean,
+            value: false,
+            notify: true
+          }
+        },
+
+        listeners: {
+          'tap': 'tapHandle'
+        },
+
+        tapHandle: function(e) {
+          var w = $(this).parent().width();
+          if (!this.editing) {
+            var me = this;
+            this.editing = true;
+            $(this).parent().width(w);
+            setTimeout(function(){
+              $(me).find('input').focus().select();
+            }, 100);
+          }
+        },
+
+        endEdit: function() {
+          if (this.value != this.$$('input').value) {
+            this.value = this.$$('input').value;
+            this.fire('datachanged', {key: this.key, field: this.field, value: this.value});
+          }
+          this.editing = false;
+        }
+
+      });
+    })();
+  </script>
+</dom-module>
