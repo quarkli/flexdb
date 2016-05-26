@@ -50,34 +50,33 @@ This code may only be used under the MIT license.
         cursor: pointer;
       }
     </style>
-    <paper-material elevation="1">
-      <table class="main">
-        <tr>
+
+    <table class="main">
+      <tr>
+        <th>
+          <paper-icon-button icon="menu"></paper-icon-button>
+        </th>
+        <template is="dom-repeat" items="[[data]]">
           <th>
-            <paper-icon-button icon="menu"></paper-icon-button>
+            {{getIdx(index)}}
+            <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
+            <paper-tooltip>Delete Data</paper-tooltip>
           </th>
-          <template is="dom-repeat" items="[[data]]">
-            <th>
-              {{getIdx(index)}}
-              <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
-              <paper-tooltip>Delete Data</paper-tooltip>
-            </th>
-          </template>
-        </tr>
-        <template is="dom-repeat" items="[[headerfields]]">
-          <tr>
-              <td class="headerfield">
-                <span class="fieldKey" on-tap="sortData">{{item.key}}</span>
-              </td>
-              <template is="dom-repeat" items="[[data]]" as="doc">
-                <td>
-                  <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
-                </td>
-              </template>
-          </tr>
         </template>
-      </table>
-    </paper-material>
+      </tr>
+      <template is="dom-repeat" items="[[headerfields]]">
+        <tr>
+            <td class="headerfield">
+              <span class="fieldKey" on-tap="sortData">{{item.key}}</span>
+            </td>
+            <template is="dom-repeat" items="[[data]]" as="doc">
+              <td>
+                <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
+              </td>
+            </template>
+        </tr>
+      </template>
+    </table>
 
     <paper-dialog id="deleteDataDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
       <div class="header">
