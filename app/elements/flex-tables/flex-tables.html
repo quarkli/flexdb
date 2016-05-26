@@ -30,6 +30,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
+    <template is="dom-if" if="{{!tables.length}}">
+      <div align="center">
+        <h3>There is no table yet.</h3>
+        <a href='#' on-tap="addNewForm">Add some form first!</a>
+      </div>
+    </template>
     <template is="dom-repeat" items="{{tables}}">
       <flex-tablebanner id="{{item.name}}" rows="{{item.rows}}"></flex-tablebanner>
     </template>
@@ -49,6 +55,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             value: function(){return []},
             notify: true
           }
+        },
+
+        addNewForm: function(e) {
+          app.popNewFormDialog();
         }
       });
     })();

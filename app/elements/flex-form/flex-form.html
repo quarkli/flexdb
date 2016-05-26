@@ -293,12 +293,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         dropItem: function() {
           var target = this;
           if (this.targetType == 'FORM') {
-            target = $(this).parents('flex-forms').first()[0];
-            var id = target.forms.findIndex(function(e){return e.name == target.id});
-            if (id > -1) target.splice('forms', id, 1);
-
-            flexModel.remove('table-schema/' + this.id);
-            flexModel.remove('source-data/' + this.id);
+            this.fire('dropform', {name: this.id});
           }
           else {
             if (Array.isArray(this.targetValue)) {

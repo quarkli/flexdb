@@ -30,6 +30,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
+    <template is="dom-if" if="[[!forms.length]]">
+      <div align="center">
+        <h3>No form has been created yet.</h3>
+        <a href='#' on-tap="addNewForm">Add some form now!</a>
+      </div>
+    </template>
     <template is="dom-repeat" items="{{forms}}">
       <flex-form id="{{item.name}}" data="{{item.data}}" is-root="true" mode="{{mode}}"></flex-form>
     </template>
@@ -60,6 +66,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var target = this;
           this.splice('forms', 0, this.forms.length);
           data.forEach(function(e){ target.push('forms', e); });
+        },
+
+        addNewForm: function(e) {
+          app.popNewFormDialog();
         }
       });
     })();

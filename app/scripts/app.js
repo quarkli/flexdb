@@ -305,6 +305,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     flexModel.remove('source-data/' + path);
   };
 
+  app.dropForm = function(event, params) {
+    if (formlist.forms.length < 2 && formlist.forms[0].name == params.name) {
+      formlist.refreshForms([]);
+      updateTablelist();
+    }
+    flexModel.remove('table-schema/' + params.name);
+    flexModel.remove('source-data/' + params.name);
+  };
+
   app.popCancelEditDialog = function(event, params) {
     cancelEditDialog.toggle();
   }
@@ -375,6 +384,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.cfmNewPassword = '';
   };
 
+  function updateTablelist() {
+    formlist.forms.forEach(function(e){
+      if (!tablelist.tables.find(function(f){return f.name == e.name})) {
+        tablelist.push('tables', {name: e.name, rows: 0});
+      }
+    });
+
+    tablelist.tables.forEach(function(e, i){
+      if (!formlist.forms.find(function(f){return f.name == e.name})) {
+        tablelist.splice('tables', i, 1);
+      }
+    });
+  }
+
   function initApp() {
     resetDefaultValues();
 
@@ -401,20 +424,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
       updateTablelist();
     });
-
-    function updateTablelist() {
-      formlist.forms.forEach(function(e){
-        if (!tablelist.tables.find(function(f){return f.name == e.name})) {
-          tablelist.push('tables', {name: e.name, rows: 0});
-        }
-      });
-
-      tablelist.tables.forEach(function(e, i){
-        if (!formlist.forms.find(function(f){return f.name == e.name})) {
-          tablelist.splice('tables', i, 1);
-        }
-      });
-    }
 
     page('/');
   }
