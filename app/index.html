@@ -101,9 +101,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <span>Table</span>
           </a>
 
-          <a data-route="compute" href="{{baseUrl}}compute">
-            <iron-icon icon="assessment"></iron-icon>
-            <span>Compute</span>
+          <a data-route="view" href="{{baseUrl}}view">
+            <iron-icon icon="view-quilt"></iron-icon>
+            <span>View</span>
           </a>
 
           <a on-tap="login">
@@ -156,12 +156,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-icon-button id="btn-canceledit" icon="clear" alt="Cancel" on-tap="popCancelEditDialog"></paper-icon-button>
             <paper-tooltip for="btn-canceledit">Cancel Edit</paper-tooltip>
           </template>
-          <!-- /form/input Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'form-input')}}">
+          <!-- /table/:table/input Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'data-input')}}">
             <paper-icon-button id="btn-finished" icon="check" alt="finished" on-tap="finishInput"></paper-icon-button>
             <paper-tooltip for="btn-finished">Input Finished</paper-tooltip>
             <paper-icon-button id="btn-savedata" icon="save" alt="save" on-tap="saveData"></paper-icon-button>
             <paper-tooltip for="btn-savedata">Save Data</paper-tooltip>
+          </template>
+          <!-- /form/:table/edit/:doc Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'data-edit')}}">
+            <div>
+              <paper-icon-button icon="check" alt="finished" on-tap="saveData"></paper-icon-button>
+              <paper-tooltip>Save Changes</paper-tooltip>
+            </div>
+            <div>
+              <paper-icon-button icon="clear" alt="cancel" on-tap="finishInput"></paper-icon-button>
+              <paper-tooltip>Cancel Edit</paper-tooltip>
+            </div>
           </template>
           <!-- /tables Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tables')}}">
@@ -171,8 +182,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-icon-button id="btn-newdata" icon="add" alt="add" on-tap="newData"></paper-icon-button>
             <paper-tooltip for="btn-newdata">Input Data</paper-tooltip>
           </template>
-          <!-- /compute Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'compute')}}">
+          <!-- /view Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'view')}}">
             <paper-icon-button icon="add" alt="add"></paper-icon-button>
           </template>
           <!-- /account Page Icons -->
@@ -207,9 +218,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <flex-forms id="formedit" mode="edit"></flex-forms>
             </section>
 
-            <section data-route="form-input" tabindex="-1">
+            <section data-route="data-input" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-forms id="forminput" mode="input" on-completed="saveData"></flex-forms>
+              <flex-forms id="datainput" mode="input" on-completed="saveData"></flex-forms>
+            </section>
+
+            <section data-route="data-edit" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-forms id="dataedit" mode="data" on-completed=""></flex-forms>
             </section>
 
             <section data-route="tables" tabindex="-1">
@@ -222,9 +238,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <flex-tableview id="tableview" on-datachanged="updateDocument" on-deletedoc="deleteDocument"></flex-tables>
             </section>
 
-            <section data-route="compute" tabindex="-1">
+            <section data-route="view" tabindex="-1">
               <paper-material elevation="1">
-                <h1 class="page-title" tabindex="-1">Compute</h1>
+                <h1 class="page-title" tabindex="-1">View</h1>
                 <p>Computing data</p>
               </paper-material>
             </section>

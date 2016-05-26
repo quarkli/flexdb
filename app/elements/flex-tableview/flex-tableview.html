@@ -26,14 +26,6 @@ This code may only be used under the MIT license.
       th {
         position: relative;
       }
-      th paper-icon-button[icon=clear] {
-        position: absolute;
-        top: -10px;
-        right: 0px;
-        margin: 0px;
-        padding: 0px;
-        width: 20px;
-      }
       div.header {
         @apply(--layout-horizontal);
         color: var(--secondary-text-color);
@@ -49,6 +41,17 @@ This code may only be used under the MIT license.
         text-decoration: underline;
         cursor: pointer;
       }
+      a {
+        color: white;
+      }
+      .delbtn {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        margin: 0px;
+        padding: 0px;
+        width: 20px;
+      }
     </style>
 
     <table class="main">
@@ -58,9 +61,14 @@ This code may only be used under the MIT license.
         </th>
         <template is="dom-repeat" items="[[data]]">
           <th>
-            {{getIdx(index)}}
-            <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
-            <paper-tooltip>Delete Data</paper-tooltip>
+            <div>
+              <a href="[[hashEditUrl(item.key)]]">{{getIdx(index)}}</a>
+              <paper-tooltip>Edit Data</paper-tooltip>
+            </div>
+            <div class="delbtn">
+              <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
+              <paper-tooltip>Delete Data</paper-tooltip>
+            </div>
           </th>
         </template>
       </tr>
@@ -285,6 +293,10 @@ This code may only be used under the MIT license.
             $(cols).last().css('border-bottom', '');
             $(cols).css('border-left', '').css('border-right', '');
           }
+        },
+
+        hashEditUrl: function(key) {
+          return '/tables/' + this.form.name + '/edit/' + key;
         }
       });
     })();

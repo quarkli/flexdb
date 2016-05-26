@@ -91,12 +91,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         page('/tables');
         return;
       }
-      forminput.refreshForms([form]);
+      datainput.refreshForms([form]);
 
-      app.route = 'form-input';
+      app.route = 'data-input';
       app.title = 'Input Data';
       app.desp = 'Data Input';
       setFocus(app.route);
+    });
+
+    page('/tables/:id/edit/:doc', function(data) {
+      var table = data.params.id;
+      var doc = data.params.doc;
+      app.getDocument(table, doc, function(data, object){
+        dataedit.refreshForms([{name: table, data: flexTools.json2array(object)}]);
+        app.route = 'data-edit';
+        app.title = 'Edit Data';
+        app.desp = 'Data Edit';
+        setFocus(app.route);
+      });
+
     });
 
     page('/tables', function() {
@@ -113,7 +126,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return;
       }
       tableview.form = form;
-      app.getData(form.name, function(data){
+      app.getTable(form.name, function(data){
         tableview.refreshData(data);
       });
 
@@ -123,10 +136,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/compute', function() {
-      app.route = 'compute';
-      app.title = 'Compute';
-      app.desp = 'Computing data';
+    page('/view', function() {
+      app.route = 'view';
+      app.title = 'View';
+      app.desp = 'Data Views';
       setFocus(app.route);
     });
 

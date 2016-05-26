@@ -96,6 +96,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <template is="dom-if" if="[[curMode(mode, 'input')]]">
                   <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
                 </template>
+                <template is="dom-if" if="[[curMode(mode, 'data')]]">
+                  <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
+                </template>
               </div>
               </paper-material>
             </template>

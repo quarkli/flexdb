@@ -119,9 +119,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.getData = function(tablename, cb) {
+  app.getTable = function(tablename, cb) {
     flexModel.get('source-data/' + tablename, function(data) {
       if (cb) cb(data);
+    });
+  };
+
+  app.getDocument = function(table, doc, cb) {
+    flexModel.get('source-data/' + table + '/' + doc, function(d, o) {
+      if (cb) cb(d, o);
     });
   };
 
@@ -262,18 +268,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.finishInput = function(event, params) {
-    page('/tables/' + forminput.forms[0].name);
+    var path = page.current.split('/');
+    path = path.slice(0, 3);
+    page(path.join('/'));
   };
 
   app.saveData = function(event, params) {
-    var table = forminput.forms[0].name;
+    var target = page.current.match('input') ? datainput : dataedit;
+    var table = target.forms[0].name;
     var hasData = false;
-    var data = flexTools.array2json(forminput.forms[0].data);
+    var data = flexTools.array2json(target.forms[0].data);
     flexTools.objectNodeIterator(data, function(e){hasData = hasData || e.length > 0});
 
     if (formExists(table) && hasData) {
-      flexModel.push('source-data/' + table, flexTools.array2json(forminput.forms[0].data));
-      page('/tables/' + table + '/input');
+      data = flexTools.array2json(target.forms[0].data);
+      if (target == datainput) {
+        flexModel.push('source-data/' + table, data);
+        page('/tables/' + table + '/input');
+      }
+      else {
+        var key = page.current.split('/').pop();
+        flexModel.set('source-data/' + table + '/' + key, data);
+        page('/tables/' + table);
+      }
     }
     else {
       popToast("No data inputed, save skipped!", '#F48FB1');
@@ -324,12 +341,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   }
 
   app.popNewFormDialog = function(event, params) {
+    if (!app.authenticated) {
+      app.login();
+      return;
+    }
     app.newFormName = '';
     formedit.splice('forms', 0);
     newFormDialog.toggle();
   };
 
   app.popImportDialog = function(event, params) {
+    if (!app.authenticated) {
+      app.login();
+      return;
+    }
     app.newFormName = '';
     app.extjson = '';
     importDialog.toggle();
