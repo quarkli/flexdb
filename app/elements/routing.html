@@ -136,10 +136,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/view', function() {
-      app.route = 'view';
+    page('/views', function() {
+      app.route = 'views';
       app.title = 'View';
       app.desp = 'Data Views';
+      setFocus(app.route);
+    });
+
+    page('/views/wizard', function() {
+      viewwizard.selected = 0;
+      viewwizard.splice('tables', 0);
+      tablelist.tables.forEach(function(e){
+        viewwizard.push('tables', e.name);
+      });
+      app.route = 'view-wizard';
+      app.title = 'Create View';
+      app.desp = 'Create Views';
       setFocus(app.route);
     });
 

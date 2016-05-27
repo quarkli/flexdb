@@ -101,7 +101,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <span>Table</span>
           </a>
 
-          <a data-route="view" href="{{baseUrl}}view">
+          <a data-route="view" href="{{baseUrl}}views">
             <iron-icon icon="view-quilt"></iron-icon>
             <span>View</span>
           </a>
@@ -179,12 +179,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </template>
           <!-- /tables Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tableview')}}">
-            <paper-icon-button id="btn-newdata" icon="add" alt="add" on-tap="newData"></paper-icon-button>
-            <paper-tooltip for="btn-newdata">Input Data</paper-tooltip>
+            <div>
+              <paper-icon-button icon="filter-list" alt="filter" on-tap="popFilterDialog"></paper-icon-button>
+              <paper-tooltip>Filter Data</paper-tooltip>
+            </div>
+            <div>
+              <paper-icon-button icon="add" alt="add" on-tap="newData"></paper-icon-button>
+              <paper-tooltip>Input Data</paper-tooltip>
+            </div>
           </template>
           <!-- /view Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'view')}}">
-            <paper-icon-button icon="add" alt="add"></paper-icon-button>
+          <template is="dom-if" if="{{curPage(route, 'views')}}">
+            <a data-route="forms" href="{{baseUrl}}views/wizard">
+              <div>
+                <paper-icon-button icon="add" alt="add"></paper-icon-button>
+                <paper-tooltip>Create View</paper-tooltip>
+              </div>
+            </a>
           </template>
           <!-- /account Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'account')}}">
@@ -238,11 +249,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <flex-tableview id="tableview" on-datachanged="updateDocument" on-deletedoc="deleteDocument"></flex-tables>
             </section>
 
-            <section data-route="view" tabindex="-1">
-              <paper-material elevation="1">
-                <h1 class="page-title" tabindex="-1">View</h1>
-                <p>Computing data</p>
-              </paper-material>
+            <section data-route="views" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-views id="viewlist"></flex-views>
+            </section>
+
+            <section data-route="view-wizard" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-viewwizard id="viewwizard"></flex-viewwizard>
             </section>
 
             <section data-route="account" tabindex="-1">

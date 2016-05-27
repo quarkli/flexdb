@@ -11,6 +11,7 @@ This code may only be used under the MIT license.
 
 <dom-module id="flex-tableview">
   <template>
+    <style include="shared-styles"></style>
     <style>
       :host {
         display: block;
@@ -25,13 +26,6 @@ This code may only be used under the MIT license.
       }
       th {
         position: relative;
-      }
-      div.header {
-        @apply(--layout-horizontal);
-        color: var(--secondary-text-color);
-      }
-      div span.space {
-        @apply(--layout-flex);
       }
       #deleteDataDialog {
         width: 280px;
@@ -75,7 +69,7 @@ This code may only be used under the MIT license.
       <template is="dom-repeat" items="[[headerfields]]">
         <tr>
             <td class="headerfield">
-              <span class="fieldKey" on-tap="sortData">{{item.key}}</span>
+              <span class="fieldKey" field="{{item}}" on-tap="sortData">{{item.key}}</span>
             </td>
             <template is="dom-repeat" items="[[data]]" as="doc">
               <td>
@@ -90,7 +84,7 @@ This code may only be used under the MIT license.
       <div class="header">
         <h2>Delete Selected Data?</h2>
         <span class="space"></span>
-        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss tabIndex="-1"></paper-icon-button>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss tabIndex="-1" on-tap="cancelDelete"></paper-icon-button>
       </div>
       <div class="buttons">
         <paper-button dialog-confirm on-tap="fireDelEvent">Delete</paper-button>
@@ -208,10 +202,11 @@ This code may only be used under the MIT license.
             target.innerText = target.innerText.replace('>> ', '<< ');
           }
 
-          var key = target.innerText.split(' ')[1];
-
           var data = this.splice('data', 0);
-          flexTools.sort(data, key, !target.innerText.match('<<'));
+          var path = target.field.path.slice();
+          path.splice(0, 0, 'data');
+          var node = {k: target.field.key, p: path};
+          flexTools.sort(data, flexTools.buildPathFromNode(node), !target.innerText.match('<<'));
           data.forEach(function(e){
             me.push('data', e);
           });

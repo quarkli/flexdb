@@ -1,0 +1,350 @@
+<!--
+@license
+Copyright (c) 2016 Quark Li. All rights reserved.
+This code may only be used under the MIT license.
+-->
+
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-styles/typography.html">
+<link rel="import" href="../elements.html">
+<link rel="import" href="../../include.html">
+
+<dom-module id="flex-viewwizard">
+  <template>
+    <style include="shared-styles"></style>
+    <style>
+      :host {
+        display: block;
+      }
+      .container {
+        padding: 50px;
+      }
+      .itemtitle {
+        @apply(--layout-flex);
+      }
+      paper-icon-item {
+        cursor: pointer;
+      }
+      #tableItemList {
+        height: 155px;
+      }
+      paper-item {
+        min-width: 80px;
+        overflow-x: hidden;
+      }
+      .itembtns {
+        @apply(--layout-horizontal);
+      }
+      #itemAddFilter {
+        color: var(--primary-color);
+      }
+    </style>
+
+    <div class="container">
+      <iron-pages id="wizardpages" selected="{{selectedPage}}">
+        <div id="step1">
+          <h2>Step 1. Add Source Data</h2>
+          <p>Add source of data to be further processed.</p>
+          <h3>Tables</h3>
+          <iron-list id="tableItemList" items="[[tables]]" selected-items="{{selectedTables}}" selection-enabled multi-selection scroll-target="tableItemList">
+            <template>
+              <paper-icon-item>
+                <iron-icon icon="dns" item-icon></iron-icon>
+                <div class="itemtitle">{{item}}</div>
+                <template is="dom-if" if="[[selected]]">
+                  <iron-icon icon="check"></iron-icon>
+                </template>
+              </paper-icon-item>
+            </template>
+          </iron-list>
+          <p></p><hr>
+          <div class="buttons" align="right">
+            <paper-button on-tap="updateFilters" disabled="[[!selectedTables.length]]">Next</paper-button>
+          </div>
+        </div>
+
+        <div id="step2">
+          <h2>Step 2. Add Filter</h2>
+          <p>Filter the data for what is really intereted.</p>
+          <paper-icon-item id="itemAddFilter" on-tap="popFilterDialog">
+            <iron-icon icon="add" item-icon></iron-icon>
+            <div class="itemtitle">Filter</div>
+          </paper-icon-item>
+          <iron-list id="filterList" items="[[filters]]" scroll-target="filterList">
+            <template>
+              <paper-icon-item value="{{index}}">
+                <iron-icon icon="filter-list" item-icon></iron-icon>
+                <div class="itemtitle">{{item.statement}}</div>
+                <div class="itembtns">
+                  <div>
+                    <paper-icon-button icon="create" on-tap="editFilter"></paper-icon-button>
+                  </div>
+                  <div>
+                    <paper-icon-button icon="clear" on-tap="removeFilter"></paper-icon-button>
+                  </div>
+                </div>
+              </paper-icon-item>
+            </template>
+          </iron-list>
+          <p></p><hr>
+          <div class="buttons" align="right">
+            <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
+            <paper-button onclick="wizardpages.selectNext();">Next</paper-button>
+          </div>
+        </div>
+
+        <div id="step3">
+          <h2>Step 3. Add Calculations</h2>
+          <p>Add calculation items to digest source data and output with computational result.</p>
+          <p></p><hr>
+          <div class="buttons" align="right">
+            <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
+            <paper-button onclick="wizardpages.selectNext();">Next</paper-button>
+          </div>
+        </div>
+
+        <div id="step4">
+          <h2>Stept 4. Generate View</h2>
+          <p>When all condistions have been setup, here we can check out our result.</p>
+          <p></p><hr>
+          <div class="buttons" align="right">
+            <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
+            <paper-button>Generate</paper-button>
+          </div>
+        </div>
+      </iron-pages>
+    </div>
+
+    <paper-dialog id="filterDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
+      <div class="header">
+        <h2>Creat Filter</h2>
+        <span class="space"></span>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss tabIndex="-1"></paper-icon-button>
+      </div>
+      <div>
+        <paper-dropdown-menu label="Select Table" value={{filterTable}}>
+          <paper-listbox id="listTable" class="dropdown-content">
+            <template is="dom-repeat" items="[[selectedTables]]">
+              <paper-item>{{item}}</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+        <paper-dropdown-menu label="Select Field" value="{{filterField}}">
+          <paper-listbox id="listField" class="dropdown-content">
+            <template is="dom-repeat" items="[[fields]]">
+              <paper-item>{{item}}</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+        <paper-dropdown-menu label="Evaluated Method" value="{{evalMethod}}">
+          <paper-listbox id="listMethod" class="dropdown-content">
+            <paper-item> > </paper-item>
+            <paper-item> < </paper-item>
+            <paper-item> == </paper-item>
+            <paper-item> != </paper-item>
+            <paper-item> >= </paper-item>
+            <paper-item> <= </paper-item>
+            <paper-item> match </paper-item>
+            <paper-item> like </paper-item>
+          </paper-listbox>
+        </paper-dropdown-menu>
+        <label>{{evalMethodDesc(evalMethod)}}</label>
+        <paper-input id="evalValue" label="Evaluated Value" value="{{evalValue}}"></paper-input>
+      </div>
+      <div class="buttons">
+        <paper-button class="defaultConfirm" dialog-confirm on-tap="saveFilter" disabled="[[validFilter(filterTable, filterField, evalMethod, evalValue)]]" hidden="[[!editingFilter]]">Save</paper-button>
+        <paper-button class="defaultConfirm" dialog-confirm on-tap="addFilter" disabled="[[validFilter(filterTable, filterField, evalMethod, evalValue)]]" hidden="[[editingFilter]]">Create</paper-button>
+        <paper-button dialog-dismiss>Cancel</paper-button>
+      </div>
+    </paper-dialog>
+
+  </template>
+
+  <script>
+    (function() {
+      'use strict';
+
+      Polymer({
+        is: 'flex-viewwizard',
+
+        properties: {
+          tables: {
+            type: Array,
+            value: function(){return []},
+            notify: true
+          },
+          selectedPage: {
+            type: Number,
+            value: 0,
+            notify: true
+          },
+          selectedTables: {
+            type: Object
+          },
+          tables: {
+            type: Array,
+            value: function(){return [];},
+            notify: true
+          },
+          fields: {
+            type: Array,
+            value: function(){return [];},
+            notify: true
+          },
+          filters: {
+            type: Array,
+            value: function(){return [];},
+            notify: true
+          },
+          filterTable: {
+            type: String,
+            value: '',
+            notify: true,
+            observer: 'refreshFields'
+          },
+          filterField: {
+            type: String,
+            value: '',
+            notify: true,
+          },
+          evalMethod: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          evalValue: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          editingFilter: {
+            type: Boolean,
+            value: false,
+            notify: true
+          }
+        },
+
+        popFilterDialog: function(e) {
+          $('paper-listbox').each(function(i, e){
+            e.selected = -1;
+          });
+          this.evalValue = '';
+          this.editingFilter = false;
+          this.$$('#filterDialog').filter = null;
+          this.$$('#filterDialog').toggle();
+        },
+
+        refreshFields: function(e) {
+          var me = this;
+          var form = app.getForm(this.filterTable);
+          this.splice('fields', 0);
+
+          if (form) {
+            var obj = flexTools.array2json(form.data);
+            flexTools.objectNodeIterator(obj, function(e, k, p, o){
+              var path = p.slice();
+              path.push(k);
+              me.push('fields', path.join('/'));
+            });
+          }
+        },
+
+        evalMethodDesc: function(method) {
+          switch(method) {
+            case '>': return '(Greater Than)';
+            case '<': return '(Less Than)';
+            case '==': return '(Equal To)';
+            case '!=': return '(Not Equal To)';
+            case '>=': return '(Greater Than or Equal To)';
+            case '<=': return '(Less Than or Equal To)';
+            case 'match': return '(Match keyword, case-sensitive)';
+            case 'like': return '(Match Keyword, case-insensitive)';
+          }
+        },
+
+        validFilter: function(a, b, c, d) {
+          return !a || !b || !c || !d;
+        },
+
+        addFilter: function() {
+          var value = isNaN(this.evalValue) ? '"' + this.evalValue + '"' : this.evalValue;
+          var filter = {};
+
+          filter.table = this.filterTable;
+          filter.field = this.filterField;
+          filter.path = flexTools.convertPath(this.filterField);
+          filter.method = this.evalMethod;
+          filter.value = this.evalValue;
+          filter.statement = filter.table + filter.path + ' ' + filter.method + ' ' + value;
+
+          this.push('filters', filter);
+        },
+
+        removeFilter: function(e) {
+          var target = $(e.target).parents('paper-icon-item')[0];
+          this.splice('filters', target.value, 1);
+        },
+
+        editFilter: function(e) {
+          this.$$('#filterDialog').toggle();
+          var target = $(e.target).parents('paper-icon-item')[0];
+          var filter = this.filters[target.value];
+          var table = $('#filterDialog').find('paper-item:contains(' + filter.table + ')');
+          table.parent()[0].selected = table.index();
+
+          // wait for refreshFields
+          setTimeout(function() {
+            var field = $('#filterDialog').find('paper-item:contains(' + filter.field + ')');
+            field.parent()[0].selected = field.index();
+          }, 50);
+
+          var method = $('#filterDialog').find('paper-item:contains(' + filter.method + ')');
+          method.parent()[0].selected = method.index();
+          this.evalValue = filter.value;
+          this.editingFilter = true;
+          this.$$('#filterDialog').filter = target.value;
+        },
+
+        saveFilter: function(e) {
+          var id = this.$$('#filterDialog').filter;
+          var filter = this.splice('filters', id, 1)[0];
+
+          // change value in the same object will not trigger data-binding event
+          // copy the object to a new one will do the trick
+          filter = JSON.parse(JSON.stringify(filter));
+          var value = isNaN(this.evalValue) ? '"' + this.evalValue + '"' : this.evalValue;
+          filter.table = this.filterTable;
+          filter.field = this.filterField;
+          filter.path = flexTools.convertPath(this.filterField);
+          filter.method = this.evalMethod;
+          filter.value = this.evalValue;
+          filter.statement = filter.table + filter.path + ' ' + filter.method + ' ' + value;
+          this.splice('filters', id, 0, filter)
+        },
+
+        updateFilters: function() {
+          var me = this;
+          var removed = [];
+          this.filters.forEach(function(e, i){
+            if (me.selectedTables.indexOf(e.table) < 0) removed.splice(0, 0, i);
+          });
+
+          removed.forEach(function(e){
+            me.splice('filters', e, 1);
+          });
+          this.$$('#wizardpages').selectNext();
+        }
+      });
+    })();
+  </script>
+</dom-module>

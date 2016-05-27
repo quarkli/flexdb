@@ -10,36 +10,38 @@ This code may only be used under the MIT license.
   function FlexTools() {
     var me = this;
 
-    // internal function to retrieve the path of object node
-    function _getPath(data, node) {
-      var path = [];
-      var key = '';
-      objectNodeIterator(data, function(e,k,p,o){
-        if (k == node) {
-          path = p.slice();
-          key = k;
-        }
-      },true,true);
-      path.push(key);
-      path.splice(0, 1);
-      path = path.map(function(a,b){return '["'+a+'"]'}).reduce(function(a,b){return a+b}, '');
-      return path;
+    // Convert a path string "tables/test/key1" to ["tables"]["test"]["key1"]
+    // Arguments:
+    // path - path string as the above example
+    this.convertPath = convertPath;
+    function convertPath(path) {
+      return '["' + path.split('/').join('"]["') + '"]';
     }
 
-    this.avg = avg;
-    // calculate average value of a specific node in a object array data
+    // Create an object path, like ["path0"]["path1"]["key"], from a node object
+    // Arguments:
+    // node - a node object is {k: <node_key>, p: <path_array>, v: <node_value>}
+    this.buildPathFromNode = buildPathFromNode;
+    function buildPathFromNode(node) {
+      var path = JSON.parse(JSON.stringify(node));
+      path.p.push(path.k);
+      path = path.p.join('"]["');
+      return '["' + path + '"]';
+    }
+
+    // calculate average value of a specific path in a object array data
     // Arguments:
     //  data - source data of object array
-    //  node - the specific node to be calculated
+    //  path - the specific path to be calculated
     //  start - the start index of range of array to be calculated, starts from 1, default: 1
     //  len - the length of range of array from start index to be calculated, default: array size
-    //  incEmpty - if a node has no value, whether to count it in as average divider, default: true
-    function avg(data, node, start, len, incEmpty) {
+    //  incEmpty - if a path has no value, whether to count it in as average divider, default: true
+    this.avg = avg;
+    function avg(data, path, start, len, incEmpty) {
       start = start || 1;
       len = len || data.length;
       incEmpty = incEmpty  === undefined ? true : incEmpty;
 
-      var path = _getPath(data, node);
       var count = len;
       if (!incEmpty) {
         count = data.reduce(function(e1, e2, i){
@@ -47,21 +49,20 @@ This code may only be used under the MIT license.
           return eval('e2' + path).length || isNaN(eval('e2' + path)) ? ++e1 : e1;
         }, 0);
       }
-      return sum(data, node, start, len) / count;
+      return sum(data, path, start, len) / count;
     }
 
-    this.sum = sum;
-    // calculate summarization of a specific node in a object array data
+    // calculate summarization of a specific path in a object array data
     // Arguments:
     //  data - source data of object array
-    //  node - the specific node to be calculated
+    //  path - the specific path to be calculated
     //  start - the start index of range of array to be calculated, starts from 1, default: 1
     //  len - the length of range of array from start index to be calculated, default: array size
-    function sum(data, node, start, len) {
+    this.sum = sum;
+    function sum(data, path, start, len) {
       start = start || 1;
       len = len || data.length;
 
-      var path = _getPath(data, node);
       return data.reduce(function(e1, e2, i){
         // console.log(i, (i < start || i > end), e1)
         if (i < start - 1 || i > start + len - 2) return e1;
@@ -69,21 +70,19 @@ This code may only be used under the MIT license.
       }, 0);
     }
 
-    this.sort = sort;
-    // sort an object array data by specific node
+    // sort an object array data by specific path
     // Arguments:
     //  data - source data of object array
-    //  node - the specific node to be sorted
+    //  path - the specific path to be sorted
     //  ascending - the sort order is ascending or descending, default ascending
-    function sort(data, node, ascending) {
+    this.sort = sort;
+    function sort(data, path, ascending) {
       ascending = ascending  === undefined ? true : ascending;
-
-      var path = _getPath(data, node);
 
       data.sort(function(a,b){
         // compare numbers
         var aval = eval('a' + path);
-        var bval = eval('b' + path)
+        var bval = eval('b' + path);
         if (!isNaN(aval) && !isNaN(bval)) {
           return ascending ? aval - bval : bval　- aval;
         }
@@ -100,7 +99,60 @@ This code may only be used under the MIT license.
       });
     }
 
-    this.objectNodeIterator = objectNodeIterator;
+    // filter an object array data by specific query statement, filtered objects
+    // will be returned in a callback function
+    // Arguments:
+    //  data - source data of object array
+    //  query - query statement
+    //  cb - callback function with the prototype =>
+    //    cb(filteredObjectArray)
+    this.filter = filter;
+    function filter(data, query, cb) {
+      var unmatched = [];
+      var filtered = []
+      var statement = query.path;
+      if (isNaN(query.value)) query.value = '"' + query.value +'"';
+
+      switch (query.term) {
+        case 'lt':
+          statement += '<' + query.value;
+          break;
+        case 'gt':
+          statement += '>' + query.value;
+          break;
+        case 'eq':
+          statement += '==' + query.value;
+          break;
+        case 'neq':
+          statement += '!=' + query.value;
+          break;
+        case 'leq':
+          statement += '<=' + query.value;
+          break;
+        case 'geq':
+          statement += '>=' + query.value;
+          break;
+        case 'match':
+          statement += '.match("' + query.value + '")';
+          break;
+        case 'like':
+          statement += '.toLowerCase().match(("' + query.value + '").toLowerCase())';
+          break;
+      }
+
+      data.forEach(function(e, i, o){
+        if (!eval('e' + statement)) {
+          unmatched.splice(0, 0, i);
+        }
+      });
+
+      unmatched.forEach(function(e){
+        filtered.splice(0, 0, data.splice(e, 1)[0]);
+      });
+
+      if (cb) cb(filtered);
+    }
+
     // Recursive iteration on a Javascript Object with self/cross-reference protection
     // Arguments:
     //  obj - Object to be iterated
@@ -112,6 +164,7 @@ This code may only be used under the MIT license.
     //    each Array node, if FALSE, iterator treat Array as value
     //  path - internal use for recursive tracking, should not be set by application call.
     //  cache - internal use for recursive tracking, should not be set by application call.
+    this.objectNodeIterator = objectNodeIterator;
     function objectNodeIterator(obj, cb, leafOnly, arrayAsObj, path, cache) {
       leafOnly = leafOnly === undefined ? true : leafOnly;
       arrayAsObj = arrayAsObj === undefined ? false : arrayAsObj;
@@ -136,7 +189,6 @@ This code may only be used under the MIT license.
       }
     }
 
-    this.json2array = json2array;
     // Convert a JSON data to an Array data
     // example:
     // json = {
@@ -160,6 +212,7 @@ This code may only be used under the MIT license.
     //   jsn - source JSON data
     // Return:
     //   Converted Array data
+    this.json2array = json2array;
     function json2array(jsn) {
       var ret = [];
 
@@ -192,8 +245,8 @@ This code may only be used under the MIT license.
       return ret;
     }
 
-    this.array2json = array2json
     // Convert a Array data to an JSON data, the reverse function of json2array
+    this.array2json = array2json
     function array2json(ary) {
       function iter(ary, obj) {
         ary.forEach(function(e){

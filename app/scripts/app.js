@@ -15,6 +15,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 (function(document) {
   'use strict';
 
+  function supportsPolymer() {
+    return 'content' in document.createElement('template') && 'import' in document.createElement('link') && 'registerElement' in document && document.head.createShadowRoot;
+  }
+  if(!supportsPolymer()) {
+   alert("The browser does not support HTML5.\n Use Chrome, Firefox, Opera, or Safari(6+) to run this applicaiton.");
+  }
+
   // Grab a fbaseerence to our auto-binding template
   // and give it some initial binding values
   // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
@@ -110,8 +117,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   // Generic Functions
   app.getForm = function(name) {
-    var id = formlist.forms.findIndex(function(e){return e.name == name;});
     try{
+      var id = formlist.forms.findIndex(function(e){return e.name == name;});
       return id > -1 ?　JSON.parse(JSON.stringify(formlist.forms[id])) : undefined;
     }
     catch(e) {
