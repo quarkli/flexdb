@@ -75,7 +75,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <div id="step2">
           <h2>Step 2. Add Filter</h2>
-          <p>Filter the data for what is really intereted.</p>
+          <p>Filter the data for what is really interested.</p>
           <paper-icon-item id="itemAddFilter" on-tap="popFilterDialog">
             <iron-icon icon="add" item-icon></iron-icon>
             <div class="itemtitle">Filter</div>
@@ -255,6 +255,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             value: '',
             notify: true
           }
+        },
+
+        init: function(tables) {
+          var me = this;
+          this.splice('tables', 0);
+          tables.forEach(function(e){
+            me.push('tables', e.name);
+          });
+
+          this.selectedPage = 0;
+          this.splice('filters', 0);
+          this.filterTable = '';
+          this.filterField = '';
+          this.evalMethod = '';
+          this.evalValue = '';
+          this.editingFilter = false;
+          this.splice('viewDef', 0);
+          this.viewName = '';
         },
 
         popFilterDialog: function(e) {

@@ -56,7 +56,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </template>
         <template is="dom-if" if="{{curMode(mode, 'edit')}}">
           <paper-icon-button id="btn-additem" icon="add" alt="New" on-tap="editItem" tabIndex="-1"></paper-icon-button>
-          <paper-tooltip for="btn-additem">Add Item</paper-tooltip>
+          <paper-tooltip for="btn-additem">Add Content</paper-tooltip>
           <template is="dom-if" if="[[!isRoot]]">
             <paper-icon-button id="btn-dropsec" icon="clear" alt="Drop" on-tap="editItem" tabIndex="-1"></paper-icon-button>
             <paper-tooltip for="btn-dropsec">Drop Section</paper-tooltip>
@@ -123,14 +123,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <paper-dialog id="addDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
       <div class="header">
-        <h2>Add Item</h2>
+        <h2>Add Content</h2>
         <span class="space"></span>
         <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss  tabIndex="-1"></paper-icon-button>
       </div>
-      <paper-input class="defaultFocus" label="New Item Name" value="{{newItemName}}" maxlength="20"></paper-input>
+      <paper-input class="defaultFocus" label="Content Name" value="{{newItemName}}" maxlength="20"></paper-input>
       <div class="buttons">
-        <paper-button dialog-confirm on-tap="addItem" disabled=[[!newItemName]]>Add SECTION</paper-button>
-        <paper-button dialog-dismiss on-tap="addItem" disabled=[[!newItemName]]>Add FIELD</paper-button>
+        <paper-button dialog-confirm on-tap="addItem" disabled=[[!newItemName]]>As SECTION</paper-button>
+        <paper-button dialog-dismiss on-tap="addItem" disabled=[[!newItemName]]>As FIELD</paper-button>
       </div>
     </paper-dialog>
 
