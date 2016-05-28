@@ -19,7 +19,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return 'content' in document.createElement('template') && 'import' in document.createElement('link') && 'registerElement' in document && document.head.createShadowRoot;
   }
   if(!supportsPolymer()) {
-   alert("The browser does not support HTML5.\n Use Chrome, Firefox, Opera, or Safari(6+) to run this applicaiton.");
+   alert("The browser does not support.innerHTML5.\n Use Chrome, Firefox, Opera, or Safari(6+) to run this applicaiton.");
   }
 
   // Grab a fbaseerence to our auto-binding template
@@ -150,14 +150,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.auth = function(event, params) {
-    if (flexModel) flexModel.auth(app.email, app.password, function(err, uid){
-      if (uid) {
-        initApp();
-      }
-      else {
-        popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
-      }
-    });
+    if (flexModel) {
+      spinReason.innerHTML = "Logging in";
+      spinDialog.opened = true;
+      flexModel.auth(app.email, app.password, function(err, uid){
+        spinReason.innerHTML = "";
+        spinDialog.opened = false;
+        if (uid) {
+          initApp();
+        }
+        else {
+          popToast('!!! User logged in failed, please check your email and password!', '#F48FB1');
+        }
+      });
+    }
   };
 
   app.regUser = function(event, params) {
@@ -165,7 +171,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.newUser = function(event, params) {
+    spinReason.innerHTML = "Registering";
+    spinDialog.opened = true;
     flexModel.newUser(app.email, app.password, function(e,d){
+      spinReason.innerHTML = "";
+      spinDialog.opened = false;
       if (e) {
         popToast("Registration failed! Reason: " + e, '#F48FB1');
       }
@@ -182,7 +192,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       popToast("You cannot change password of guest account!", '#F48FB1');
     }
     else {
+      spinReason.innerHTML = "Changing Password";
+      spinDialog.opened = true;
       flexModel.changePassword(app.password, app.newPassword, function(e){
+        spinReason.innerHTML = "";
+        spinDialog.opened = false;
         if (e) {
           popToast("Passowrd change failed! Reason: " + e, '#F48FB1');
         }
@@ -198,7 +212,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       popToast("You cannot delete guest account!", '#F48FB1');
     }
     else {
+      spinReason.innerHTML = "Deleting Account";
+      spinDialog.opened = true;
       flexModel.deleteAccount(app.password, function(e){
+        spinReason.innerHTML = "";
+        spinDialog.opened = false;
         if (e) {
           popToast("Deleting account failed! Reason: " + e, '#F48FB1');
         }

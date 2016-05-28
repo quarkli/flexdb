@@ -17,6 +17,11 @@ body {
   overflow: auto;
 }
 
+#spinDialog {
+  min-width: 120px;
+  border-radius: 4px;
+}
+
 table, tr, td, th {
   border-style: solid;
   border-width: 1px;

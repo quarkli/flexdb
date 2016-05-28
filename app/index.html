@@ -180,8 +180,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!-- /tables Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tableview')}}">
             <div>
-              <paper-icon-button icon="filter-list" alt="filter" on-tap="popFilterDialog"></paper-icon-button>
-              <paper-tooltip>Filter Data</paper-tooltip>
+              <paper-icon-button icon="search" alt="search" on-tap="popSearchTableDialog"></paper-icon-button>
+              <paper-tooltip>Search Data</paper-tooltip>
             </div>
             <div>
               <paper-icon-button icon="add" alt="add" on-tap="newData"></paper-icon-button>
@@ -397,6 +397,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <div class="buttons">
           <paper-button class="defaultConfirm" dialog-confirm on-tap="saveas" disabled="[[!newFormName]]">Save as</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
+        </div>
+      </paper-dialog>
+    </template>
+
+    <template is="dom-if" if="{{1}}">
+      <paper-dialog id="spinDialog" modal role="alertdialog">
+        <div align="center">
+          <paper-spinner-lite active></paper-spinner-lite>
+          <h4 id="spinReason"></h4>
         </div>
       </paper-dialog>
     </template>

@@ -104,22 +104,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </div>
 
         <div id="step3">
-          <h2>Step 3. Add Calculations</h2>
-          <p>Add calculation items to digest source data and output with computational result.</p>
+          <h2>Step 3. Define the View</h2>
+          <p>Define a view is like create a form. The difference is a view can use reference data from saved tables, views, or field in the view itself.</p>
+          <a href="#"  onclick="step3hint.toggle();return false;">
+            <h3>(See Hint)</h3>
+          </a>
+          <iron-collapse id="step3hint">
+            <p><b>Primary Key</b> - Primary key may define whether the view will be a single, grouping, or by-document computational result. For example, if you want to create a summary or average calculations over a source table, name the primary with a static name.</p>
+            <p>  If you want to do the summary or average on a field basis, like a company, or a combined fields basis, like company + year, create the primary key with a reference.</p>
+            <p>  To create a by-document computation, create the primary key with a reference which is unique in the souce table.</p>
+          </iron-collapse>
           <p></p><hr>
           <div class="buttons" align="right">
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
-            <paper-button onclick="wizardpages.selectNext();">Next</paper-button>
+            <paper-button onclick="wizardpages.selectNext();viewname.focus();">Next</paper-button>
           </div>
         </div>
 
         <div id="step4">
-          <h2>Stept 4. Generate View</h2>
-          <p>When all condistions have been setup, here we can check out our result.</p>
+          <h2>Stept 4. Name the View</h2>
+          <paper-input id="viewname" label="Name of View" value="{{viewName}}"></paper-input>
+          <p>When a view has been setup, assign a specific name to the view and generate the computational result.</p>
           <p></p><hr>
           <div class="buttons" align="right">
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
-            <paper-button>Generate</paper-button>
+            <paper-button disabled="[[!viewName]]">Generate</paper-button>
           </div>
         </div>
       </iron-pages>
@@ -162,8 +171,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-input id="evalValue" label="Evaluated Value" value="{{evalValue}}"></paper-input>
       </div>
       <div class="buttons">
-        <paper-button class="defaultConfirm" dialog-confirm on-tap="saveFilter" disabled="[[validFilter(filterTable, filterField, evalMethod, evalValue)]]" hidden="[[!editingFilter]]">Save</paper-button>
-        <paper-button class="defaultConfirm" dialog-confirm on-tap="addFilter" disabled="[[validFilter(filterTable, filterField, evalMethod, evalValue)]]" hidden="[[editingFilter]]">Create</paper-button>
+        <template is="dom-if" if="[[editingFilter]]">
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="saveFilter" disabled="[[validFilter(filterTable, filterField, evalMethod, evalValue)]]">Save</paper-button>
+        </template>
+        <template is="dom-if" if="[[!editingFilter]]">
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="addFilter" disabled="[[validFilter(filterTable, filterField, evalMethod, evalValue)]]">Create</paper-button>
+        </template>
         <paper-button dialog-dismiss>Cancel</paper-button>
       </div>
     </paper-dialog>
@@ -230,6 +243,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           editingFilter: {
             type: Boolean,
             value: false,
+            notify: true
+          },
+          viewDef: {
+            type: Array,
+            value: function(){return [];},
+            notify: true
+          },
+          viewName: {
+            type: String,
+            value: '',
             notify: true
           }
         },
