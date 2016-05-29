@@ -19,7 +19,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../elements.html">
 <link rel="import" href="../../include.html">
 
-<dom-module id="flex-tablebanner">
+<dom-module id="flex-banner">
   <template>
     <style include="shared-styles">
       :host {
@@ -30,11 +30,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <paper-material class="paper-table" elevation="1" on-tap="viewTable">
+    <paper-material class="paper-table" elevation="1" on-tap="openItem">
       <div class="header">
         <h3><iron-icon icon="dns"></iron-icon>{{id}}</h3>
         <span class="space"></span>
-        <h3>{{rows}} Documents</h3>
+        <template is="dom-if" if="[[!hideRows]]">
+          <h3>{{getRows(rows)}} Documents</h3>
+        </template>
       </div>
     </paper-material>
 
@@ -45,18 +47,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       'use strict';
 
       Polymer({
-        is: 'flex-tablebanner',
+        is: 'flex-banner',
 
         properties: {
           rows: {
             type: Number,
             value: 0,
             notify: true
+          },
+          hideRows: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
+          itemPath: {
+            type: String,
+            value: '',
+            notify: true
           }
         },
 
-        viewTable: function() {
-          page('/tables/' + this.id);
+        getRows: function(rows) {
+          return !rows ? 'No' : rows;
+        },
+
+        openItem: function() {
+          page('/' + this.itemPath + '/' + this.id);
         }
       });
     })();

@@ -126,16 +126,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
-  app.getTable = function(tablename, cb) {
-    flexModel.get('source-data/' + tablename, function(data) {
-      if (cb) cb(data);
-    });
+  app.getTable = function(name) {
+    var tables = tablelist.tables;
+    for (var i in tables) {
+      if (tables[i].name == name) return tables[i].data;
+    }
   };
 
-  app.getDocument = function(table, doc, cb) {
-    flexModel.get('source-data/' + table + '/' + doc, function(d, o) {
-      if (cb) cb(d, o);
-    });
+  app.getDocument = function(table, doc) {
+    var table = app.getTable(table);
+
+    for (var i in table) {
+      if (table[i].key == doc) return flexTools.json2array(table[i].data);
+    }
+  };
+
+  app.saveView = function(name, view) {
+    if (viewExists(name)) {
+        popToast("View name duplicated!", '#F48FB1');
+        return false;
+    }
+    app.updateView(name, view);
+    return true;
+  };
+
+  app.updateView = function(name, view) {
+    flexModel.set('transit-view/' + name, view);
+  };
+
+  app.produceView = function(name) {
+    // 1. prepare source data
+    //  1-1. run filters on reference source data
+    //  1-2. get primary key and group data by pkey
+    // 2. evaluate view values with source data 
+    //    and push evaluation result into table
   };
 
   // Tap-triggered Functions
@@ -324,7 +348,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.updateDocument = function(event, params) {
     var form = event.target.form ? event.target.form.name :
-      $(event.target).parents('flex-tableview')[0].form.name;
+      $(event.target).parents('flex-table')[0].form.name;
     if (!form) return;
 
     var path = params.field.path.slice(0);
@@ -338,7 +362,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.deleteDocument = function(event, params) {
     var form = event.target.form ? event.target.form.name :
-      $(event.target).parents('flex-tableview')[0].form.name;
+      $(event.target).parents('flex-table')[0].form.name;
     if (!form) return;
 
     var path = [form];
@@ -470,9 +494,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     flexModel.on('source-data', 'value', function(data){
       tablelist.splice('tables', 0);
       data.forEach(function(e){
-        tablelist.push('tables', {name: e.key, rows: flexTools.json2array(e.data).length});
+        var d = [];
+        Object.keys(e.data).forEach(function(k){
+          d.push({key: k, data: e.data[k]});
+        });
+        tablelist.push('tables', {name: e.key, rows: d.length, data: d});
       });
       updateTablelist();
+    });
+
+    flexModel.on('transit-view', 'value', function(data){
+      viewlist.splice('views', 0);
+      data.forEach(function(e){
+        var view = {name: e.key, data: e.data};
+        viewlist.push('views', view);
+      });
     });
 
     page('/');
@@ -491,6 +527,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   function formExists(name) {
     return formlist.forms.find(function(e){return e.name == name}) || 
       formedit.forms.find(function(e){return e.name == name});
+  }
+
+  function viewExists(name) {
+    return viewlist.views.find(function(e){return e.name == name});
   }
 
   function popToast(msg, color) {

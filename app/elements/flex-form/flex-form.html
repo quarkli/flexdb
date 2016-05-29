@@ -46,15 +46,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <h3>{{id}}</h3>
         </template>
         <span class="space"></span>
-        <template is="dom-if" if="{{curMode(mode, 'default')}}">
         <template is="dom-if" if="{{isRoot}}">
+        <template is="dom-if" if="{{curMode(mode, 'default')}}">
           <paper-icon-button id="btn-editform" icon="create" alt="Edit" on-tap="editForm" tabIndex="-1"></paper-icon-button>
           <paper-tooltip for="btn-editform">Edit Form</paper-tooltip>
           <paper-icon-button id="btn-dropform" icon="clear" alt="Drop" on-tap="dropForm" tabIndex="-1"></paper-icon-button>
           <paper-tooltip for="btn-dropform">Drop Form</paper-tooltip>
         </template>
         </template>
-        <template is="dom-if" if="{{curMode(mode, 'edit')}}">
+        <template is="dom-if" if="{{curMode(mode, 'edit view')}}">
           <paper-icon-button id="btn-additem" icon="add" alt="New" on-tap="editItem" tabIndex="-1"></paper-icon-button>
           <paper-tooltip for="btn-additem">Add Content</paper-tooltip>
           <template is="dom-if" if="[[!isRoot]]">
@@ -80,23 +80,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <template is="dom-if" if="[[!isObject(item.v)]]">
               <paper-material class="paper-form" elevation="1">
               <div class="field" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
-                <template is="dom-if" if="[[curMode(mode, 'edit')]]">
+                <template is="dom-if" if="[[curMode(mode, 'edit view')]]">
                   <div class="header">
                     <h4>{{item.k}}</h4>
                     <span class="space"></span>
-                    <template is="dom-if" if="[[curMode(mode, 'edit')]]">
+                    <template is="dom-if" if="[[curMode(mode, 'edit view')]]">
                       <div>
-                        <paper-icon-button icon="clear" alt="Drop" on-tap="editItem" tabIndex="-1"></paper-icon-button>
+                        <paper-icon-button icon="clear" alt="Drop" on-tap="editItem" tabIndex="-1" disabled="[[isPriKey(item.k)]]"></paper-icon-button>
                         <paper-tooltip position="left">Drop Field</paper-tooltip>
                       </div>
                     </template>
                   </div>
-                  <paper-input label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
+                  <div class="row">
+                    <paper-input class="flex" label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
+                    <paper-icon-button class="sidebtn" icon="dns" on-tap="popReferenceDialog"></paper-icon-button>
+                  </div>
                 </template>
-                <template is="dom-if" if="[[curMode(mode, 'input')]]">
-                  <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
-                </template>
-                <template is="dom-if" if="[[curMode(mode, 'data')]]">
+                <template is="dom-if" if="[[curMode(mode, 'input data')]]">
                   <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
                 </template>
               </div>
@@ -120,6 +120,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </template>
       </template>
     </paper-material>
+
+    <paper-dialog id="referenceDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
+      <div class="header">
+        <h2>Add Reference</h2>
+        <span class="space"></span>
+        <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss  tabIndex="-1"></paper-icon-button>
+      </div>
+      <div>
+        <paper-dropdown-menu label="Select Table" value="{{selectedTable}}">
+          <paper-listbox id="listTable" class="dropdown-content">
+            <template is="dom-repeat" items="[[refTables]]">
+              <paper-item>{{item}}</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+        <paper-dropdown-menu label="Select Field" value="{{refField}}">
+          <paper-listbox id="listField" class="dropdown-content">
+            <template is="dom-repeat" items="[[getFields(selectedTable)]]">
+              <paper-item>{{item}}</paper-item>
+            </template>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
+     <div class="buttons">
+        <paper-button class="defaultConfirm" dialog-confirm on-tap="addRef">Add</paper-button>
+        <paper-button dialog-dismiss>Cancel</paper-button>
+      </div>
+    </paper-dialog>
 
     <paper-dialog id="addDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
       <div class="header">
@@ -221,6 +249,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           newItemName: {
             type: String,
             value: ''
+          },
+          refTables: {
+            type: Array,
+            value: function(){return [];},
+            notify: true
+          },
+          refField: {
+            type: String,
+            value: '',
+            notify: true
           }
         },
 
@@ -237,7 +275,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         curMode: function(mode, tgt) {
-          return mode == tgt;
+          return tgt.split(' ').indexOf(mode) > -1;
         },
 
         toggleChild: function(e) {
@@ -276,6 +314,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           var tgt = $(e.target).parents('div.field')[0];
           tgt = tgt || $(e.target).parents('div.section')[0];
+
           if (tgt) {
             this.targetPath = tgt.path;
             this.targetKey = tgt.key;
@@ -294,15 +333,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         dropItem: function() {
-          var target = this;
+          var me = this;
+          var target = me;
           if (this.targetType == 'FORM') {
             this.fire('dropform', {name: this.id});
           }
           else {
-            if (Array.isArray(this.targetValue)) {
-              target = $(this).parents('flex-form').first()[0];
+            if (Array.isArray(me.targetValue)) {
+              target = $(me).parents('flex-form').first()[0];
             }
-            var id = target.data.findIndex(function(e){return e.k == target.targetKey});
+            var id = target.data.findIndex(function(e){return e.k == me.targetKey});
             if (id > -1) target.splice('data', id, 1);
           }
         },
@@ -354,6 +394,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         saveData: function() {
           this.fire('completed');
+        },
+
+        popReferenceDialog: function(e) {
+          var target = $(e.target).parents('.row').find('paper-input')[0];
+          console.log(target)
+          this.$$('#referenceDialog').target = target;
+          this.$$('#referenceDialog').toggle();
+        },
+
+        getFields: function(table) {
+          var root = table + '/';
+          var fields = [];
+          var obj = flexTools.array2json(app.getForm(table).data);
+          fields.push(root);
+          flexTools.objectNodeIterator(obj, function(e, k, p, o){
+            var path = p.slice();
+            path.push(k);
+            fields.push(root + path.join('/'));
+          });
+          return fields;
+        },
+
+        isPriKey: function(key) {
+          return key == 'PrimaryKey';
+        },
+
+        addRef: function() {
+          this.$$('#referenceDialog').target.value += '__' + this.refField + '__';
         }
       });
     })();

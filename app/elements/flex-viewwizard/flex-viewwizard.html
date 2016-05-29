@@ -119,6 +119,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
             <paper-button onclick="wizardpages.selectNext();viewname.focus();">Next</paper-button>
           </div>
+          <flex-form id="View" is-root="true" data="{{viewDef}}" mode="edit" ref-tables="[[selectedTables]]"></flex-form>
         </div>
 
         <div id="step4">
@@ -128,7 +129,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <p></p><hr>
           <div class="buttons" align="right">
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
-            <paper-button disabled="[[!viewName]]">Generate</paper-button>
+            <paper-button disabled="[[!viewName]]" on-tap="genView">Generate</paper-button>
           </div>
         </div>
       </iron-pages>
@@ -247,7 +248,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           },
           viewDef: {
             type: Array,
-            value: function(){return [];},
+            value: function(){return [{k: 'PrimaryKey', p: [], v: ''}];},
             notify: true
           },
           viewName: {
@@ -271,7 +272,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.evalMethod = '';
           this.evalValue = '';
           this.editingFilter = false;
-          this.splice('viewDef', 0);
+          this.splice('viewDef', 1);
           this.viewName = '';
         },
 
@@ -384,6 +385,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             me.splice('filters', e, 1);
           });
           this.$$('#wizardpages').selectNext();
+        },
+
+        genView: function() {
+          var view = {};
+          view.reference = this.selectedTables;
+          view.filters = this.filters;
+          view.def = flexTools.array2json(this.viewDef);
+          if (app.saveView(this.viewName, view)) {
+            page('/views');
+          }
         }
       });
     })();
