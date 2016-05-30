@@ -32,7 +32,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <paper-material class="paper-table" elevation="1" on-tap="openItem">
       <div class="header">
-        <h3><iron-icon icon="dns"></iron-icon>{{id}}</h3>
+        <h3><iron-icon icon="[[bannerIcon]]"></iron-icon>{{id}}</h3>
         <span class="space"></span>
         <template is="dom-if" if="[[!hideRows]]">
           <h3>{{getRows(rows)}} Documents</h3>
@@ -58,6 +58,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           hideRows: {
             type: Boolean,
             value: false,
+            notify: true
+          },
+          bannerIcon: {
+            type: String,
+            value: 'dns',
             notify: true
           },
           itemPath: {

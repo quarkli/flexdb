@@ -31,6 +31,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       p.warning {
         color: red;
       }
+      pre{
+          white-space: pre-wrap;
+          word-wrap: break-word;
+      }
     </style>
 
     <paper-material class="paper-form" elevation="1">
@@ -78,7 +82,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </div>
             </template>
             <template is="dom-if" if="[[!isObject(item.v)]]">
-              <paper-material class="paper-form" elevation="1">
+              <paper-material class="paper-form" elevation="[[fieldElevation(mode)]]">
               <div class="field" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
                 <template is="dom-if" if="[[curMode(mode, 'edit view')]]">
                   <div class="header">
@@ -414,6 +418,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             fields.push(root + path.join('/'));
           });
           return fields;
+        },
+
+        fieldElevation: function(mode) {
+          return this.curMode(mode, 'input data') ? 0 : 1;
         },
 
         isPriKey: function(key) {

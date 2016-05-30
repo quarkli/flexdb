@@ -13,60 +13,9 @@ body {
   color: #333;
 }
 
-#tableview {
-  overflow: auto;
-}
-
 #spinDialog {
   min-width: 120px;
   border-radius: 4px;
-}
-
-table, tr, td, th {
-  border-style: solid;
-  border-width: 1px;
-  border-color: white;
-  border-collapse: collapse;
-}
-
-td {
-  min-width: 80px;
-}
-
-table tr:nth-child(even) {
-  background-color: #C5CAE9;
-}
-
-table tr:nth-child(odd) {
-  background-color: #fff;
-}
-
-table th {
-  color: white;
-  background-color: #5C6BC0;
-}
-
-th.sec {
-  width: 16px;
-  word-wrap: break-word;
-  cursor: auto;
-}
-
-pre{
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-.page-title {
-  outline: none;
-}
-
-.number {
-  text-align: right;
-}
-
-.date {
-  text-align: center;
 }
 
 div.username {

@@ -151,7 +151,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <paper-icon-button id="btn-restore" icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
               <paper-tooltip for="btn-restore">Restore</paper-tooltip>
             </template>
-            <paper-icon-button id="btn-saveform" icon="check" alt="Save" on-tap="saveEdit"></paper-icon-button>
+            <paper-icon-button id="btn-saveform" icon="check" alt="Save" on-tap="saveForm"></paper-icon-button>
             <paper-tooltip for="btn-saveform">Save</paper-tooltip>
             <paper-icon-button id="btn-canceledit" icon="clear" alt="Cancel" on-tap="popCancelEditDialog"></paper-icon-button>
             <paper-tooltip for="btn-canceledit">Cancel Edit</paper-tooltip>
@@ -177,8 +177,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!-- /tables Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'tables')}}">
           </template>
-          <!-- /tables Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'tableview')}}">
+          <!-- /tables/:id Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'datatable')}}">
             <div>
               <paper-icon-button icon="search" alt="search" on-tap="popSearchTableDialog"></paper-icon-button>
               <paper-tooltip>Search Document</paper-tooltip>
@@ -190,12 +190,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </template>
           <!-- /view Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'views')}}">
-            <a data-route="forms" href="{{baseUrl}}views/wizard">
+            <a data-route="forms" href="{{baseUrl}}view-wizard">
               <div>
                 <paper-icon-button icon="add" alt="add"></paper-icon-button>
                 <paper-tooltip>Create View</paper-tooltip>
               </div>
             </a>
+          </template>
+          <!-- /tables/:id Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'viewtable')}}">
+            <div>
+              <paper-icon-button icon="create" alt="edit" on-tap="editView"></paper-icon-button>
+              <paper-tooltip>Edit View</paper-tooltip>
+            </div>
           </template>
           <!-- /account Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'account')}}">
@@ -229,6 +236,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <flex-forms id="formedit" mode="edit"></flex-forms>
             </section>
 
+            <section data-route="view-edit" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-forms id="viewedit" mode="edit"></flex-forms>
+            </section>
+
             <section data-route="data-input" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
               <flex-forms id="datainput" mode="input" on-completed="saveData"></flex-forms>
@@ -244,14 +256,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <flex-tables id="tablelist" on-act="tableAct"></flex-tables>
             </section>
 
-            <section data-route="tableview" tabindex="-1">
+            <section data-route="datatable" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-table id="tableview" on-datachanged="updateDocument" on-deletedoc="deleteDocument"></flex-tables>
+              <flex-table id="datatable" on-datachanged="updateDocument" on-deletedoc="deleteDocument"></flex-tables>
             </section>
 
             <section data-route="views" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
               <flex-views id="viewlist"></flex-views>
+            </section>
+
+            <section data-route="viewtable" tabindex="-1">
+              <span class="page-title" tabindex="-1"></span>
+              <flex-table id="viewtable"></flex-tables>
             </section>
 
             <section data-route="view-wizard" tabindex="-1">

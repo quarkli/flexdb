@@ -37,7 +37,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </div>
     </template>
     <template is="dom-repeat" items="{{views}}">
-      <flex-banner id="{{item.name}}" hide-rows item-path="views"></flex-banner>
+      <flex-banner id="{{item.name}}" hide-rows banner-icon="view-quilt" item-path="views"></flex-banner>
     </template>
 
   </template>
@@ -51,6 +51,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         properties: {
           views: {
+            type: Array,
+            value: function(){return []},
+            notify: true
+          },
+          viewtables: {
             type: Array,
             value: function(){return []},
             notify: true

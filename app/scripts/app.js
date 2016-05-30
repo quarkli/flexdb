@@ -133,6 +133,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   };
 
+  app.getView = function(name) {
+    return viewlist.views.find(function(e){return e.name == name});
+  };
+
+
+
   app.getDocument = function(table, doc) {
     var table = app.getTable(table);
 
@@ -142,7 +148,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.saveView = function(name, view) {
-    if (viewExists(name)) {
+    if (app.getView(name)) {
         popToast("View name duplicated!", '#F48FB1');
         return false;
     }
@@ -154,12 +160,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     flexModel.set('transit-view/' + name, view);
   };
 
-  app.produceView = function(name) {
-    // 1. prepare source data
-    //  1-1. run filters on reference source data
-    //  1-2. get primary key and group data by pkey
-    // 2. evaluate view values with source data 
-    //    and push evaluation result into table
+  app.produceViewTable = function(name) {
+    var view = app.getView(name);
+    if (!view) return null;
+    var pk = view.data.def['PrimaryKey'];
+    var docs = [];
+    if (pk.indexOf('__') < 0) {
+      docs.push({key: pk, data: {}});
+    }
+    else {
+      pk = pk.split('__')[1].split('/')[0];
+      var tbl = app.getTable(pk);
+      tbl.forEach(function(e){
+        docs.push({key: e.key, data: e.data});
+      });
+    }
+
+    var form = JSON.parse(JSON.stringify(view.data.def));
+    delete form["PrimaryKey"];  // don't need primary key in view table
+
+    var table = {};
+    table.form = {};
+    table.form.name = name;
+    table.form.data = flexTools.json2array(form);
+    table.data = [];
+
+    var formobj = flexTools.array2json(table.form.data);
+
+    docs.forEach(function(e){
+      var obj = flexTools.evalDocument(formobj, e.data);
+      table.data.push({key: e.key, data: obj});
+      flexModel.set('source-data/' + name + '/' + e.key, {});
+      flexModel.set('source-data/' + name + '/' + e.key, obj);
+    });
+
+    return table;
   };
 
   // Tap-triggered Functions
@@ -269,7 +304,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.newData = function(event, params) {
-    var table = tableview.form.name;
+    var table = datatable.form.name;
     if (table) page('/tables/' + table + '/input');
   };
 
@@ -299,7 +334,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page(parent);
   };
 
-  app.saveEdit = function(event, params) {
+  app.saveForm = function(event, params) {
     var table = params.formname || formedit.forms[0].name;
     flexModel.set('table-schema/' + table, {});
     flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
@@ -313,7 +348,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     if (!params) params = {};
     params.formname = app.newFormName;
-    app.saveEdit(event, params);
+    app.saveForm(event, params);
   };
 
   app.finishInput = function(event, params) {
@@ -378,6 +413,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     flexModel.remove('table-schema/' + params.name);
     flexModel.remove('source-data/' + params.name);
+  };
+
+  app.editView = function(event, params) {
+    var view = viewtable.form.name;
+    page('/views/' + view + '/edit');
   };
 
   app.popCancelEditDialog = function(event, params) {
@@ -467,7 +507,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     tablelist.tables.forEach(function(e, i){
       if (!formlist.forms.find(function(f){return f.name == e.name})) {
-        tablelist.splice('tables', i, 1);
+        tablelist.splice('tables', i, 1)[0];
       }
     });
   }
@@ -493,6 +533,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     flexModel.on('source-data', 'value', function(data){
       tablelist.splice('tables', 0);
+      viewlist.splice('viewtables', 0);
       data.forEach(function(e){
         var d = [];
         Object.keys(e.data).forEach(function(k){
@@ -527,10 +568,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   function formExists(name) {
     return formlist.forms.find(function(e){return e.name == name}) || 
       formedit.forms.find(function(e){return e.name == name});
-  }
-
-  function viewExists(name) {
-    return viewlist.views.find(function(e){return e.name == name});
   }
 
   function popToast(msg, color) {

@@ -123,10 +123,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         page('/tables');
         return;
       }
-      tableview.form = form;
-      tableview.refreshData(app.getTable(form.name));
+      datatable.form = form;
+      datatable.refreshData(app.getTable(form.name));
 
-      app.route = 'tableview';
+      app.route = 'datatable';
       app.title = data.params.id;
       app.desp = 'View tables';
       setFocus(app.route);
@@ -139,7 +139,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/views/wizard', function() {
+    page('/views/:id', function(data) {
+      var table = app.produceViewTable(data.params.id);
+      if (!table) {
+        page('/views');
+        return;
+      }
+      viewtable.form = table.form;
+      viewtable.refreshData(table.data);
+
+      app.route = 'viewtable';
+      app.title = data.params.id;
+      app.desp = 'View View';
+      setFocus(app.route);
+    });
+
+    page('/views/:id/edit', function(data) {
+      var view = app.getView(data.params.id);
+      if (!view) {
+        page('/views');
+        return;
+      }
+      viewedit.refreshForms([{name: view.name, data: flexTools.json2array(view.data)}]);
+
+      app.route = 'view-edit';
+      app.title = 'Edit View';
+      app.desp = 'Edit view';
+      app.params = data.params;
+      setFocus(app.route);
+    });
+
+    page('/view-wizard', function() {
     if (!app.authenticated) {
       app.login();
       return;

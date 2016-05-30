@@ -241,12 +241,12 @@ This code may only be used under the MIT license.
         else {
           ret.push({p: path, k: k, v: typeof e == 'object' ? [] : e});
         }
-      }, false);
+      }, false, true);
       return ret;
     }
 
     // Convert a Array data to an JSON data, the reverse function of json2array
-    this.array2json = array2json
+    this.array2json = array2json;
     function array2json(ary) {
       function iter(ary, obj) {
         ary.forEach(function(e){
@@ -262,6 +262,163 @@ This code may only be used under the MIT license.
       }
       return iter(ary, {});
     }
+
+    // syntaxParser, will parse a statement matched the following rules.
+    // Rule:
+    // 1. =[statement] - only statement wiithin =[] will be parsed
+    // 2. AVG(table/field), SUM(table/field) - resolve AVG() and SUM() function first
+    //    AVG() and SUM() will be evaluated first and replaced with evaluated result
+    // 3. __table/field__ - field value will be looked for and replaced
+    // 4. Arithmetic statement will be evaluated last.
+    this.syntaxParser = syntaxParser;
+    function syntaxParser(statement, refData) {
+      var ret = statement;
+      if (ret.match(/=\[.*\]$/)) {
+        ret = ret.slice(2, -1);
+        ret = parseFunc('SUM', ret);
+        ret = parseFunc('AVG', ret);
+        ret = evalValue(ret, refData);
+      }
+      return ret;
+    }
+
+    function parseFunc(func, statement) {
+      if (statement.indexOf(func + '(') < 0) return statement;
+
+      var breakdown = [];
+
+      var slice = statement.split(func + '(');
+      breakdown.push(slice[0]);
+      slice = slice.slice(1).join(func + '(');
+
+      slice = slice.split(')');
+      var path = slice[0].replace(/__/g, '').split('/');
+      var table = path[0];
+      path.splice(1, 0, 'data');
+      path = convertPath(path.slice(1).join('/'));
+      var result = eval(func.toLowerCase() + '(app.getTable("' + table + '"), \'' + path + '\')');
+      breakdown.push(result);
+      slice = slice.slice(1).join(')');
+
+      if(slice && slice.length) {
+        if (slice.indexOf(func + '(') > -1) {
+          breakdown.push(parseFunc(func, slice));
+        }
+        else {
+          breakdown.push(slice);
+        }
+      }
+
+      return breakdown.join('');
+    }
+
+    this.evalDocument = evalDocument;
+    function evalDocument(evalDoc, refDoc) {
+      var obj = {};
+      flexTools.objectNodeIterator(evalDoc, function(e,k,p,o){
+        var path = p.slice();
+        path.push(k);
+        path = flexTools.convertPath(path.join('/'));
+
+        if (typeof e == 'object') {
+          eval('obj' + path + '= {}');
+        }
+        else {
+          var ret = syntaxParser(e, refDoc);
+          eval('obj' + path + '= "' + ret + '"');
+        }
+      });
+
+      return obj;
+    }
+    // function evalDocument(evalDoc, refDoc) {
+    //   var ret = {};
+    //   src = src || form2json();
+    //   objectNodeIterator(src, function(e,k,p){
+    //     var path = p.map(function(a,b){return '["'+a+'"]'}).reduce(function(a,b){return a+b}, '');
+    //     var srcnode = eval('src' + path);
+    //     var retnode = eval('ret' + path);
+    //     if (typeof srcnode[k] == 'object') {
+    //       retnode[k] = {};
+    //     }
+    //     else {
+    //       retnode[k] = evalValue(srcnode[k], refTable);
+    //     }
+    // }, false);
+    //   $('pre').html(JSON.stringify(ret,null,4));
+    //   return ret;
+    // }
+
+    this.evalValue = evalValue;
+    function evalValue(val, refObj) {
+      try {
+        var statement = val.split('__');
+        if (statement.length > 1) statement = statement.map(function(e){
+          var path = e.split('/').slice(1).join('/');
+          path = convertPath(path);
+
+          var ret = getValue(path, refObj);
+          return ret ? ret : e;
+        });
+        statement = statement.join('');
+        var ret = eval(statement);
+        if (!isNaN(ret)) ret = parseFloat(ret).toFixed(2);
+        return ret;
+      }
+      catch (e) {
+        return val;
+      }
+    }
+
+    this.getValue = getValue;
+    function getValue(path, obj) {
+      return eval('obj' + path);
+    }
+    /* old implementation
+    function getValue(value, data) {
+      var obj, key;
+
+      // Search from a data source
+      // i.e. getValue('apple', foods), foods = {vegi: {carrot: 1}, fruit: {apple: 2, banana: 1}}
+      // return => 2
+      if (data) {
+        obj = data;
+        key = value;
+      }
+      else {
+        try {
+          // getValue('doc["sectA"]["sectB"]["fieldA"]')
+          // converts to => tables.doc["sectA"]["sectB"]["fieldA"]
+          var val = eval('tables.' + value);
+          if (val) return val;
+        }
+        catch (e) {}
+
+        try {
+          // getValue('src.val') = getValue('val', tables.src)
+          obj = eval('tables.' + value.split('.')[0]);
+          key = value.split('.')[1];
+          if (!obj) return null;
+        }
+        catch (e) {
+          return null;
+        }
+      }
+
+      if (obj[key]) {
+        return obj[key];
+      }
+      else {
+        var ret = null;
+        Object.keys(obj).forEach(k=>{
+          if (!ret && typeof obj[k] == 'object') {
+            ret = getValue(key, obj[k]);
+          }
+        });
+        return ret;
+      }
+    }
+    */
   }
 
   window.flexTools = window.flexTools || new FlexTools();

@@ -15,6 +15,7 @@ This code may only be used under the MIT license.
     <style>
       :host {
         display: block;
+        overflow: auto;
       }
       .headerfield, td {
         font-size: 10px;
@@ -24,8 +25,27 @@ This code may only be used under the MIT license.
       table.main {
         width: 100%;
       }
+      table, tr, td, th {
+        border-style: solid;
+        border-width: 1px;
+        border-color: white;
+        border-collapse: collapse;
+      }
       th {
         position: relative;
+      }
+      td {
+        min-width: 80px;
+      }
+      table th {
+        color: white;
+        background-color: #5C6BC0;
+      }
+      table tr:nth-child(even) {
+        background-color: #C5CAE9;
+      }
+      table tr:nth-child(odd) {
+        background-color: #fff;
       }
       #deleteDataDialog {
         width: 280px;
@@ -45,6 +65,12 @@ This code may only be used under the MIT license.
         margin: 0px;
         padding: 0px;
         width: 20px;
+      }
+      .number {
+        text-align: right;
+      }
+      .date {
+        text-align: center;
       }
     </style>
 
@@ -141,10 +167,18 @@ This code may only be used under the MIT license.
         },
 
         refreshData: function(data) {
-          this.splice('data', 0);
-          data.forEach(e=>{
-            this.push('data', e);
-          });
+          if (data) {
+            var me = this;
+            this.splice('data', 0);
+            data.forEach(function(e){
+              setTimeout(function(){
+                me.push('data', e);
+              }, 0);
+            });
+          }
+          else {
+            page('/tables/' + this.form.name + '/input');
+          }
         },
 
         getIdx: function(id) {
