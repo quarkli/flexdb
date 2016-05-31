@@ -292,8 +292,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.splice('fields', 0);
 
           if (form) {
-            var obj = flexTools.array2json(form.data);
-            flexTools.objectNodeIterator(obj, function(e, k, p, o){
+            var obj = flexTools.arrayToObject(form.data);
+            flexTools.objectIterator(obj, function(e, k, p, o){
               var path = p.slice();
               path.push(k);
               me.push('fields', path.join('/'));
@@ -391,9 +391,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var view = {};
           view.reference = this.selectedTables;
           view.filters = this.filters;
-          view.def = flexTools.array2json(this.viewDef);
+          view.def = flexTools.arrayToObject(this.viewDef);
           if (app.saveView(this.viewName, view)) {
-            page('/views');
+            page('/views/' + this.viewName);
           }
         }
       });
