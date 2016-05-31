@@ -47,7 +47,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </h2>
         </template>
         <template is="dom-if" if="{{!isRoot}}">
-          <h3>{{id}}</h3>
+          <flex-cell value="{{id}}" on-datachanged="modifyKey" on-keydown="cellKeyDown"></flex-cell>
         </template>
         <span class="space"></span>
         <template is="dom-if" if="{{isRoot}}">
@@ -86,7 +86,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <div class="field" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
                 <template is="dom-if" if="[[curMode(mode, 'edit view')]]">
                   <div class="header">
-                    <h4>{{item.k}}</h4>
+                    <flex-cell value="{{item.k}}" on-datachanged="modifyKey" on-keydown="cellKeyDown"></flex-cell>
                     <span class="space"></span>
                     <template is="dom-if" if="[[curMode(mode, 'edit view')]]">
                       <div>
@@ -363,7 +363,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         showSchema: function(data) {
-          return JSON.stringify(flexTools.array2json(data), null, 2);
+          return JSON.stringify(flexTools.arrayToObject(data), null, 2);
         },
 
         toggleSchema: function(e) {
@@ -402,17 +402,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         popReferenceDialog: function(e) {
           var target = $(e.target).parents('.row').find('paper-input')[0];
-          console.log(target)
+          $('paper-listbox').each(function(i, e){
+            e.selected = -1;
+          });
           this.$$('#referenceDialog').target = target;
           this.$$('#referenceDialog').toggle();
         },
 
         getFields: function(table) {
+          if (!table) return;
           var root = table + '/';
           var fields = [];
-          var obj = flexTools.array2json(app.getForm(table).data);
+          var obj = flexTools.arrayToObject(app.getForm(table).data);
           fields.push(root);
-          flexTools.objectNodeIterator(obj, function(e, k, p, o){
+          flexTools.objectIterator(obj, function(e, k, p, o){
             var path = p.slice();
             path.push(k);
             fields.push(root + path.join('/'));
@@ -430,6 +433,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         addRef: function() {
           this.$$('#referenceDialog').target.value += '__' + this.refField + '__';
+          if (this.$$('#referenceDialog').target.value.indexOf('=') != 0) {
+            this.$$('#referenceDialog').target.value = '=' +this.$$('#referenceDialog').target.value;
+          }
+        },
+
+        modifyKey: function(e) {
+          var key = e.target
+          this.fire('modifykey', {doc: this.id, oldKey: key.oldValue, newKey: key.value});
+        },
+
+
+        cellKeyDown: function(e) {
+          if (e.keyCode == 13) e.target.blur();
         }
       });
     })();

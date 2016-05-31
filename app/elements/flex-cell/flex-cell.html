@@ -24,6 +24,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <style>
       :host {
         display: block;
+        white-space: nowrap; 
       }
       div {
         display: inline-block;
@@ -37,7 +38,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       input {
         @apply(--paper-font-body1);
-        text-align: right;
       }
     </style>
 
@@ -45,7 +45,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div> [[value]]</div>
     </template>
     <template is="dom-if" if="[[editing]]">
-      <input type="text" value="[[value]]" on-blur="endEdit">
+      <input type="text" value="[[value]]" on-blur="endEdit" style="text-align: [[align]]">
     </template>
 
   </template>
@@ -72,9 +72,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             value: '',
             notify: true
           },
+          oldValue: {
+            type: String,
+            value: '',
+            notify: true
+          },
           editing: {
             type: Boolean,
             value: false,
+            notify: true
+          },
+          align: {
+            type: String,
+            value: 'left',
             notify: true
           }
         },
@@ -97,12 +107,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         endEdit: function() {
           if (this.value != this.$$('input').value) {
+            this.oldValue = this.value;
             this.value = this.$$('input').value;
             this.fire('datachanged', {key: this.key, field: this.field, value: this.value});
           }
           this.editing = false;
         }
-
       });
     })();
   </script>

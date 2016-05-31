@@ -38,7 +38,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       </div>
     </template>
     <template is="dom-repeat" items="{{forms}}">
-      <flex-form id="{{item.name}}" data="{{item.data}}" is-root="true" mode="{{mode}}"></flex-form>
+      <flex-form id="{{item.name}}" data="{{item.data}}" is-root="true" mode="{{mode}}" ref-tables="{{getRefTables(item.data)}}"></flex-form>
     </template>
 
   </template>
@@ -71,6 +71,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         addNewForm: function(e) {
           app.popNewFormDialog();
+        },
+
+        getRefTables: function(data) {
+          var tables = flexTools.o2a(flexTools.a2o(data)['reference']);
+          var ret = [];
+          tables.forEach(function(e){
+            ret.push(e.v);
+          });
+          return ret;
         }
       });
     })();

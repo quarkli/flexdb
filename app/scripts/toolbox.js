@@ -4,23 +4,78 @@ Copyright (c) 2016 Quark Li. All rights reserved.
 This code may only be used under the MIT license.
 */
 
+/*
+* o = object:
+  a javascript object which may contain nested object.
+  example:
+  o = {
+    key1: value1,
+    key2: {
+      key3: value 3
+    },
+    ...
+  }
+
+* oa = object-array:
+  a conversion of object presented in array for easier iteration,
+  an object node (key/value pair) will be convert to a oa-node,
+  noted, in k=key, p=path, v=value, to keep tracking its original node information,
+  and nested object will be nested array in oa-node value.
+  example:
+  oa = [
+    {k: key1, p: [], v: value1},
+    {k: key2: p: [], v: [
+      {k: key3, p: [key2], v: value3}
+    ]}
+  ]
+
+* oa-node:
+  a representation of an object node in a oa conversion.
+  k: node key
+  p: node path, array of nested object's parent keys
+  v: value, if node was an object, it will be converted to oa-node
+  example:
+  oa-node = {
+    k: key,
+    p: [node-path1, node-path2, ...],
+    v: value
+  }
+
+* aob - array of object:
+  a array of objects which are in the same object schema.
+  example:
+  [
+    {name: 'Sam', age: 20},
+    {name: 'Peter', age: 19},
+    ...
+  ]
+
+* node path: an object node's path in the format of ["a"]["b"]["c"]
+
+* node-ref = node reference:
+  a node-ref noted as __object/node_path__, starts and ends with __ (double under-score)
+  , which is used as a reference to an object node and can be evaluated to its node value.
+
+* evaluation statement: an string start with = (equal sign) will be evaluated and
+  converted aob functions and node-ref withing the string to the functions execution
+  result or node value of reference object.
+
+*/
 (function() {
   'use strict';
 
   function FlexTools() {
     var me = this;
 
-    // Convert a path string "tables/test/key1" to ["tables"]["test"]["key1"]
-    // Arguments:
-    // path - path string as the above example
+    // Convert a path string "a/b/c" to ["a"]["b"]["c"]
+    // Arguments: path string as in the above example
     this.convertPath = convertPath;
     function convertPath(path) {
       return '["' + path.split('/').join('"]["') + '"]';
     }
 
-    // Create an object path, like ["path0"]["path1"]["key"], from a node object
-    // Arguments:
-    // node - a node object is {k: <node_key>, p: <path_array>, v: <node_value>}
+    // Create a path from a node, like ["path0"]["path1"]["key"], from a node object
+    // Arguments: oa-node
     this.buildPathFromNode = buildPathFromNode;
     function buildPathFromNode(node) {
       var path = JSON.parse(JSON.stringify(node));
@@ -29,85 +84,104 @@ This code may only be used under the MIT license.
       return '["' + path + '"]';
     }
 
-    // calculate average value of a specific path in a object array data
+    // calculate average value of a specific node in an array of object (aob)
     // Arguments:
-    //  data - source data of object array
-    //  path - the specific path to be calculated
-    //  start - the start index of range of array to be calculated, starts from 1, default: 1
-    //  len - the length of range of array from start index to be calculated, default: array size
+    //  aob - source array of object
+    //  path - the specific node path to be calculated
+    //  start - the start index of range of aob to be calculated, range index starts from 1, default: 1
+    //  len - the length of range of aob from start index to be calculated, default: aob size
     //  incEmpty - if a path has no value, whether to count it in as average divider, default: true
     this.avg = avg;
-    function avg(data, path, start, len, incEmpty) {
+    function avg(aob, path, start, len, incEmpty) {
       start = start || 1;
-      len = len || data.length;
+      len = len || aob.length;
       incEmpty = incEmpty  === undefined ? true : incEmpty;
 
       var count = len;
       if (!incEmpty) {
-        count = data.reduce(function(e1, e2, i){
+        count = aob.reduce(function(e1, e2, i){
           if (i < start - 1 || i > start + len - 2) return e1;
-          return eval('e2' + path).length || isNaN(eval('e2' + path)) ? ++e1 : e1;
+          try {
+            return eval('e2' + path).length || isNaN(eval('e2' + path)) ? ++e1 : e1;
+          }
+          catch(e) {
+            return -1;
+          }
         }, 0);
       }
-      return sum(data, path, start, len) / count;
+      return sum(aob, path, start, len) / count;
     }
 
-    // calculate summarization of a specific path in a object array data
+    // calculate summarization of a specific node in an array of object (aob)
     // Arguments:
-    //  data - source data of object array
-    //  path - the specific path to be calculated
-    //  start - the start index of range of array to be calculated, starts from 1, default: 1
-    //  len - the length of range of array from start index to be calculated, default: array size
+    //  aob - source array of object
+    //  path - the specific node path to be calculated
+    //  start - the start index of range of aob to be calculated, range index starts from 1, default: 1
+    //  len - the length of range of aob from start index to be calculated, default: array size
     this.sum = sum;
-    function sum(data, path, start, len) {
+    function sum(aob, path, start, len) {
       start = start || 1;
-      len = len || data.length;
+      len = len || aob.length;
 
-      return data.reduce(function(e1, e2, i){
+      return aob.reduce(function(e1, e2, i){
         // console.log(i, (i < start || i > end), e1)
         if (i < start - 1 || i > start + len - 2) return e1;
-        return e1 + (isNaN(eval('e2' + path)) ? 0 : 1 * eval('e2' + path));
+        try {
+          return e1 + (isNaN(eval('e2' + path)) ? 0 : 1 * eval('e2' + path));
+        }
+        catch(e) {
+          return -1;
+        }
       }, 0);
     }
 
-    // sort an object array data by specific path
+    // sort an array of object (aob) by specific node
     // Arguments:
-    //  data - source data of object array
-    //  path - the specific path to be sorted
-    //  ascending - the sort order is ascending or descending, default ascending
+    //  aob - source array of object
+    //  path - the specific node path as the sorting value
+    //  ascending - the sort order is ascending or descending, default: ascending=true
     this.sort = sort;
-    function sort(data, path, ascending) {
+    function sort(aob, path, ascending) {
       ascending = ascending  === undefined ? true : ascending;
 
-      data.sort(function(a,b){
+      aob.sort(function(a,b){
         // compare numbers
-        var aval = eval('a' + path);
-        var bval = eval('b' + path);
-        if (!isNaN(aval) && !isNaN(bval)) {
-          return ascending ? aval - bval : bval　- aval;
-        }
-        else {
-          var ad = (new Date(aval)).valueOf();
-          var bd = (new Date(bval)).valueOf();
-          if (isNaN(ad) || isNaN(bd)) {
-            return aval + '' > bval + '' == ascending ? 1 : -1;
+        try {
+          var aval = eval('a' + path);
+          var bval = eval('b' + path);
+          if (!isNaN(aval) && !isNaN(bval)) {
+            return ascending ? aval - bval : bval　- aval;
           }
           else {
-            return ascending ? ad - bd : bd - ad;
+            var ad = Date.parse(aval);
+            var bd = Date.parse(bval);
+            if (isNaN(ad) || isNaN(bd)) {
+              return aval + '' > bval + '' == ascending ? 1 : -1;
+            }
+            else {
+              return ascending ? ad - bd : bd - ad;
+            }
           }
+        }
+        catch(e) {
+          return 1;
         }
       });
     }
 
-    // filter an object array data by specific query statement, filtered objects
-    // will be returned in a callback function
+    // filter an array of object (aob) by specific query statement, filtered objects
+    // will be returned as aob in a callback function
     // Arguments:
-    //  data - source data of object array
-    //  query - query statement
-    //  cb - callback function with the prototype =>
-    //    cb(filteredObjectArray)
+    //  aob - source array of object
+    //  query - query object:
+    //    query = {
+    //      path: node_path,
+    //      term: evaluation_term,  ['lt', 'gt', 'eq', 'neq', 'leq', 'geq', 'match', 'like']
+    //      value: comparison_value
+    //    }
+    //  cb - callback function, prototype: cb(filtered_aob)
     this.filter = filter;
-    function filter(data, query, cb) {
+    function filter(aob, query, cb) {
       var unmatched = [];
       var filtered = []
       var statement = query.path;
@@ -140,14 +214,17 @@ This code may only be used under the MIT license.
           break;
       }
 
-      data.forEach(function(e, i, o){
-        if (!eval('e' + statement)) {
-          unmatched.splice(0, 0, i);
+      aob.forEach(function(e, i, o){
+        try {
+          if (!eval('e' + statement)) {
+            unmatched.splice(0, 0, i);
+          }
         }
+        catch(e) {}
       });
 
       unmatched.forEach(function(e){
-        filtered.splice(0, 0, data.splice(e, 1)[0]);
+        filtered.splice(0, 0, aob.splice(e, 1)[0]);
       });
 
       if (cb) cb(filtered);
@@ -164,8 +241,9 @@ This code may only be used under the MIT license.
     //    each Array node, if FALSE, iterator treat Array as value
     //  path - internal use for recursive tracking, should not be set by application call.
     //  cache - internal use for recursive tracking, should not be set by application call.
-    this.objectNodeIterator = objectNodeIterator;
-    function objectNodeIterator(obj, cb, leafOnly, arrayAsObj, path, cache) {
+    this.objectIterator = objectIterator;
+    this.oi = objectIterator;
+    function objectIterator(obj, cb, leafOnly, arrayAsObj, path, cache) {
       leafOnly = leafOnly === undefined ? true : leafOnly;
       arrayAsObj = arrayAsObj === undefined ? false : arrayAsObj;
       path = path || [];
@@ -182,38 +260,20 @@ This code may only be used under the MIT license.
               if (!leafOnly && typeof cb == 'function') cb(obj[key], key, p, obj);
               p.push(key);
               cache.push(obj[key]);
-              objectNodeIterator(obj[key], cb, leafOnly, arrayAsObj, p, cache);
+              objectIterator(obj[key], cb, leafOnly, arrayAsObj, p, cache);
             }
           }
         });
       }
     }
 
-    // Convert a JSON data to an Array data
-    // example:
-    // json = {
-    //   a: 1,
-    //   b: 2,
-    //   c: {
-    //     d: 'x',
-    //     e: 'y'
-    //   }
-    // }
-    // converts to:
-    // array = [
-    //  {key: 'a', value: 1},
-    //  {key: 'b', value: 2},
-    //  {key: 'c', value: [
-    //     {key: 'd', value: 'x'},
-    //     {key: 'e', value: 'y'}
-    //  ]}
-    // ]
+    // Convert a object to a object-array (oa)
     // Arguments:
-    //   jsn - source JSON data
-    // Return:
-    //   Converted Array data
-    this.json2array = json2array;
-    function json2array(jsn) {
+    //   obj - source object
+    // Return: oa
+    this.objectToArray = objectToArray;
+    this.o2a = objectToArray;
+    function objectToArray(obj) {
       var ret = [];
 
       function findNode(p, a) {
@@ -232,7 +292,7 @@ This code may only be used under the MIT license.
         return realNode || rootNode;
       }
 
-      flexTools.objectNodeIterator(jsn, function(e,k,p,o){
+      objectIterator(obj, function(e,k,p,o){
         var path = p.slice();
         var node = findNode(path, ret);
         if (node) {
@@ -245,9 +305,10 @@ This code may only be used under the MIT license.
       return ret;
     }
 
-    // Convert a Array data to an JSON data, the reverse function of json2array
-    this.array2json = array2json;
-    function array2json(ary) {
+    // Convert a Array data to an JSON data, the reverse function of objectToArray
+    this.arrayToObject = arrayToObject;
+    this.a2o = arrayToObject;
+    function arrayToObject(ary) {
       function iter(ary, obj) {
         ary.forEach(function(e){
           if (Array.isArray(e.v)) {
@@ -263,27 +324,42 @@ This code may only be used under the MIT license.
       return iter(ary, {});
     }
 
-    // syntaxParser, will parse a statement matched the following rules.
+    // complexParser, will parse a statement matched the following rules.
     // Rule:
-    // 1. =[statement] - only statement wiithin =[] will be parsed
-    // 2. AVG(table/field), SUM(table/field) - resolve AVG() and SUM() function first
-    //    AVG() and SUM() will be evaluated first and replaced with evaluated result
-    // 3. __table/field__ - field value will be looked for and replaced
-    // 4. Arithmetic statement will be evaluated last.
-    this.syntaxParser = syntaxParser;
-    function syntaxParser(statement, refData) {
+    //  1. =[statement] - only statement wiithin =[] will be parsed
+    //  2. AVG(table/field), SUM(table/field) - resolve AVG() and SUM() function first
+    //     AVG() and SUM() will be evaluated first and replaced with evaluated result
+    //  3. __table/field__ - field value will be looked for and replaced
+    //  4. Arithmetic statement will be evaluated last.
+    // Arguments:
+    //  statement - statement to be evaluated
+    //  refObj - refernce object to be looked for the value of node-ref
+    this.complexParser = complexParser;
+    function complexParser(statement, refObj, aob) {
       var ret = statement;
-      if (ret.match(/=\[.*\]$/)) {
-        ret = ret.slice(2, -1);
-        ret = parseFunc('SUM', ret);
-        ret = parseFunc('AVG', ret);
-        ret = evalValue(ret, refData);
+      if (ret.indexOf('=') == 0) {
+        ret = ret.slice(1);
+        ret = evalAobFunc('SUM', ret, aob);
+        ret = evalAobFunc('AVG', ret, aob);
+        ret = evalStatement(ret, refObj);
       }
       return ret;
     }
 
-    function parseFunc(func, statement) {
-      if (statement.indexOf(func + '(') < 0) return statement;
+    // evaluate aob function (sum, avg) with the statement on the aob
+    // Arguments:
+    //  func - aob function name, currently: 'sum', 'avg'
+    //  statement - statement to be evaluated
+    //  aob - array of object
+    function evalAobFunc(func, statement, aob) {
+      try {
+        if (!aob || statement.indexOf(func + '(') < 0 || eval(func.toLowerCase()) == undefined) {
+          return statement;
+        }
+      }
+      catch(e) {
+        return statement;
+      }
 
       var breakdown = [];
 
@@ -296,129 +372,112 @@ This code may only be used under the MIT license.
       var table = path[0];
       path.splice(1, 0, 'data');
       path = convertPath(path.slice(1).join('/'));
-      var result = eval(func.toLowerCase() + '(app.getTable("' + table + '"), \'' + path + '\')');
-      breakdown.push(result);
-      slice = slice.slice(1).join(')');
 
-      if(slice && slice.length) {
-        if (slice.indexOf(func + '(') > -1) {
-          breakdown.push(parseFunc(func, slice));
+      try {
+        var result = eval(func.toLowerCase() + '(' + aob + ', \'' + path + '\')');
+        breakdown.push(result);
+        slice = slice.slice(1).join(')');
+
+        if(slice && slice.length) {
+          if (slice.indexOf(func + '(') > -1) {
+            breakdown.push(evalAobFunc(func, slice, aob));
+          }
+          else {
+            breakdown.push(slice);
+          }
         }
-        else {
-          breakdown.push(slice);
-        }
+
+        return breakdown.join('');
       }
-
-      return breakdown.join('');
+      catch(e) {
+        return statement;
+      }
     }
 
-    this.evalDocument = evalDocument;
-    function evalDocument(evalDoc, refDoc) {
+    // traverse through an object and evaluate each node against reference object
+    // and aob
+    // Arguments:
+    //  evalObj - object to be evaluated
+    //  refObj - reference object
+    //  aob - array of object used for aob function evaluation
+    // Return: object with evaluated nodes
+    this.evalObject = evalObject;
+    function evalObject(evalObj, refObj, aob) {
       var obj = {};
-      flexTools.objectNodeIterator(evalDoc, function(e,k,p,o){
+      objectIterator(evalObj, function(e,k,p,o){
         var path = p.slice();
         path.push(k);
-        path = flexTools.convertPath(path.join('/'));
+        path = convertPath(path.join('/'));
 
-        if (typeof e == 'object') {
-          eval('obj' + path + '= {}');
+        try {
+          if (typeof e == 'object') {
+            eval('obj' + path + '= {}');
+          }
+          else {
+            var ret = complexParser(e, refObj, aob);
+            eval('obj' + path + '= "' + ret + '"');
+          }
         }
-        else {
-          var ret = syntaxParser(e, refDoc);
-          eval('obj' + path + '= "' + ret + '"');
+        catch(e) {
+          console.error(e);
         }
       });
 
       return obj;
     }
-    // function evalDocument(evalDoc, refDoc) {
-    //   var ret = {};
-    //   src = src || form2json();
-    //   objectNodeIterator(src, function(e,k,p){
-    //     var path = p.map(function(a,b){return '["'+a+'"]'}).reduce(function(a,b){return a+b}, '');
-    //     var srcnode = eval('src' + path);
-    //     var retnode = eval('ret' + path);
-    //     if (typeof srcnode[k] == 'object') {
-    //       retnode[k] = {};
-    //     }
-    //     else {
-    //       retnode[k] = evalValue(srcnode[k], refTable);
-    //     }
-    // }, false);
-    //   $('pre').html(JSON.stringify(ret,null,4));
-    //   return ret;
-    // }
 
-    this.evalValue = evalValue;
-    function evalValue(val, refObj) {
+    // evaluate a statement against a reference object
+    // Arguments:
+    //  statement - statement to be evaluated
+    //  refObj - reference object to be looked for node-ref value
+    // Return: evaluated string
+    this.evalStatement = evalStatement;
+    function evalStatement(statement, refObj) {
+      var breakdowns = statement.split('__');
+      for (var i = breakdowns.length -1; i > -1; i--) {
+        if (breakdowns[i].length == 0) breakdowns.splice(i, 1);
+      }
+      if (breakdowns.length > 0) breakdowns = breakdowns.map(function(e){
+        var path = e.split('/').slice(1).join('/');
+        path = convertPath(path);
+
+        var ret = getNodeValue(path, refObj);
+        return ret ? ret : e;
+      });
+
+      var combo = breakdowns.join('');
       try {
-        var statement = val.split('__');
-        if (statement.length > 1) statement = statement.map(function(e){
-          var path = e.split('/').slice(1).join('/');
-          path = convertPath(path);
+        if (!isNaN(Date.parse(combo))) {
+          var hbrk = combo.split('-');
+          var sbrk = combo.split('/');
+          if (hbrk.length == 3 || sbrk.length == 3) return combo;
+        }
 
-          var ret = getValue(path, refObj);
-          return ret ? ret : e;
-        });
-        statement = statement.join('');
-        var ret = eval(statement);
-        if (!isNaN(ret)) ret = parseFloat(ret).toFixed(2);
+        var ret = eval(combo);
+        if (!isNaN(ret)) {
+          ret = parseInt(ret * 100) / 100;
+        }
         return ret;
       }
-      catch (e) {
-        return val;
+      catch(e) {
+        return combo;
       }
     }
 
-    this.getValue = getValue;
-    function getValue(path, obj) {
-      return eval('obj' + path);
-    }
-    /* old implementation
-    function getValue(value, data) {
-      var obj, key;
-
-      // Search from a data source
-      // i.e. getValue('apple', foods), foods = {vegi: {carrot: 1}, fruit: {apple: 2, banana: 1}}
-      // return => 2
-      if (data) {
-        obj = data;
-        key = value;
+    // get a node value of an object with node path
+    // Arguments:
+    //  path - node path
+    //  obj - object
+    // Return: node value
+    this.getNodeValue = getNodeValue;
+    function getNodeValue(path, obj) {
+      try {
+        return eval('obj' + path);
       }
-      else {
-        try {
-          // getValue('doc["sectA"]["sectB"]["fieldA"]')
-          // converts to => tables.doc["sectA"]["sectB"]["fieldA"]
-          var val = eval('tables.' + value);
-          if (val) return val;
-        }
-        catch (e) {}
-
-        try {
-          // getValue('src.val') = getValue('val', tables.src)
-          obj = eval('tables.' + value.split('.')[0]);
-          key = value.split('.')[1];
-          if (!obj) return null;
-        }
-        catch (e) {
-          return null;
-        }
-      }
-
-      if (obj[key]) {
-        return obj[key];
-      }
-      else {
-        var ret = null;
-        Object.keys(obj).forEach(k=>{
-          if (!ret && typeof obj[k] == 'object') {
-            ret = getValue(key, obj[k]);
-          }
-        });
-        return ret;
+      catch(e) {
+        return '';
       }
     }
-    */
   }
 
   window.flexTools = window.flexTools || new FlexTools();

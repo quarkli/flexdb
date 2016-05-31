@@ -175,6 +175,7 @@ This code may only be used under the MIT license.
       }
     };
 
+    // create new user
     this.newUser = function(email, pass, cb) {
       fbase.createUser({
         email: email,
@@ -200,6 +201,7 @@ This code may only be used under the MIT license.
       });
     };
 
+    // login with oauth provider
     this.oauthLogin = function(provider) {
       fbase.authWithOAuthPopup("facebook", function(error, authData) {
         if (error) {
@@ -210,6 +212,7 @@ This code may only be used under the MIT license.
       });
     };
 
+    // change user password
     this.changePassword = function(oldpwd, newpwd, cb) {
       if (!uid) return;
       fbase.changePassword({
@@ -221,9 +224,10 @@ This code may only be used under the MIT license.
       });
     };
 
-    this.deleteAccount = function(pwd, cb) {
+    // delete user, and remove all user's data
+    this.deleteUser = function(pwd, cb) {
       if (!uid) return;
-      this.changePassword(pwd, pwd, function(e){
+      me.changePassword(pwd, pwd, function(e){
         if (e) {
           if (cb) cb(e);
         }
@@ -238,6 +242,30 @@ This code may only be used under the MIT license.
           });
         }
       });
+    }
+
+    // modify key in document and dependent documents
+    this.modifyKey = function(path, oldKey, newKey, depPath) {
+      if (!uid) return;
+      if (ubase) {
+        ubase.child(path).once('value', function(snap){
+          if (snap) {
+            var val = JSON.stringify(snap.val());
+            var regex = new RegExp('"' + oldKey + '":', 'g')
+            val = val.replace(regex, '"' + newKey + '":');
+            ubase.child(path).set(JSON.parse(val));
+            if (depPath) {
+              me.modifyKey(depPath, oldKey, newKey);
+            }
+          }
+        });
+      }
+    }
+
+    // delete documents and dependent documents
+    this.delete = function(path, depPath) {
+      me.remove(path);
+      if (depPath) me.remove(depPath);
     }
   }
 

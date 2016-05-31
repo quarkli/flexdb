@@ -118,13 +118,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/tables/:id', function(data) {
-      var form = app.getForm(data.params.id);
-      if (!form) {
-        page('/tables');
+      var id = data.params.id;
+      var table = app.getTable(id);
+      if (!table) {
+        page('/tables/' + id + '/input');
         return;
       }
-      datatable.form = form;
-      datatable.refreshData(app.getTable(form.name));
+      datatable.form = app.getForm(id);
+      datatable.refreshData(table);
 
       app.route = 'datatable';
       app.title = data.params.id;
@@ -140,12 +141,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/views/:id', function(data) {
-      var table = app.produceViewTable(data.params.id);
+      var table = app.getViewTable(data.params.id);
       if (!table) {
         page('/views');
         return;
       }
-      viewtable.form = table.form;
+      viewtable.form = app.getViewForm(data.params.id);
       viewtable.refreshData(table.data);
 
       app.route = 'viewtable';
@@ -160,7 +161,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         page('/views');
         return;
       }
-      viewedit.refreshForms([{name: view.name, data: flexTools.json2array(view.data)}]);
+      viewedit.refreshForms([{name: view.name, data: flexTools.objectToArray(view.data)}]);
 
       app.route = 'view-edit';
       app.title = 'Edit View';

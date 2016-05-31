@@ -15,7 +15,8 @@ This code may only be used under the MIT license.
     <style>
       :host {
         display: block;
-        overflow: auto;
+        overflow-x: auto;
+        overflow-y: hidden;
       }
       .headerfield, td {
         font-size: 10px;
@@ -99,7 +100,7 @@ This code may only be used under the MIT license.
             </td>
             <template is="dom-repeat" items="[[data]]" as="doc">
               <td>
-                <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
+                <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" align="right" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
               </td>
             </template>
         </tr>
@@ -156,9 +157,9 @@ This code may only be used under the MIT license.
 
         buildHeaders: function() {
           var me = this;
-          var obj = flexTools.array2json(this.form.data);
+          var obj = flexTools.arrayToObject(this.form.data);
           this.splice('headerfields', 0);
-          flexTools.objectNodeIterator(obj, function(e, k, p, o){
+          flexTools.objectIterator(obj, function(e, k, p, o){
             me.push('headerfields', {key: k, path: p, value: e});
           });
           this.sortKey = null;
@@ -187,7 +188,7 @@ This code may only be used under the MIT license.
 
         getField: function(data, item) {
           var ret = undefined;
-          flexTools.objectNodeIterator(data.data, function(e, k, p, o) {
+          flexTools.objectIterator(data.data, function(e, k, p, o) {
             if (k == item.key  && JSON.stringify(p) == JSON.stringify(item.path)) {
               ret = e;
             }
@@ -200,7 +201,7 @@ This code may only be used under the MIT license.
             return e.key == params.key;
           });
 
-          flexTools.objectNodeIterator(data.data, function(e, k, p, o) {
+          flexTools.objectIterator(data.data, function(e, k, p, o) {
             if (k == params.field.key  && JSON.stringify(p) == JSON.stringify(params.field.path)) {
               o[k] = params.value;
             }
@@ -208,9 +209,9 @@ This code may only be used under the MIT license.
         },
 
         getRows: function(form) {
-          var obj = flexTools.array2json(form.data);
+          var obj = flexTools.arrayToObject(form.data);
           var rows = 0;
-          flexTools.objectNodeIterator(obj, function(){rows++;});
+          flexTools.objectIterator(obj, function(){rows++;});
           return rows + 1;
         },
 

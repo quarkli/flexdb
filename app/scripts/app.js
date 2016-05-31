@@ -15,13 +15,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 (function(document) {
   'use strict';
 
-  function supportsPolymer() {
-    return 'content' in document.createElement('template') && 'import' in document.createElement('link') && 'registerElement' in document && document.head.createShadowRoot;
-  }
-  if(!supportsPolymer()) {
-   alert("The browser does not support.innerHTML5.\n Use Chrome, Firefox, Opera, or Safari(6+) to run this applicaiton.");
-  }
-
   // Grab a fbaseerence to our auto-binding template
   // and give it some initial binding values
   // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
@@ -143,8 +136,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var table = app.getTable(table);
 
     for (var i in table) {
-      if (table[i].key == doc) return flexTools.json2array(table[i].data);
+      if (table[i].key == doc) return flexTools.objectToArray(table[i].data);
     }
+  };
+
+  app.getViewForm = function(name) {
+    var view = app.getView(name);
+    if (!view) return null;
+    var form = {};
+    var data = JSON.parse(JSON.stringify(view.data.def));
+    delete data["PrimaryKey"];  // don't need primary key in view table
+    form.name = name;
+    form.data = flexTools.objectToArray(data);
+    return form;
+  };
+
+  app.getViewTable = function(name) {
+    return viewlist.viewtables.find(function(e){return e.name == name});
   };
 
   app.saveView = function(name, view) {
@@ -156,8 +164,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return true;
   };
 
+  app.saveViewEdit = function(event, params) {
+    if (viewedit.forms[0]) {
+      var view = flexTools.arrayToObject(viewedit.forms[0].data);
+      app.updateView(viewedit.forms[0].name, view);
+      page('/views/' + viewedit.forms[0].name);
+    }
+  };
+
+  app.saveasNewView = function(event, params) {
+    if (viewedit.forms[0]) {
+      var view = flexTools.arrayToObject(viewedit.forms[0].data);
+      app.updateView(app.newViewName, view);
+      page('/views/' + app.newViewName);
+    }
+  };
+
   app.updateView = function(name, view) {
     flexModel.set('transit-view/' + name, view);
+    app.produceViewTable(name);
   };
 
   app.produceViewTable = function(name) {
@@ -176,25 +201,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
     }
 
-    var form = JSON.parse(JSON.stringify(view.data.def));
-    delete form["PrimaryKey"];  // don't need primary key in view table
-
     var table = {};
-    table.form = {};
-    table.form.name = name;
-    table.form.data = flexTools.json2array(form);
+    table.form = app.getViewForm(name);
     table.data = [];
 
-    var formobj = flexTools.array2json(table.form.data);
+    var formobj = flexTools.arrayToObject(table.form.data);
 
     docs.forEach(function(e){
-      var obj = flexTools.evalDocument(formobj, e.data);
+      var obj = flexTools.evalObject(formobj, e.data, docs);
       table.data.push({key: e.key, data: obj});
-      flexModel.set('source-data/' + name + '/' + e.key, {});
-      flexModel.set('source-data/' + name + '/' + e.key, obj);
+      flexModel.set('computed-view/' + name + '/' + e.key, {});
+      flexModel.set('computed-view/' + name + '/' + e.key, obj);
     });
-
-    return table;
   };
 
   // Tap-triggered Functions
@@ -273,7 +291,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     else {
       spinReason.innerHTML = "Deleting Account";
       spinDialog.opened = true;
-      flexModel.deleteAccount(app.password, function(e){
+      flexModel.deleteUser(app.password, function(e){
         spinReason.innerHTML = "";
         spinDialog.opened = false;
         if (e) {
@@ -315,7 +333,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
 
     try {
-      var data = [{name: app.newFormName, data: flexTools.json2array(JSON.parse(app.extjson))}];
+      var data = [{name: app.newFormName, data: flexTools.objectToArray(JSON.parse(app.extjson))}];
       formedit.refreshForms(data);
       page('/forms/new');
     }
@@ -325,19 +343,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.resetChanges = function(event, params) {
     formedit.$$('flex-form').pop('data');
     flexModel.get('table-schema/' + formedit.forms[0].name, function(d, o){
-      formedit.refreshForms([{name: formedit.forms[0].name, data: flexTools.json2array(o)}]);
+      formedit.refreshForms([{name: formedit.forms[0].name, data: flexTools.objectToArray(o)}]);
     });
   };
 
+  app.resetViewChanges = function(event, params) {
+    page(page.current);
+  };
+
   app.pageBack = function(event, params) {
-    var parent = page.current.split('/').slice(0,2).join('/');
-    page(parent);
+    var path = page.current.split('/');
+    path.pop();
+    page(path.join('/'));
   };
 
   app.saveForm = function(event, params) {
     var table = params.formname || formedit.forms[0].name;
     flexModel.set('table-schema/' + table, {});
-    flexModel.set('table-schema/' + table, flexTools.array2json(formedit.forms[0].data));
+    flexModel.set('table-schema/' + table, flexTools.arrayToObject(formedit.forms[0].data));
     page('/');
   };
 
@@ -361,11 +384,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var target = page.current.match('input') ? datainput : dataedit;
     var table = target.forms[0].name;
     var hasData = false;
-    var data = flexTools.array2json(target.forms[0].data);
-    flexTools.objectNodeIterator(data, function(e){hasData = hasData || e.length > 0});
+    var data = flexTools.arrayToObject(target.forms[0].data);
+    flexTools.objectIterator(data, function(e){hasData = hasData || e.length > 0});
 
     if (formExists(table) && hasData) {
-      data = flexTools.array2json(target.forms[0].data);
+      data = flexTools.arrayToObject(target.forms[0].data);
       if (target == datainput) {
         flexModel.push('source-data/' + table, data);
         page('/tables/' + table + '/input');
@@ -378,6 +401,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
     else {
       popToast("No data inputed, save skipped!", '#F48FB1');
+    }
+  };
+
+  app.modifyKey = function(event, params) {
+    var id = $(event.target).parents('flex-forms')[0].id;
+    var path = '';
+    var depPath = '';
+    if (id.indexOf('view') > -1) {
+      path = 'transit-view/' + params.doc;
+      depPath = 'computed-view/' + params.doc;
+    }
+    else if (id.indexOf('form') > -1) {
+      path = 'table-schema/' + params.doc;
+      depPath = 'source-data/' + params.doc;
+    }
+
+    if (path.length && depPath.length) {
+      flexModel.modifyKey(path, params.oldKey, params.newKey, depPath);
     }
   };
 
@@ -403,16 +444,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var path = [form];
     path.push(params.key);
     path = path.join('/');
-    flexModel.remove('source-data/' + path);
+    flexModel.delete('source-data/' + path);
   };
 
   app.dropForm = function(event, params) {
-    if (formlist.forms.length < 2 && formlist.forms[0].name == params.name) {
-      formlist.refreshForms([]);
-      updateTablelist();
+    var form = app.getForm(params.name);
+    if (form) {
+      var id = formlist.forms.indexOf(form);
+      formlist.splice('forms', id, 1);
+      flexModel.delete('table-schema/' + params.name, 'source-data/' + params.name);
     }
-    flexModel.remove('table-schema/' + params.name);
-    flexModel.remove('source-data/' + params.name);
+  };
+
+  app.dropView = function(event, params) {
+    if (app.route != 'viewtable') return;
+    var view = app.getView(app.title);
+
+    if (view) {
+      var id = viewlist.views.indexOf(view);
+      viewlist.splice('views', id, 1);
+      flexModel.delete('transit-view/' + app.title, 'computed-view/' + app.title);
+      page('/views');
+    }
   };
 
   app.editView = function(event, params) {
@@ -420,14 +473,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page('/views/' + view + '/edit');
   };
 
+  app.popDeleteViewDialog = function(event, params) {
+    deleteViewDialog.toggle();
+  };
+
   app.popCancelEditDialog = function(event, params) {
     cancelEditDialog.toggle();
-  }
+  };
 
   app.popSaveAsDialog = function(event, params) {
     app.newFormName = '';
     saveasDialog.toggle();
-  }
+  };
+
+  app.popSaveAsNewViewDialog = function(event, params) {
+    app.newViewName = '';
+    saveasNewViewDialog.toggle();
+  };
 
   app.popNewFormDialog = function(event, params) {
     if (!app.authenticated) {
@@ -504,12 +566,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         tablelist.push('tables', {name: e.name, rows: 0});
       }
     });
-
-    tablelist.tables.forEach(function(e, i){
-      if (!formlist.forms.find(function(f){return f.name == e.name})) {
-        tablelist.splice('tables', i, 1)[0];
-      }
-    });
   }
 
   function initApp() {
@@ -524,7 +580,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     flexModel.on('table-schema', 'value', function(data){
       var d = [];
       data.forEach(function(e){
-        var form = {name: e.key, data: flexTools.json2array(e.data)};
+        var form = {name: e.key, data: flexTools.objectToArray(e.data)};
         d.push(form);
       });
       formlist.refreshForms(d);
@@ -533,7 +589,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     flexModel.on('source-data', 'value', function(data){
       tablelist.splice('tables', 0);
-      viewlist.splice('viewtables', 0);
       data.forEach(function(e){
         var d = [];
         Object.keys(e.data).forEach(function(k){
@@ -549,6 +604,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       data.forEach(function(e){
         var view = {name: e.key, data: e.data};
         viewlist.push('views', view);
+      });
+    });
+
+    flexModel.on('computed-view', 'value', function(data){
+      viewlist.splice('viewtables', 0);
+      data.forEach(function(e){
+        var d = [];
+        Object.keys(e.data).forEach(function(k){
+          d.push({key: k, data: e.data[k]});
+        });
+        viewlist.push('viewtables', {name: e.key, rows: d.length, data: d});
       });
     });
 

@@ -143,7 +143,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-icon-button id="btn-newform" icon="add" alt="add" on-tap="popNewFormDialog"></paper-icon-button>
             <paper-tooltip for="btn-newform">New Form</paper-tooltip>
           </template>
-          <!-- /form/new Page Icons -->
+          <!-- /form/new, /form/:id/edit Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'form-edit')}}">
             <template is="dom-if" if="{{curTitle(title, 'Edit Form')}}">
               <paper-icon-button id="btn-saveas" icon="assignment-turned-in" alt="Sava as" on-tap="popSaveAsDialog"></paper-icon-button>
@@ -180,10 +180,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!-- /tables/:id Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'datatable')}}">
             <div>
-              <paper-icon-button icon="search" alt="search" on-tap="popSearchTableDialog"></paper-icon-button>
-              <paper-tooltip>Search Document</paper-tooltip>
-            </div>
-            <div>
               <paper-icon-button icon="add" alt="add" on-tap="newData"></paper-icon-button>
               <paper-tooltip>Create Document</paper-tooltip>
             </div>
@@ -197,11 +193,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </div>
             </a>
           </template>
-          <!-- /tables/:id Page Icons -->
+          <!-- /views/:id Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'viewtable')}}">
+            <div>
+              <paper-icon-button icon="delete" alt="delete" on-tap="popDeleteViewDialog"></paper-icon-button>
+              <paper-tooltip>Delete View</paper-tooltip>
+            </div>
             <div>
               <paper-icon-button icon="create" alt="edit" on-tap="editView"></paper-icon-button>
               <paper-tooltip>Edit View</paper-tooltip>
+            </div>
+          </template>
+          <!-- /views/:id/edit Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'view-edit')}}">
+            <div>
+              <paper-icon-button icon="assignment-turned-in" alt="Sava as" on-tap="popSaveAsNewViewDialog"></paper-icon-button>
+              <paper-tooltip>Save as</paper-tooltip>
+            </div>
+            <div>
+              <paper-icon-button icon="restore" alt="Reset" on-tap="resetViewChanges"></paper-icon-button>
+              <paper-tooltip>Restore</paper-tooltip>
+            </div>
+            <div>
+              <paper-icon-button icon="check" alt="Save" on-tap="saveViewEdit"></paper-icon-button>
+              <paper-tooltip>Save</paper-tooltip>
+            </div>
+            <div>
+              <paper-icon-button icon="clear" alt="Cancel" on-tap="cancelEdit"></paper-icon-button>
+              <paper-tooltip>Cancel Edit</paper-tooltip>
             </div>
           </template>
           <!-- /account Page Icons -->
@@ -233,12 +252,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             <section data-route="form-edit" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-forms id="formedit" mode="edit"></flex-forms>
+              <flex-forms id="formedit" mode="edit" on-modifykey="modifyKey"></flex-forms>
             </section>
 
             <section data-route="view-edit" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
-              <flex-forms id="viewedit" mode="edit"></flex-forms>
+              <flex-forms id="viewedit" mode="edit" on-modifykey="modifyKey"></flex-forms>
             </section>
 
             <section data-route="data-input" tabindex="-1">
@@ -414,6 +433,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <div class="buttons">
           <paper-button class="defaultConfirm" dialog-confirm on-tap="saveas" disabled="[[!newFormName]]">Save as</paper-button>
           <paper-button dialog-dismiss>Cancel</paper-button>
+        </div>
+      </paper-dialog>
+    </template>
+
+    <template is="dom-if" if="{{1}}">
+      <paper-dialog id="saveasNewViewDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
+        <div class="header">
+          <h2>Save as New View</h2>
+          <span class="space"></span>
+          <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        </div>
+        <paper-input class="defaultFocus" label="View Name" value="{{newViewName}}" maxlength="20"></paper-input>
+        <div class="buttons">
+          <paper-button class="defaultConfirm" dialog-confirm on-tap="saveasNewView" disabled="[[!newViewName]]">Save as</paper-button>
+          <paper-button dialog-dismiss>Cancel</paper-button>
+        </div>
+      </paper-dialog>
+    </template>
+
+    <template is="dom-if" if="{{1}}">
+      <paper-dialog id="deleteViewDialog" modal role="alertdialog" onkeydown="app.dialogKeyHandle(event)" onfocus="app.setDialogFocus(event)">
+        <div class="header">
+          <h2>Drop View</h2>
+          <span class="space"></span>
+          <paper-icon-button icon="clear" class="defaultCancel" style="margin: -16px;" dialog-dismiss></paper-icon-button>
+        </div>
+        <div>
+          <p>Drop the current view?</p>
+        <div>
+        <div class="buttons">
+          <paper-button dialog-confirm on-tap="dropView">Drop</paper-button>
+          <paper-button class="defaultConfirm" dialog-dismiss>Cancel</paper-button>
         </div>
       </paper-dialog>
     </template>
