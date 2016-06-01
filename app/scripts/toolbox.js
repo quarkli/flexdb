@@ -176,7 +176,7 @@ This code may only be used under the MIT license.
     //  query - query object:
     //    query = {
     //      path: node_path,
-    //      term: evaluation_term,  ['lt', 'gt', 'eq', 'neq', 'leq', 'geq', 'match', 'like']
+    //      method: evaluation_method,  ['lt', 'gt', 'eq', 'neq', 'leq', 'geq', 'match', 'like']
     //      value: comparison_value
     //    }
     //  cb - callback function, prototype: cb(filtered_aob)
@@ -184,43 +184,58 @@ This code may only be used under the MIT license.
     function filter(aob, query, cb) {
       var unmatched = [];
       var filtered = []
-      var statement = query.path;
-      if (isNaN(query.value)) query.value = '"' + query.value +'"';
-
-      switch (query.term) {
-        case 'lt':
-          statement += '<' + query.value;
-          break;
-        case 'gt':
-          statement += '>' + query.value;
-          break;
-        case 'eq':
-          statement += '==' + query.value;
-          break;
-        case 'neq':
-          statement += '!=' + query.value;
-          break;
-        case 'leq':
-          statement += '<=' + query.value;
-          break;
-        case 'geq':
-          statement += '>=' + query.value;
-          break;
-        case 'match':
-          statement += '.match("' + query.value + '")';
-          break;
-        case 'like':
-          statement += '.toLowerCase().match(("' + query.value + '").toLowerCase())';
-          break;
-      }
 
       aob.forEach(function(e, i, o){
         try {
-          if (!eval('e' + statement)) {
+          var passed = true;
+          var value = eval('e' + query.path);
+          var comp = query.value
+
+          if (!isNaN(Date.parse(value)) && !isNaN(Date.parse(comp))) {
+            value = Date.parse(value);
+            comp = Date.parse(comp);
+          }
+
+          if (!isNaN(value) && !isNaN(comp)) {
+            value *= 1;
+            comp *= 1;
+          }
+
+          switch (query.method) {
+            case '<':
+              passed = (value < comp);
+              break;
+            case '>':
+              passed = (value > comp);
+              break;
+            case '==':
+              passed = (value == comp);
+              break;
+            case '!=':
+              passed = (value != comp);
+              break;
+            case '<=':
+              passed = (value <= comp);
+              break;
+            case '>=':
+              passed = (value >= comp);
+              break;
+            case 'match':
+              passed == (value < comp);
+              passed = value.match(comp) ? true : false;
+              break;
+            case 'like':
+              var regex = new RegExp(comp, 'i');
+              passed = value.match(regex) ? true : false;
+              break;
+          }
+          if (!passed) {
             unmatched.splice(0, 0, i);
           }
         }
-        catch(e) {}
+        catch(e) {
+          // console.error(e);
+        }
       });
 
       unmatched.forEach(function(e){

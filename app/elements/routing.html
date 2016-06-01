@@ -64,7 +64,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         page('/');
         return;
       }
-      formedit.refreshForms([form]);
+      formedit.splice('forms', 0);
+      formedit.push('forms', form);
 
       app.route = 'form-edit';
       app.title = 'Edit Form';
@@ -91,7 +92,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         page('/tables');
         return;
       }
-      datainput.refreshForms([form]);
+      datainput.splice('forms', 0);
+      datainput.push('forms', form);
 
       app.route = 'data-input';
       app.title = 'Input Data';
@@ -102,7 +104,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     page('/tables/:id/edit/:doc', function(data) {
       var table = data.params.id;
       var doc = data.params.doc;
-      dataedit.refreshForms([{name: table, data: app.getDocument(table, doc)}]);
+      dataedit.splice('forms', 0);
+      dataedit.push('forms', {name: table, data: app.getDocument(table, doc)});
 
       app.route = 'data-edit';
       app.title = 'Edit Data';
@@ -125,7 +128,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return;
       }
       datatable.form = app.getForm(id);
-      datatable.refreshData(table);
+      datatable.table = table;
+      datatable.refreshPage();
 
       app.route = 'datatable';
       app.title = data.params.id;
@@ -147,7 +151,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return;
       }
       viewtable.form = app.getViewForm(data.params.id);
-      viewtable.refreshData(table.data);
+      viewtable.table = table;
+      viewtable.refreshPage();
 
       app.route = 'viewtable';
       app.title = data.params.id;
@@ -161,7 +166,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         page('/views');
         return;
       }
-      viewedit.refreshForms([{name: view.name, data: flexTools.objectToArray(view.data)}]);
+      viewedit.splice('forms', 0);
+      viewedit.push('forms', {name: view.name, data: flexTools.objectToArray(view.data)});
 
       app.route = 'view-edit';
       app.title = 'Edit View';
@@ -175,7 +181,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       app.login();
       return;
     }
-    viewwizard.init(tablelist.tables);
+    var tables = [];
+    tablelist.tables.forEach(function(e){
+      tables.push(e.name);
+    });
+    viewlist.views.forEach(function(e){
+      tables.push(e.name);
+    });
+    viewwizard.init(tables);
 
       app.route = 'view-wizard';
       app.title = 'Create View';

@@ -63,12 +63,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         },
 
-        refreshForms: function(data) {
-          var target = this;
-          this.splice('forms', 0, this.forms.length);
-          data.forEach(function(e){ target.push('forms', e); });
-        },
-
         addNewForm: function(e) {
           app.popNewFormDialog();
         },

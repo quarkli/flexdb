@@ -73,8 +73,27 @@ This code may only be used under the MIT license.
       .date {
         text-align: center;
       }
+      paper-dropdown-menu {
+        width: 120px;
+      }
     </style>
 
+    <paper-dropdown-menu label="Page Size" value={{pageSize}}>
+      <paper-listbox id="ps" class="dropdown-content">
+        <paper-item>5</paper-item>
+        <paper-item>10</paper-item>
+        <paper-item>20</paper-item>
+        <paper-item>50</paper-item>
+        <paper-item>100</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
+    <paper-dropdown-menu label="Current Page" value={{curPage}}>
+      <paper-listbox id="page" class="dropdown-content">
+        <template is="dom-repeat" items="[[pageList(pageSize)]]">
+          <paper-item>{{item}}</paper-item>
+        </template>
+      </paper-listbox>
+    </paper-dropdown-menu>
     <table class="main">
       <tr>
         <th>
@@ -133,6 +152,11 @@ This code may only be used under the MIT license.
             notify: true,
             observer: 'buildHeaders'
           },
+          table: {
+            type: Object,
+            value: [],
+            notify: true
+          },
           data: {
             type: Array,
             value: function(){return []},
@@ -152,6 +176,17 @@ This code may only be used under the MIT license.
             type: Object,
             value: null,
             notify: true
+          },
+          pageSize: {
+            type: Number,
+            value: 0,
+            notify: true,
+          },
+          curPage: {
+            type: Number,
+            value: 0,
+            notify: true,
+            observer: 'refreshPage'
           }
         },
 
@@ -167,15 +202,44 @@ This code may only be used under the MIT license.
           $('td').css('color', '');
         },
 
-        refreshData: function(data) {
-          if (data) {
+        pageList: function() {
+          var page = [];
+          var ps = this.pageSize ? this.pageSize : 10;
+          var total = Math.ceil(this.table.length / ps);
+
+          for (var i = 0; i < total; i++) {
+            page.push(i + 1);
+          }
+          if (this.curPage == 1) {
+            this.refreshPage();
+          }
+          else if ($('#page')[0]) {
+            $('#page')[0].selected = 0;
+          }
+          return page;
+        },
+
+        refreshPage: function() {
+          if (!this.form) return;
+          if ($('#ps')[0].selected == undefined) {
+            $('#ps')[0].selected = 1;
+            return;
+          }
+          if (this.table && this.table.length) {
             var me = this;
-            this.splice('data', 0);
-            data.forEach(function(e){
-              setTimeout(function(){
-                me.push('data', e);
-              }, 0);
-            });
+            me.splice('data', 0);
+            pushData(this.table);
+
+            function pushData(d, i) {
+              i = i ? i : me.pageSize * (me.curPage - 1);
+
+              if (i < me.pageSize * me.curPage && d[i]) {
+                setTimeout(function(){
+                    me.push('data', d[i]);
+                    pushData(d, ++i);
+                }, 0);
+              }
+            }
           }
           else {
             page('/tables/' + this.form.name + '/input');
@@ -183,7 +247,7 @@ This code may only be used under the MIT license.
         },
 
         getIdx: function(id) {
-          return id + 1;
+          return 1 + id + this.pageSize * (this.curPage - 1);
         },
 
         getField: function(data, item) {
@@ -237,14 +301,11 @@ This code may only be used under the MIT license.
             target.innerText = target.innerText.replace('>> ', '<< ');
           }
 
-          var data = this.splice('data', 0);
           var path = target.field.path.slice();
           path.splice(0, 0, 'data');
           var node = {k: target.field.key, p: path};
-          flexTools.sort(data, flexTools.buildPathFromNode(node), !target.innerText.match('<<'));
-          data.forEach(function(e){
-            me.push('data', e);
-          });
+          flexTools.sort(this.table, flexTools.buildPathFromNode(node), !target.innerText.match('<<'));
+          this.refreshPage();
         },
 
         cellKeyDown: function(e) {

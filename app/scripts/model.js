@@ -62,21 +62,21 @@ This code may only be used under the MIT license.
     }
 
     // parse frebase return snapshot values into array data
-    function snapCb(snap, cb) {
-      var ret = snap.val();
-      var data = [];
-      if (ret) {
-        if (typeof ret == 'object') {
-          Object.keys(ret).forEach(function(k){
-            data.push({key: k, data: ret[k]});
-          });
-        }
-        else {
-          data.push(ret);
-        }
-        if (cb) cb(data, ret);
-      }
-    }
+    // function snapCb(snap, cb) {
+    //   var ret = snap.val();
+    //   var data = [];
+    //   if (ret) {
+    //     if (typeof ret == 'object') {
+    //       Object.keys(ret).forEach(function(k){
+    //         data.push({key: k, data: ret[k]});
+    //       });
+    //     }
+    //     else {
+    //       data.push(ret);
+    //     }
+    //     if (cb) cb(data, ret);
+    //   }
+    // }
 
     //  export below properties only for development convenience
     Object.defineProperty(this, 'fbase', {
@@ -140,14 +140,13 @@ This code may only be used under the MIT license.
       if (ubase) {
         if (cb) {
           ubase.child(path).once('value', function(snap){
-            snapCb(snap, cb)
+            cb(snap.val());
           });
         }
         else {
           return new Promise(function(resolv, reject){
-            ubase.child(path).once('value', function(snap, err){
-              if (snap) snapCb(snap, resolv);
-              else reject(err);
+            ubase.child(path).once('value', function(snap){
+              resolv(snap.val());
             });
           });
         }
@@ -159,7 +158,7 @@ This code may only be used under the MIT license.
     this.on = function(path, event, cb) {
       if (ubase) {
         ubase.child(path).on(event, function(snap){
-          snapCb(snap, cb);
+          cb(snap.val());
         });
       }
       else {

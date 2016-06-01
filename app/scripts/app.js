@@ -188,6 +188,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.produceViewTable = function(name) {
     var view = app.getView(name);
     if (!view) return null;
+
+    var tables = {};
+    if (view.data.reference) {
+      view.data.reference.forEach(function(e){
+        tables[e] = JSON.parse(JSON.stringify(app.getTable(e)));
+      });
+    }
+
+    if (view.data.filters) {
+      view.data.filters.forEach(function(e){
+        var query = JSON.parse(JSON.stringify(e));
+        query.path = '["data"]' + query.path;
+        flexTools.filter(tables[e.table], query);
+      });
+    }
+    console.log(tables)
+
     var pk = view.data.def['PrimaryKey'];
     var docs = [];
     if (pk.indexOf('__') < 0) {
@@ -197,21 +214,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       pk = pk.split('__')[1].split('/')[0];
       var tbl = app.getTable(pk);
       tbl.forEach(function(e){
-        docs.push({key: e.key, data: e.data});
+        docs.push(e);
       });
     }
 
-    var table = {};
-    table.form = app.getViewForm(name);
-    table.data = [];
-
-    var formobj = flexTools.arrayToObject(table.form.data);
+    var form = app.getViewForm(name);
+    var formobj = flexTools.arrayToObject(form.data);
 
     docs.forEach(function(e){
-      var obj = flexTools.evalObject(formobj, e.data, docs);
-      table.data.push({key: e.key, data: obj});
+      var value = flexTools.evalObject(formobj, e.data, docs);
       flexModel.set('computed-view/' + name + '/' + e.key, {});
-      flexModel.set('computed-view/' + name + '/' + e.key, obj);
+      flexModel.set('computed-view/' + name + '/' + e.key, value);
     });
   };
 
@@ -316,8 +329,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         popToast("Form name duplicated!", '#F48FB1');
         return;
     }
-    var data = [{name: app.newFormName, data: []}];
-    formedit.refreshForms(data);
+    var data = {name: app.newFormName, data: []};
+    formedit.splice('forms', 0);
+    formedit.push('forms', data);
     page('/forms/new');
   };
 
@@ -333,8 +347,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
 
     try {
-      var data = [{name: app.newFormName, data: flexTools.objectToArray(JSON.parse(app.extjson))}];
-      formedit.refreshForms(data);
+      var data = {name: app.newFormName, data: flexTools.objectToArray(JSON.parse(app.extjson))};
+      formedit.splice('forms', 0);
+      formedit.push('forms', data);
       page('/forms/new');
     }
     catch(e) {}
@@ -342,8 +357,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.resetChanges = function(event, params) {
     formedit.$$('flex-form').pop('data');
-    flexModel.get('table-schema/' + formedit.forms[0].name, function(d, o){
-      formedit.refreshForms([{name: formedit.forms[0].name, data: flexTools.objectToArray(o)}]);
+    flexModel.get('table-schema/' + formedit.forms[0].name, function(snap){
+      formedit.splice('forms', 0);
+      formedit.push('forms', {name: formedit.forms[0].name, data: flexTools.objectToArray(snap)});
     });
   };
 
@@ -354,6 +370,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.pageBack = function(event, params) {
     var path = page.current.split('/');
     path.pop();
+    if (path[1] == 'tables' && !app.getTable(path[2])) path.pop();
     page(path.join('/'));
   };
 
@@ -453,6 +470,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       var id = formlist.forms.indexOf(form);
       formlist.splice('forms', id, 1);
       flexModel.delete('table-schema/' + params.name, 'source-data/' + params.name);
+      tablelist.tables.forEach(function(e, i){
+        if (e.name == params.name) tablelist.splice('tables', i, 1);
+      });
     }
   };
 
@@ -577,44 +597,44 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     popToast('User has logged in!', '#B2DFDB');
 
     // fetch data
-    flexModel.on('table-schema', 'value', function(data){
-      var d = [];
-      data.forEach(function(e){
-        var form = {name: e.key, data: flexTools.objectToArray(e.data)};
-        d.push(form);
+    flexModel.on('table-schema', 'value', function(snap){
+      formlist.splice('forms', 0);
+      Object.keys(snap).forEach(function(k){
+        var form = {name: k, data: flexTools.objectToArray(snap[k])};
+        formlist.push('forms', form);
       });
-      formlist.refreshForms(d);
       updateTablelist();
     });
 
-    flexModel.on('source-data', 'value', function(data){
+    flexModel.on('source-data', 'value', function(snap){
       tablelist.splice('tables', 0);
-      data.forEach(function(e){
+      Object.keys(snap).forEach(function(k){
+        var data = snap[k];
         var d = [];
-        Object.keys(e.data).forEach(function(k){
-          d.push({key: k, data: e.data[k]});
+        Object.keys(data).forEach(function(k){
+          d.push({key: k, data: data[k]});
         });
-        tablelist.push('tables', {name: e.key, rows: d.length, data: d});
+        tablelist.push('tables', {name: k, rows: d.length, data: d});
       });
       updateTablelist();
     });
 
-    flexModel.on('transit-view', 'value', function(data){
+    flexModel.on('transit-view', 'value', function(snap){
       viewlist.splice('views', 0);
-      data.forEach(function(e){
-        var view = {name: e.key, data: e.data};
-        viewlist.push('views', view);
+      Object.keys(snap).forEach(function(k){
+        viewlist.push('views', {name: k, data: snap[k]});
       });
     });
 
-    flexModel.on('computed-view', 'value', function(data){
+    flexModel.on('computed-view', 'value', function(snap){
       viewlist.splice('viewtables', 0);
-      data.forEach(function(e){
+      Object.keys(snap).forEach(function(k){
+        var data = snap[k];
         var d = [];
-        Object.keys(e.data).forEach(function(k){
-          d.push({key: k, data: e.data[k]});
+        Object.keys(data).forEach(function(k){
+          d.push({key: k, data: data[k]});
         });
-        viewlist.push('viewtables', {name: e.key, rows: d.length, data: d});
+        viewlist.push('viewtables', {name: k, rows: d.length, data: d});
       });
     });
 
