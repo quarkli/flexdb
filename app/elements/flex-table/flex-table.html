@@ -79,7 +79,7 @@ This code may only be used under the MIT license.
     </style>
 
     <paper-dropdown-menu label="Page Size" value={{pageSize}}>
-      <paper-listbox id="ps" class="dropdown-content">
+      <paper-listbox id="ps" class="dropdown-content" selected="{{selectedPS}}">
         <paper-item>5</paper-item>
         <paper-item>10</paper-item>
         <paper-item>20</paper-item>
@@ -87,8 +87,8 @@ This code may only be used under the MIT license.
         <paper-item>100</paper-item>
       </paper-listbox>
     </paper-dropdown-menu>
-    <paper-dropdown-menu label="Current Page" value={{curPage}}>
-      <paper-listbox id="page" class="dropdown-content">
+    <paper-dropdown-menu label="Current Page">
+      <paper-listbox id="page" class="dropdown-content" selected="{{curPage}}">
         <template is="dom-repeat" items="[[pageList(pageSize)]]">
           <paper-item>{{item}}</paper-item>
         </template>
@@ -102,7 +102,7 @@ This code may only be used under the MIT license.
         <template is="dom-repeat" items="[[data]]">
           <th>
             <div>
-              <a href="[[hashEditUrl(item.key)]]">{{getIdx(index)}}</a>
+              <a href="[[hashEditUrl(item.key)]]">{{getIdx(index, curPage)}}</a>
               <paper-tooltip>Edit Document</paper-tooltip>
             </div>
             <div class="delbtn">
@@ -177,17 +177,28 @@ This code may only be used under the MIT license.
             value: null,
             notify: true
           },
+          selectedPS: {
+            type: Number,
+            value: 1,
+            notify: true
+          },
           pageSize: {
             type: Number,
-            value: 0,
-            notify: true,
+            value: 10,
+            notify: true
           },
           curPage: {
             type: Number,
-            value: 0,
+            value: 1,
             notify: true,
             observer: 'refreshPage'
           }
+        },
+
+        init: function() {
+          this.selectedPS = 1;
+          this.curPage = 0;
+          this.refreshPage();
         },
 
         buildHeaders: function() {
@@ -202,52 +213,32 @@ This code may only be used under the MIT license.
           $('td').css('color', '');
         },
 
-        pageList: function() {
-          var page = [];
-          var ps = this.pageSize ? this.pageSize : 10;
+        pageList: function(ps) {
+          ps = ps || 10;
+          var pages = [1];
           var total = Math.ceil(this.table.length / ps);
 
-          for (var i = 0; i < total; i++) {
-            page.push(i + 1);
+          for (var i = 1; i < total; i++) {
+            pages.push(i + 1);
           }
-          if (this.curPage == 1) {
-            this.refreshPage();
-          }
-          else if ($('#page')[0]) {
-            $('#page')[0].selected = 0;
-          }
-          return page;
+          this.refreshPage();
+          return pages;
         },
 
         refreshPage: function() {
           if (!this.form) return;
-          if ($('#ps')[0].selected == undefined) {
-            $('#ps')[0].selected = 1;
-            return;
-          }
           if (this.table && this.table.length) {
-            var me = this;
-            me.splice('data', 0);
-            pushData(this.table);
-
-            function pushData(d, i) {
-              i = i ? i : me.pageSize * (me.curPage - 1);
-
-              if (i < me.pageSize * me.curPage && d[i]) {
-                setTimeout(function(){
-                    me.push('data', d[i]);
-                    pushData(d, ++i);
-                }, 0);
-              }
+            this.splice('data', 0);
+            var start = this.pageSize * this.curPage;
+            var end = this.pageSize * (this.curPage + 1);
+            for (var i = start; i < end; i++) {
+              if (this.table[i]) this.push('data', this.table[i]);
             }
-          }
-          else {
-            page('/tables/' + this.form.name + '/input');
           }
         },
 
-        getIdx: function(id) {
-          return 1 + id + this.pageSize * (this.curPage - 1);
+        getIdx: function(id, cp) {
+          return 1 + id + this.pageSize * this.curPage;
         },
 
         getField: function(data, item) {
