@@ -370,7 +370,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.pageBack = function(event, params) {
     var path = page.current.split('/');
     path.pop();
-    if (path[1] == 'tables' && !app.getTable(path[2])) path.pop();
+    if (path.length > 2 && path[1] == 'tables') {
+      if (app.getTable(path[2])) {
+        path.splice(3);
+      }
+      else {
+        path.splice(2);
+      }
+    }
     page(path.join('/'));
   };
 

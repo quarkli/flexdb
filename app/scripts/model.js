@@ -61,23 +61,6 @@ This code may only be used under the MIT license.
       }
     }
 
-    // parse frebase return snapshot values into array data
-    // function snapCb(snap, cb) {
-    //   var ret = snap.val();
-    //   var data = [];
-    //   if (ret) {
-    //     if (typeof ret == 'object') {
-    //       Object.keys(ret).forEach(function(k){
-    //         data.push({key: k, data: ret[k]});
-    //       });
-    //     }
-    //     else {
-    //       data.push(ret);
-    //     }
-    //     if (cb) cb(data, ret);
-    //   }
-    // }
-
     //  export below properties only for development convenience
     Object.defineProperty(this, 'fbase', {
       get: function(){return fbase}
