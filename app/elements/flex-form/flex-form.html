@@ -78,7 +78,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <template is="dom-repeat" items="{{data}}">
             <template is="dom-if" if="[[isObject(item.v)]]">
               <div class="section" path="{{item.p}}" key="{{item.k}}" value="{{item.v}}">
-                <flex-form id="{{item.k}}" data="{{item.v}}" mode="[[mode]]"></flex-form>
+                <flex-form id="{{item.k}}" data="{{item.v}}" mode="[[mode]]" ref-tables="[[refTables]]"></flex-form>
               </div>
             </template>
             <template is="dom-if" if="[[!isObject(item.v)]]">
@@ -135,7 +135,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <paper-dropdown-menu label="Select Table" value="{{selectedTable}}">
           <paper-listbox id="listTable" class="dropdown-content">
             <template is="dom-repeat" items="[[refTables]]">
-              <paper-item>{{item}}</paper-item>
+              <paper-item value="{{item}}">{{item.name}}</paper-item>
             </template>
           </paper-listbox>
         </paper-dropdown-menu>
@@ -410,15 +410,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         getFields: function(table) {
-          if (!table) return;
-          var root = table + '/';
+          var item = this.$$('#listTable').selectedItem;
+          if (!item) return;
+          item = item.value;
+          var table = item.type == 'table' ? app.getForm(item.name) : {name: item.name, data: app.getViewForm(item.name)};
           var fields = [];
-          var obj = flexTools.arrayToObject(app.getForm(table).data);
-          fields.push(root);
+          var obj = flexTools.arrayToObject(table.data);
           flexTools.objectIterator(obj, function(e, k, p, o){
             var path = p.slice();
             path.push(k);
-            fields.push(root + path.join('/'));
+            fields.push(item.name + '/' + path.join('/'));
           });
           return fields;
         },

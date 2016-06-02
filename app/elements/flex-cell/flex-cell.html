@@ -41,11 +41,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     </style>
 
-    <template is="dom-if" if="[[!editing]]">
-      <div> [[value]]</div>
+    <template is="dom-if" if="[[readonly]]">
+      <div> [[format(value)]]</div>
     </template>
-    <template is="dom-if" if="[[editing]]">
-      <input type="text" value="[[value]]" on-blur="endEdit" style="text-align: [[align]]">
+    <template is="dom-if" if="[[!readonly]]">
+      <template is="dom-if" if="[[!editing]]">
+        <div> [[format(value)]]</div>
+      </template>
+      <template is="dom-if" if="[[editing]]">
+        <input type="text" value="[[value]]" on-blur="endEdit" style="text-align: [[align]]">
+      </template>
     </template>
 
   </template>
@@ -82,6 +87,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             value: false,
             notify: true
           },
+          readonly: {
+            type: Boolean,
+            value: false,
+            notify: true
+          },
           align: {
             type: String,
             value: 'left',
@@ -112,6 +122,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.fire('datachanged', {key: this.key, field: this.field, value: this.value});
           }
           this.editing = false;
+        },
+
+        format: function(val) {
+          if (!isNaN(val)) {
+            var x = val * 1;
+            return x.toLocaleString('en-US', {minimumFractionDigits: 2});
+          }
+          return val;
         }
       });
     })();

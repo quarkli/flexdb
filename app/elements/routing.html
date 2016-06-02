@@ -129,7 +129,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
       datatable.form = app.getForm(id);
       datatable.table = table;
-      datatable.refreshPage();
+      datatable.init();
 
       app.route = 'datatable';
       app.title = data.params.id;
@@ -145,14 +145,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/views/:id', function(data) {
-      var table = app.getViewTable(data.params.id);
-      if (!table) {
-        page('/views');
-        return;
-      }
-      viewtable.form = app.getViewForm(data.params.id);
+      var name = data.params.id;
+      var table = app.getViewTable(name);
+
+      viewtable.form = {name: name, data: app.getViewForm(name)};
       viewtable.table = table;
-      viewtable.refreshPage();
+      viewtable.preview = true;
+      viewtable.init();
 
       app.route = 'viewtable';
       app.title = data.params.id;
@@ -160,41 +159,41 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       setFocus(app.route);
     });
 
-    page('/views/:id/edit', function(data) {
-      var view = app.getView(data.params.id);
-      if (!view) {
-        page('/views');
+    page('/view/wizard', vw_page);
+    page('/view/wizard/:id', vw_page);
+
+    function vw_page(data) {
+      if (!app.authenticated) {
+        app.login();
         return;
       }
-      viewedit.splice('forms', 0);
-      viewedit.push('forms', {name: view.name, data: flexTools.objectToArray(view.data)});
-
-      app.route = 'view-edit';
-      app.title = 'Edit View';
-      app.desp = 'Edit view';
-      app.params = data.params;
-      setFocus(app.route);
-    });
-
-    page('/view-wizard', function() {
-    if (!app.authenticated) {
-      app.login();
-      return;
-    }
-    var tables = [];
-    tablelist.tables.forEach(function(e){
-      tables.push(e.name);
-    });
-    viewlist.views.forEach(function(e){
-      tables.push(e.name);
-    });
-    viewwizard.init(tables);
-
       app.route = 'view-wizard';
       app.title = 'Create View';
-      app.desp = 'Create Views';
+      app.desp = 'Edit Views';
+
+      var tables = [];
+      tablelist.tables.forEach(function(e){
+        tables.push({name: e.name, type: 'table'});
+      });
+      viewlist.views.forEach(function(e){
+        tables.push({name: e.name, type: 'view'});
+      });
+      tables.sort(function(a, b){return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;})
+      viewwizard.sourceDataList = tables;
+      viewwizard.viewDef = {};
+
+      if (data.params.id) {
+        var view = app.getView(data.params.id);
+        if (view) {
+          viewwizard.viewDef = JSON.parse(JSON.stringify(view));
+          app.title = 'Edit View';
+        }
+      }
+
+      viewwizard.init();
+
       setFocus(app.route);
-    });
+    }
 
     page('/account', function() {
       if (!app.authenticated) {

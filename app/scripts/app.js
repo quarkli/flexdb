@@ -127,7 +127,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.getView = function(name) {
-    return viewlist.views.find(function(e){return e.name == name});
+    try {
+      return viewlist.views.find(function(e){return e.name == name});
+    }
+    catch(e) {
+      return null;
+    }
   };
 
 
@@ -142,21 +147,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.getViewForm = function(name) {
     var view = app.getView(name);
-    if (!view) return null;
-    var form = {};
-    var data = JSON.parse(JSON.stringify(view.data.def));
-    delete data["PrimaryKey"];  // don't need primary key in view table
-    form.name = name;
-    form.data = flexTools.objectToArray(data);
-    return form;
+    return view ? view.form : null;
   };
 
   app.getViewTable = function(name) {
-    return viewlist.viewtables.find(function(e){return e.name == name});
+    var table = viewlist.viewtables.find(function(e){return e.name == name});
+    return table ? table.data : [];
   };
 
   app.saveView = function(name, view) {
-    if (app.getView(name)) {
+    if (app.title != 'Edit View' && app.getView(name)) {
         popToast("View name duplicated!", '#F48FB1');
         return false;
     }
@@ -189,40 +189,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var view = app.getView(name);
     if (!view) return null;
 
-    var tables = {};
-    if (view.data.reference) {
-      view.data.reference.forEach(function(e){
-        tables[e] = JSON.parse(JSON.stringify(app.getTable(e)));
-      });
-    }
+    var viewsrc = view.source;
+    var filters = viewsrc.filters;
+    var srcName = viewsrc.data.name;
+    var srcTbl = viewsrc.data.type == 'table' ? app.getTable(srcName) : app.getViewTable(srcName);
+    srcTbl = JSON.parse(JSON.stringify(srcTbl));
 
-    if (view.data.filters) {
-      view.data.filters.forEach(function(e){
+    if (filters && filters.length) {
+      filters.forEach(function(e){
         var query = JSON.parse(JSON.stringify(e));
         query.path = '["data"]' + query.path;
-        flexTools.filter(tables[e.table], query);
-      });
-    }
-    console.log(tables)
-
-    var pk = view.data.def['PrimaryKey'];
-    var docs = [];
-    if (pk.indexOf('__') < 0) {
-      docs.push({key: pk, data: {}});
-    }
-    else {
-      pk = pk.split('__')[1].split('/')[0];
-      var tbl = app.getTable(pk);
-      tbl.forEach(function(e){
-        docs.push(e);
+        flexTools.filter(srcTbl, query);
       });
     }
 
     var form = app.getViewForm(name);
-    var formobj = flexTools.arrayToObject(form.data);
+    var obj = flexTools.arrayToObject(form);
 
-    docs.forEach(function(e){
-      var value = flexTools.evalObject(formobj, e.data, docs);
+    srcTbl.forEach(function(e){
+      var value = flexTools.evalObject(obj, e.data, srcTbl);
       flexModel.set('computed-view/' + name + '/' + e.key, {});
       flexModel.set('computed-view/' + name + '/' + e.key, value);
     });
@@ -360,6 +345,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.pageBack = function(event, params) {
+    if (page.current.match('wizard')) {
+      page('/views');
+      return;
+    }
+
     var path = page.current.split('/');
     path.pop();
     if (path.length > 2 && path[1] == 'tables') {
@@ -489,7 +479,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   app.editView = function(event, params) {
     var view = viewtable.form.name;
-    page('/views/' + view + '/edit');
+    page('/view/wizard/' + view);
   };
 
   app.popDeleteViewDialog = function(event, params) {
@@ -598,6 +588,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // fetch data
     flexModel.on('table-schema', 'value', function(snap){
       formlist.splice('forms', 0);
+      if (!snap) return;
       Object.keys(snap).forEach(function(k){
         var form = {name: k, data: flexTools.objectToArray(snap[k])};
         formlist.push('forms', form);
@@ -607,6 +598,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     flexModel.on('source-data', 'value', function(snap){
       tablelist.splice('tables', 0);
+      if (!snap) return;
       Object.keys(snap).forEach(function(k){
         var data = snap[k];
         var d = [];
@@ -620,13 +612,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     flexModel.on('transit-view', 'value', function(snap){
       viewlist.splice('views', 0);
+      if (!snap) return;
       Object.keys(snap).forEach(function(k){
-        viewlist.push('views', {name: k, data: snap[k]});
+        viewlist.push('views', snap[k]);
       });
     });
 
     flexModel.on('computed-view', 'value', function(snap){
       viewlist.splice('viewtables', 0);
+      if (!snap) return;
       Object.keys(snap).forEach(function(k){
         var data = snap[k];
         var d = [];

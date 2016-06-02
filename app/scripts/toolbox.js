@@ -135,6 +135,12 @@ This code may only be used under the MIT license.
       }, 0);
     }
 
+    this.PERCENT = PERCENT;
+    function PERCENT(val) {
+      if (!isNaN(val)) return val.toLocaleString('en-US', {minimumFractionDigits: 2, style: 'percent'});
+      return val;
+    }
+
     // sort an array of object (aob) by specific node
     // Arguments:
     //  aob - source array of object
@@ -324,6 +330,7 @@ This code may only be used under the MIT license.
     this.arrayToObject = arrayToObject;
     this.a2o = arrayToObject;
     function arrayToObject(ary) {
+      if (!ary) return null;
       function iter(ary, obj) {
         ary.forEach(function(e){
           if (Array.isArray(e.v)) {
@@ -389,7 +396,8 @@ This code may only be used under the MIT license.
       path = convertPath(path.slice(1).join('/'));
 
       try {
-        var result = eval(func.toLowerCase() + '(' + aob + ', \'' + path + '\')');
+        var result = eval(func.toLowerCase() + '(aob , \'' + path + '\')');
+
         breakdown.push(result);
         slice = slice.slice(1).join(')');
 
@@ -436,7 +444,7 @@ This code may only be used under the MIT license.
         catch(e) {
           console.error(e);
         }
-      });
+      }, false);
 
       return obj;
     }
@@ -469,9 +477,6 @@ This code may only be used under the MIT license.
         }
 
         var ret = eval(combo);
-        if (!isNaN(ret)) {
-          ret = parseInt(ret * 100) / 100;
-        }
         return ret;
       }
       catch(e) {

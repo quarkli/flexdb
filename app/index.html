@@ -184,10 +184,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </template>
           <!-- /view Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'views')}}">
-            <a data-route="forms" href="{{baseUrl}}view-wizard">
+            <a data-route="forms" href="{{baseUrl}}view/wizard">
               <div>
                 <paper-icon-button icon="add" alt="add"></paper-icon-button>
                 <paper-tooltip>Create View</paper-tooltip>
+              </div>
+            </a>
+          </template>
+          <!-- /view-wizard Page Icons -->
+          <template is="dom-if" if="{{curPage(route, 'view-wizard')}}">
+            <a data-route="forms" href="{{baseUrl}}views">
+              <div>
+                <paper-icon-button icon="clear" alt="Cancel"></paper-icon-button>
+                <paper-tooltip>Cancel</paper-tooltip>
               </div>
             </a>
           </template>
@@ -200,25 +209,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <div>
               <paper-icon-button icon="create" alt="edit" on-tap="editView"></paper-icon-button>
               <paper-tooltip>Edit View</paper-tooltip>
-            </div>
-          </template>
-          <!-- /views/:id/edit Page Icons -->
-          <template is="dom-if" if="{{curPage(route, 'view-edit')}}">
-            <div>
-              <paper-icon-button icon="assignment-turned-in" alt="Sava as" on-tap="popSaveAsNewViewDialog"></paper-icon-button>
-              <paper-tooltip>Save as</paper-tooltip>
-            </div>
-            <div>
-              <paper-icon-button icon="restore" alt="Reset" on-tap="resetChanges"></paper-icon-button>
-              <paper-tooltip>Restore</paper-tooltip>
-            </div>
-            <div>
-              <paper-icon-button icon="check" alt="Save" on-tap="saveViewEdit"></paper-icon-button>
-              <paper-tooltip>Save</paper-tooltip>
-            </div>
-            <div>
-              <paper-icon-button icon="clear" alt="Cancel" on-tap="cancelEdit"></paper-icon-button>
-              <paper-tooltip>Cancel Edit</paper-tooltip>
             </div>
           </template>
           <!-- /account Page Icons -->
@@ -251,11 +241,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <section data-route="form-edit" tabindex="-1">
               <span class="page-title" tabindex="-1"></span>
               <flex-forms id="formedit" mode="edit" on-modifykey="modifyKey"></flex-forms>
-            </section>
-
-            <section data-route="view-edit" tabindex="-1">
-              <span class="page-title" tabindex="-1"></span>
-              <flex-forms id="viewedit" mode="edit" on-modifykey="modifyKey"></flex-forms>
             </section>
 
             <section data-route="data-input" tabindex="-1">

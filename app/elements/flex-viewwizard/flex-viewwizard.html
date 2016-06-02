@@ -53,14 +53,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <div class="container">
       <iron-pages id="wizardpages" selected="{{selectedPage}}">
         <div id="step1">
-          <h2>Step 1. Add Source Data</h2>
-          <p>Add source of data to be further processed.</p>
-          <h3>Tables</h3>
-          <iron-list id="tableItemList" items="[[tables]]" selected-items="{{selectedTables}}" selection-enabled multi-selection scroll-target="tableItemList">
+          <h2>Step 1. Select a Data Source</h2>
+          <p>Select a data source as the main input of your view.</p>
+          <iron-list id="tableItemList" items="[[sourceDataList]]" selected-items="{{viewDef.source.data}}" selection-enabled scroll-target="tableItemList">
             <template>
               <paper-icon-item>
-                <iron-icon icon="dns" item-icon></iron-icon>
-                <div class="itemtitle">{{item}}</div>
+                <iron-icon icon="[[dataIcon(item.type)]]" item-icon></iron-icon>
+                <div class="itemtitle">{{item.name}}</div>
                 <template is="dom-if" if="[[selected]]">
                   <iron-icon icon="check"></iron-icon>
                 </template>
@@ -69,13 +68,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </iron-list>
           <p></p><hr>
           <div class="buttons" align="right">
-            <paper-button on-tap="updateFilters" disabled="[[!selectedTables.length]]">Next</paper-button>
+            <paper-button on-tap="updateFilters" disabled="[[!viewDef.source.data]]">Next</paper-button>
           </div>
         </div>
 
         <div id="step2">
-          <h2>Step 2. Add Filter</h2>
-          <p>Filter the data for what is really interested.</p>
+          <h2>Step 2. Filter Data Source</h2>
+          <p>Add filters to the data source to select data which is really interested.</p>
           <paper-icon-item id="itemAddFilter" on-tap="popFilterDialog">
             <iron-icon icon="add" item-icon></iron-icon>
             <div class="itemtitle">Filter</div>
@@ -105,31 +104,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         <div id="step3">
           <h2>Step 3. Define the View</h2>
-          <p>Define a view is like create a form. The difference is a view can use reference data from saved tables, views, or field in the view itself.</p>
-          <a href="#"  onclick="step3hint.toggle();return false;">
+          <p>Define a view is like create a form. The difference is a view can use the value from source and reference data as the input.</p>
+<!--           <a href="#"  onclick="step3hint.toggle();return false;">
             <h3>(See Hint)</h3>
           </a>
           <iron-collapse id="step3hint">
             <p><b>Primary Key</b> - Primary key may define whether the view will be a single, grouping, or by-document computational result. For example, if you want to create a summary or average calculations over a source table, name the primary with a static name.</p>
             <p>  If you want to do the summary or average on a field basis, like a company, or a combined fields basis, like company + year, create the primary key with a reference.</p>
             <p>  To create a by-document computation, create the primary key with a reference which is unique in the souce table.</p>
-          </iron-collapse>
+          </iron-collapse> -->
           <p></p><hr>
           <div class="buttons" align="right">
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
             <paper-button onclick="wizardpages.selectNext();viewname.focus();">Next</paper-button>
           </div>
-          <flex-form id="View" is-root="true" data="{{viewDef}}" mode="edit" ref-tables="[[selectedTables]]"></flex-form>
+          <flex-form id="View" is-root="true" data="{{viewform}}" mode="edit" ref-tables="[[getRefTables(viewDef.source.data)]]"></flex-form>
         </div>
 
         <div id="step4">
-          <h2>Stept 4. Name the View</h2>
-          <paper-input id="viewname" label="Name of View" value="{{viewName}}"></paper-input>
-          <p>When a view has been setup, assign a specific name to the view and generate the computational result.</p>
+          <h2>Stept 4. Save the View</h2>
+          <paper-input id="viewname" label="Name of View" value="{{viewDef.name}}"></paper-input>
+          <p>Save your view with a unique name and you are ready to check the result.</p>
           <p></p><hr>
           <div class="buttons" align="right">
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
-            <paper-button disabled="[[!viewName]]" on-tap="genView">Generate</paper-button>
+            <paper-button disabled="[[!viewDef.name]]" on-tap="genView">Generate</paper-button>
           </div>
         </div>
       </iron-pages>
@@ -144,9 +143,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <div>
         <paper-dropdown-menu label="Select Table" value={{filterTable}}>
           <paper-listbox id="listTable" class="dropdown-content">
-            <template is="dom-repeat" items="[[selectedTables]]">
-              <paper-item>{{item}}</paper-item>
-            </template>
+            <paper-item>{{viewDef.source.data.name}}</paper-item>
           </paper-listbox>
         </paper-dropdown-menu>
         <paper-dropdown-menu label="Select Field" value="{{filterField}}">
@@ -192,20 +189,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         is: 'flex-viewwizard',
 
         properties: {
-          tables: {
-            type: Array,
-            value: function(){return []},
-            notify: true
-          },
           selectedPage: {
             type: Number,
             value: 0,
             notify: true
           },
-          selectedTables: {
-            type: Object
+          sourceDataList: {
+            type: Object,
+            notify: true
           },
-          tables: {
+          viewDef: {
+            type: Object,
+            value: function(){return {};},
+            notify: true
+          },
+          viewform: {
             type: Array,
             value: function(){return [];},
             notify: true
@@ -245,35 +243,70 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             type: Boolean,
             value: false,
             notify: true
-          },
-          viewDef: {
-            type: Array,
-            value: function(){return [{k: 'PrimaryKey', p: [], v: ''}];},
-            notify: true
-          },
-          viewName: {
-            type: String,
-            value: '',
-            notify: true
           }
         },
 
-        init: function(tables) {
+        init: function() {
           var me = this;
-          this.splice('tables', 0);
-          tables.forEach(function(e){
-            me.push('tables', e);
-          });
 
           this.selectedPage = 0;
           this.splice('filters', 0);
+          this.splice('viewform', 0);
           this.filterTable = '';
           this.filterField = '';
           this.evalMethod = '';
           this.evalValue = '';
           this.editingFilter = false;
-          this.splice('viewDef', 1);
-          this.viewName = '';
+
+          var viewDef = this.viewDef;
+
+          viewDef.name = viewDef.name || '';
+
+          viewDef.source = viewDef.source || {};
+          viewDef.source.data = viewDef.source.data || {};
+          if (viewDef.source.data.name) {
+            var id = this.sourceDataList.findIndex(function(e){
+              return JSON.stringify(e) == JSON.stringify(viewDef.source.data);
+            });
+
+            this.$$('#tableItemList').selectItem(id);
+          }
+
+          if (viewDef.source.filters && viewDef.source.filters.length) {
+            viewDef.source.filters.forEach(function(e){
+              me.push('filters', e);
+            });
+          }
+          viewDef.source.filters = this.filters;
+          viewDef.source.groupby = [];
+
+          viewDef.reference = [];
+
+          if (viewDef.form && viewDef.form.length) {
+            viewDef.form.forEach(function(e){
+              me.push('viewform', e);
+            });
+          }
+          viewDef.form = this.viewform;
+
+          if (this.viewSrc) {
+            var viewsrc = this.viewSrc;
+            var id = this.sourceDataList.findIndex(function(e){
+              return JSON.stringify(e) == JSON.stringify(viewsrc.source.data);
+            });
+
+            this.$$('#tableItemList').selectItem(id);
+
+            viewsrc.source.filters.forEach(function(e){
+              me.push('filters', e);
+            });
+
+            viewsrc.form.forEach(function(e){
+              me.push('viewform', e);
+            });
+
+            viewDef.name = viewsrc.name;
+          }
         },
 
         popFilterDialog: function(e) {
@@ -287,8 +320,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         refreshFields: function(e) {
+          if (!this.viewDef.source) return;
           var me = this;
-          var form = app.getForm(this.filterTable);
+          var form;
+          if (this.viewDef.source.data.type == 'table') {
+            form = app.getForm(this.filterTable);
+          }
+          else {
+            form = app.getViewForm(this.filterTable);
+            if (form) form = {name: this.filterTable, data: form};
+          }
           this.splice('fields', 0);
 
           if (form) {
@@ -299,6 +340,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               me.push('fields', path.join('/'));
             });
           }
+        },
+
+        getRefTables: function(data) {
+          if (data) {
+            return [data];
+          }
+          return [];
         },
 
         evalMethodDesc: function(method) {
@@ -338,6 +386,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         },
 
         editFilter: function(e) {
+          $('paper-listbox').each(function(i, e){
+            e.selected = -1;
+          });
           this.$$('#filterDialog').toggle();
           var target = $(e.target).parents('paper-icon-item')[0];
           var filter = this.filters[target.value];
@@ -376,25 +427,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         updateFilters: function() {
           var me = this;
-          var removed = [];
+          var invalid = [];
           this.filters.forEach(function(e, i){
-            if (me.selectedTables.indexOf(e.table) < 0) removed.splice(0, 0, i);
+            if (e.table != me.viewDef.source.data.name) invalid.splice(0, 0, i);
           });
 
-          removed.forEach(function(e){
+          invalid.forEach(function(e){
             me.splice('filters', e, 1);
           });
+
           this.$$('#wizardpages').selectNext();
         },
 
         genView: function() {
-          var view = {};
-          view.reference = this.selectedTables;
-          view.filters = this.filters;
-          view.def = flexTools.arrayToObject(this.viewDef);
-          if (app.saveView(this.viewName, view)) {
-            page('/views/' + this.viewName);
+          if (app.saveView(this.viewDef.name, this.viewDef)) {
+            page('/views/' + this.viewDef.name);
           }
+        },
+
+        dataIcon: function(type) {
+          return type == 'table' ? 'dns' : 'view-quilt'
         }
       });
     })();

@@ -122,10 +122,7 @@ This code may only be used under the MIT license.
             </td>
             <template is="dom-repeat" items="[[data]]" as="doc">
               <td>
-                <template is="dom-if" if="[[preview]]">{{getField(doc, item)}}</template>
-                <template is="dom-if" if="[[!preview]]">
-                  <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" align="right" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
-                </template>
+                <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" align="right" on-keydown="cellKeyDown" on-datachanged="setField" readonly="[[preview]]"></flex-cell>
               </td>
             </template>
         </tr>
