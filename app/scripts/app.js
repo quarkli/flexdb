@@ -356,14 +356,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.resetChanges = function(event, params) {
-    formedit.$$('flex-form').pop('data');
-    flexModel.get('table-schema/' + formedit.forms[0].name, function(snap){
-      formedit.splice('forms', 0);
-      formedit.push('forms', {name: formedit.forms[0].name, data: flexTools.objectToArray(snap)});
-    });
-  };
-
-  app.resetViewChanges = function(event, params) {
     page(page.current);
   };
 

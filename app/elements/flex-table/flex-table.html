@@ -101,14 +101,17 @@ This code may only be used under the MIT license.
         </th>
         <template is="dom-repeat" items="[[data]]">
           <th>
-            <div>
-              <a href="[[hashEditUrl(item.key)]]">{{getIdx(index, curPage)}}</a>
-              <paper-tooltip>Edit Document</paper-tooltip>
-            </div>
-            <div class="delbtn">
-              <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
-              <paper-tooltip>Delete Document</paper-tooltip>
-            </div>
+            <template is="dom-if" if="[[preview]]">{{getIdx(index, curPage)}}</template>
+            <template is="dom-if" if="[[!preview]]">
+              <div>
+                <a href="[[hashEditUrl(item.key)]]">{{getIdx(index, curPage)}}</a>
+                <paper-tooltip>Edit Document</paper-tooltip>
+              </div>
+              <div class="delbtn">
+                <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
+                <paper-tooltip>Delete Document</paper-tooltip>
+              </div>
+            </template>
           </th>
         </template>
       </tr>
@@ -119,7 +122,10 @@ This code may only be used under the MIT license.
             </td>
             <template is="dom-repeat" items="[[data]]" as="doc">
               <td>
-                <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" align="right" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
+                <template is="dom-if" if="[[preview]]">{{getField(doc, item)}}</template>
+                <template is="dom-if" if="[[!preview]]">
+                  <flex-cell key="{{doc.key}}" field="{{item}}" value="{{getField(doc, item)}}" align="right" on-keydown="cellKeyDown" on-datachanged="setField"></flex-cell>
+                </template>
               </td>
             </template>
         </tr>
@@ -192,6 +198,11 @@ This code may only be used under the MIT license.
             value: 1,
             notify: true,
             observer: 'refreshPage'
+          },
+          preview: {
+            type: Boolean,
+            value: false,
+            notify: true
           }
         },
 
