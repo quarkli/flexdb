@@ -186,6 +186,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   };
 
   app.produceViewTable = function(name) {
+    name = name.length ? name : app.title;
+
     var view = app.getView(name);
     if (!view) return null;
 
@@ -211,6 +213,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       flexModel.set('computed-view/' + name + '/' + e.key, {});
       flexModel.set('computed-view/' + name + '/' + e.key, value);
     });
+
+    if (name == app.title) page(page.current);
   };
 
   // Tap-triggered Functions

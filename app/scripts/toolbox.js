@@ -269,7 +269,7 @@ This code may only be used under the MIT license.
       arrayAsObj = arrayAsObj === undefined ? false : arrayAsObj;
       path = path || [];
 
-      if (typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
+      if (obj && typeof obj == 'object' && (Array.isArray(obj) ? arrayAsObj : true)) {
         cache = cache || [obj];
         Object.keys(obj).forEach(function(key){
           if (cache.indexOf(obj[key]) < 0) {

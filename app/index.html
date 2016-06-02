@@ -203,6 +203,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!-- /views/:id Page Icons -->
           <template is="dom-if" if="{{curPage(route, 'viewtable')}}">
             <div>
+              <paper-icon-button icon="cached" alt="refresh" on-tap="produceViewTable"></paper-icon-button>
+              <paper-tooltip>Refresh View</paper-tooltip>
+            </div>
+            <div>
               <paper-icon-button icon="delete" alt="delete" on-tap="popDeleteViewDialog"></paper-icon-button>
               <paper-tooltip>Delete View</paper-tooltip>
             </div>
