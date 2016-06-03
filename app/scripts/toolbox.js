@@ -137,7 +137,7 @@ This code may only be used under the MIT license.
 
     this.PERCENT = PERCENT;
     function PERCENT(val) {
-      if (!isNaN(val)) return val.toLocaleString('en-US', {minimumFractionDigits: 2, style: 'percent'});
+      if (!isNaN(val)) return val.toLocaleString('en-US', {maximumFractionDigits: 2, style: 'percent'});
       return val;
     }
 
@@ -497,6 +497,47 @@ This code may only be used under the MIT license.
       catch(e) {
         return '';
       }
+    }
+
+    // re-group array of object (aob) by one of the 'root' node
+    // this function helps for grouping computing such as SUM, AVG.
+    // Arguments:
+    //  aob - Array of object to be processed
+    //  rootNodeKey - 'root' node path of the object, ** object can only be re-grouped with
+    //          the root node to keep the object structure unchanged.
+    // Example:
+    //  aob = [
+    //    {name: 'Steven', city: 'New York'},
+    //    {name: 'Peter', city: 'Chicago'},
+    //    {name: 'Steven', city: 'Los Angeles'},
+    //    {name: 'Mark', city: 'New York'},
+    //  ]
+    //  groupAoB(aob, 'city') = [
+    //    { key: "New York",
+    //      data: [
+    //        {name: 'Steven', city: 'New York'},
+    //        {name: 'Mark', city: 'New York'}
+    //      ]
+    //    },
+    //    { key: "Chicago",
+    //      data: [
+    //        {name: 'Peter', city: 'Chicago'}
+    //      ]
+    //    },
+    //    { key: "Los Angeles",
+    //      data: [
+    //        {name: 'Steven', city: 'Los Angeles'}
+    //      ]
+    //    },
+    //  ]
+    this.groupAoB = groupAoB;
+    function groupAoB(aob, rootNodeKey) {
+      var ret = [];
+      aob.forEach(function(e){
+        if (e[rootNodeKey]) {
+
+        }
+      });
     }
   }
 

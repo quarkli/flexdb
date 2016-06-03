@@ -118,7 +118,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
             <paper-button onclick="wizardpages.selectNext();viewname.focus();">Next</paper-button>
           </div>
-          <flex-form id="View" is-root="true" data="{{viewform}}" mode="edit" ref-tables="[[getRefTables(viewDef.source.data)]]"></flex-form>
+          <flex-form id="View" is-root="true" data="{{viewform}}" mode="view" ref-tables="[[getRefTables(viewDef.source.data)]]"></flex-form>
         </div>
 
         <div id="step4">

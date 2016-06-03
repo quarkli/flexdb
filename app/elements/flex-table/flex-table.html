@@ -89,7 +89,7 @@ This code may only be used under the MIT license.
     </paper-dropdown-menu>
     <paper-dropdown-menu label="Current Page">
       <paper-listbox id="page" class="dropdown-content" selected="{{curPage}}">
-        <template is="dom-repeat" items="[[pageList(pageSize)]]">
+        <template is="dom-repeat" items="[[pageList]]">
           <paper-item>{{item}}</paper-item>
         </template>
       </paper-listbox>
@@ -108,7 +108,7 @@ This code may only be used under the MIT license.
                 <paper-tooltip>Edit Document</paper-tooltip>
               </div>
               <div class="delbtn">
-                <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deletDoc"></paper-icon-button>
+                <paper-icon-button icon="clear" idx="{{index}}" doc="{{item}}" on-tap="deleteDoc"></paper-icon-button>
                 <paper-tooltip>Delete Document</paper-tooltip>
               </div>
             </template>
@@ -187,12 +187,18 @@ This code may only be used under the MIT license.
           },
           pageSize: {
             type: Number,
-            value: 10,
+            value: 0,
+            notify: true,
+            observer: 'updatePageList'
+          },
+          pageList: {
+            type: Array,
+            value: function(){return [];},
             notify: true
           },
           curPage: {
             type: Number,
-            value: 1,
+            value: 0,
             notify: true,
             observer: 'refreshPage'
           },
@@ -204,8 +210,8 @@ This code may only be used under the MIT license.
         },
 
         init: function() {
+          this.updatePageList();
           this.selectedPS = 1;
-          this.curPage = 0;
           this.refreshPage();
         },
 
@@ -221,16 +227,15 @@ This code may only be used under the MIT license.
           $('td').css('color', '');
         },
 
-        pageList: function(ps) {
-          ps = ps || 10;
-          var pages = [1];
-          var total = Math.ceil(this.table.length / ps);
+        updatePageList: function() {
+          if (!this.form || !this.pageSize) return;
+          var totalPages = Math.ceil(this.table.length / this.pageSize);
 
-          for (var i = 1; i < total; i++) {
-            pages.push(i + 1);
+          this.splice('pageList', 0);
+          for (var i = 0; i < totalPages; i++) {
+            this.push('pageList', i + 1);
           }
-          this.refreshPage();
-          return pages;
+          this.curPage = 0;
         },
 
         refreshPage: function() {
@@ -345,7 +350,7 @@ This code may only be used under the MIT license.
           }
         },
 
-        deletDoc: function(e) {
+        deleteDoc: function(e) {
           var target = $(e.target).parents('paper-icon-button')[0]
           var doc = this.selectedDoc = target.doc;
           var id = target.idx;
@@ -369,6 +374,10 @@ This code may only be used under the MIT license.
           var doc = this.selectedDoc;
           var id = this.data.findIndex(function(e){return e == doc;});
           this.splice('data', id, 1);
+          if (this.data.length == 0) {
+            this.updatePageList();
+            this.highlightColumn(id + 2);
+          }
         },
 
         highlightColumn: function(col, onoff) {

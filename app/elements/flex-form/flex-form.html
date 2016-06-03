@@ -95,10 +95,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       </div>
                     </template>
                   </div>
-                  <div class="row">
-                    <paper-input class="flex" label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
-                    <paper-icon-button class="sidebtn" icon="dns" on-tap="popReferenceDialog"></paper-icon-button>
-                  </div>
+                  <template is="dom-if" if="[[curMode(mode, 'view')]]">
+                    <div class="row">
+                      <paper-input class="flex" label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
+                      <paper-icon-button class="sidebtn" icon="dns" on-tap="popReferenceDialog"></paper-icon-button>
+                    </div>
+                  </template>
                 </template>
                 <template is="dom-if" if="[[curMode(mode, 'input data')]]">
                   <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>

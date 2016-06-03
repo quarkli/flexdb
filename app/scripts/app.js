@@ -207,10 +207,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     var form = app.getViewForm(name);
     var obj = flexTools.arrayToObject(form);
+    var tgtTbl = srcTbl; //[{key: 0, data: srcTbl}];
+    flexModel.remove('computed-view/' + name);
 
-    srcTbl.forEach(function(e){
+    tgtTbl.forEach(function(e){
       var value = flexTools.evalObject(obj, e.data, srcTbl);
-      flexModel.set('computed-view/' + name + '/' + e.key, {});
       flexModel.set('computed-view/' + name + '/' + e.key, value);
     });
 
@@ -455,6 +456,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     path.push(params.key);
     path = path.join('/');
     flexModel.delete('source-data/' + path);
+    datatable.table = app.getTable(form);
   };
 
   app.dropForm = function(event, params) {
