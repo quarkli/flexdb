@@ -118,7 +118,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-button onclick="wizardpages.selectPrevious();">Previous</paper-button>
             <paper-button onclick="wizardpages.selectNext();viewname.focus();">Next</paper-button>
           </div>
-          <flex-form id="View" is-root="true" data="{{viewform}}" mode="view" ref-tables="[[getRefTables(viewDef.source.data)]]"></flex-form>
+          <flex-form id="View" is-root="true" data="{{viewform}}" mode="view"></flex-form>
         </div>
 
         <div id="step4">
@@ -307,6 +307,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             viewDef.name = viewsrc.name;
           }
+
+          this.$$('flex-form').refTables = app.getRefTables();
         },
 
         popFilterDialog: function(e) {
@@ -340,13 +342,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               me.push('fields', path.join('/'));
             });
           }
-        },
-
-        getRefTables: function(data) {
-          if (data) {
-            return [data];
-          }
-          return [];
         },
 
         evalMethodDesc: function(method) {

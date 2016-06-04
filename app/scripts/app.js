@@ -155,6 +155,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return table ? table.data : [];
   };
 
+  app.getRefTables = function() {
+    var tables = [];
+    formlist.forms.forEach(function(e){
+      tables.push({name: e.name, type: 'table'});
+    });
+    viewlist.views.forEach(function(e){
+      tables.push({name: e.name, type: 'view'});
+    });
+    return tables;
+  };
+
   app.saveView = function(name, view) {
     if (app.title != 'Edit View' && app.getView(name)) {
         popToast("View name duplicated!", '#F48FB1');
