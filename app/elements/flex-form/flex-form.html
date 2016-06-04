@@ -25,7 +25,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       :host {
         display: block;
       }
-      h3 {
+      flex-cell.section, span.section {
+        font-size: 18px;
+        font-weight: bold;
         color: var(--paper-indigo-500);
       }
       p.warning {
@@ -47,7 +49,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </h2>
         </template>
         <template is="dom-if" if="{{!isRoot}}">
-          <flex-cell value="{{id}}" on-datachanged="modifyKey" on-keydown="cellKeyDown"></flex-cell>
+          <template is="dom-if" if="[[curMode(mode, 'edit view')]]">
+            <flex-cell class="section" value="{{id}}" on-datachanged="modifyKey" on-keydown="cellKeyDown"></flex-cell>
+          </template>
+          <template is="dom-if" if="[[curMode(mode, 'input data')]]">
+            <span class="section">{{id}}</span>
+          </template>
         </template>
         <span class="space"></span>
         <template is="dom-if" if="{{isRoot}}">
@@ -95,12 +102,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       </div>
                     </template>
                   </div>
-                  <template is="dom-if" if="[[curMode(mode, 'view')]]">
                     <div class="row">
                       <paper-input class="flex" label="Default Value" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>
-                      <paper-icon-button class="sidebtn" icon="dns" on-tap="popReferenceDialog"></paper-icon-button>
+                      <template is="dom-if" if="[[curMode(mode, 'view')]]">
+                        <div>
+                          <paper-icon-button class="sidebtn" icon="dns" on-tap="popReferenceDialog"></paper-icon-button>
+                          <paper-tooltip>Use Reference</paper-tooltip>
+                        </div>
+                      </template>
                     </div>
-                  </template>
                 </template>
                 <template is="dom-if" if="[[curMode(mode, 'input data')]]">
                   <paper-input label="{{item.k}}" value="{{item.v}}" readonly="[[curMode(mode, 'default')]]" on-keyup="inputKeyHandle"></paper-input>

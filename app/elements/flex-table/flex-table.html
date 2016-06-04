@@ -228,7 +228,7 @@ This code may only be used under the MIT license.
         },
 
         updatePageList: function() {
-          if (!this.form || !this.pageSize) return;
+          if (!this.form || !this.table || !this.pageSize) return;
           var totalPages = Math.ceil(this.table.length / this.pageSize);
 
           this.splice('pageList', 0);
