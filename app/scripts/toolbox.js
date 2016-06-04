@@ -503,7 +503,7 @@ This code may only be used under the MIT license.
     // this function helps for grouping computing such as SUM, AVG.
     // Arguments:
     //  aob - Array of object to be processed
-    //  rootNodeKey - 'root' node path of the object, ** object can only be re-grouped with
+    //  path - 'root' node path of the object, ** object can only be re-grouped with
     //          the root node to keep the object structure unchanged.
     // Example:
     //  aob = [
@@ -531,13 +531,27 @@ This code may only be used under the MIT license.
     //    },
     //  ]
     this.groupAoB = groupAoB;
-    function groupAoB(aob, rootNodeKey) {
+    function groupAoB(aob, path) {
       var ret = [];
       aob.forEach(function(e){
-        if (e[rootNodeKey]) {
+        if (!path) {
+          if (!ret[0]) ret[0] = {key: 'root', data: []};
+          ret[0].data.push(e);
+        }
+        else if (eval('e' + path)) {
+          var node = ret.find(function(f){
+            return f.key == eval('e' + path);
+          });
 
+          if (!node) {
+            node = {key: eval('e' + path), data: []};
+            ret.push(node);
+          }
+
+          node.data.push(e);
         }
       });
+      return ret;
     }
   }
 
