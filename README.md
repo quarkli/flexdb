@@ -1,7 +1,9 @@
 
-## flexdb(https://luminous-inferno-3027.firebaseapp.com)
+## flexdb
 
 flexdb is a web app to provide database-like functions built on top of Polymer Starter Kit. Users can create Forms, input data with Forms, browse data in Tables, and create Views to get various perspective views of data.
+
+Application is deployed on Firebase, https://luminous-inferno-3027.firebaseapp.com
 
 ### To developers:
 
@@ -12,7 +14,8 @@ Please check out Polymer Starter Kit guide to have a quick understanding of the 
 For codes inherited from Polymer, they appliy to Gogle's open-source license as shown on the headers. As for codes orignal created in the project, it applies to MIT license.
 
 ---
-#### Below is the PSK Readme (Kept for helping developers to have a quick reference)
+###### Below is the PSK Readme (Kept for helping developers to have a quick reference)
+---
 
 ![](https://cloud.githubusercontent.com/assets/110953/7877439/6a69d03e-0590-11e5-9fac-c614246606de.png)
 ## Polymer Starter Kit
