@@ -5,6 +5,34 @@ flexdb is a web app to provide database-like functions built on top of Polymer S
 
 Application is deployed on Firebase, https://luminous-inferno-3027.firebaseapp.com
 
+## Usage Guide
+
+Three major features are introduced in flexdb, Form, Table, and View. flexdb uses NoSQL database instead of relational database which provides lots of flexibility. 
+
+- **Form**
+  A Form is what users used to defined the data structure and used for input. User can create a form with fields and section. Fields is where to store the data while section is a block to organize and contains child fields. There is no limitation on the child level of section, however, it is recommended to keep staying minimun child level whenever it is possible to keep the highest processing performance.
+
+  Hint for Developers:
+  I designed a 'recursive' component called <flex-form> which can provide a great example of how to create and leverage Web Components in a different way. This recursive design save lots of effort on coding to render such a result.
+  
+  User may click the 'edit' button in an existing form to make changes. If fields is added to or dropped from a form when there are already data existed, the added fields will contains no value in the old data and the removed field will not be shown in the table while it was not actually deleted just simply not shown with its definition. If the removed field is added back, those value will be shown again.
+  
+  It is possible to change the field name (key), but it is better to avoid such modification whenever possible. Change a field name is like remove one old field and added with a new one. The field name modification method is designed to be not obvious. Simply click on the field name in the create/edit mode, it becomes editable.
+  
+  User can put default value when creating a field, the default value will be default entered when user input new data.
+  
+  User can also create a form from a JSON string with the 'import' button in the toolbar of Form page.
+  
+- **Table**
+  Table is where user can input, edit, delete and browse data. When three is no data in a table, user will be lead to a data input page when user tried to open the table. User can save the input data by the 'save' button in the toolbar. If there is not a problem, the data will be saved and the form will be cleared for the next input. When done, click the 'page back' button to get back to the table page.
+
+  To edit a field value, simply click on the field in the table to enter the edit mode and click somewhere else to leave the eedit mode while data is updated immediately. PC user can use tab key to go through fields for editing and enter key to end. The X (cross) sign on top of each column is the delete button while it column number is the entrance of editing mode in form style.
+
+- **View**
+  View is the most important feature in flexdb and the main purpose of flexdb which is to provide non-programmer user an easy way to analyze NoSQL data. The analyzation may comes from all perspective and flexdb may not be able to handle all of them at the current stage. It involves complex logic and syntax construction based on the analyzation demand. Hopefully, I will keep improving flexdb to support more analyzing perspective.
+
+  View is created via a creatation wizard, user selects a data source which can be a table or an existing view, then apply with some filters if needed. After that, user creates a form with fields which may refer data from existing tables and views and put them into mathmatical calculation or statistical function such as summarization and averaging. User can modify a view after created and click the 'refresh' button on the toolbar to update the view result.
+
 ### To developers:
 
 Please check out Polymer Starter Kit guide to have a quick understanding of the project structure and feel free to open issue for bugs or suggestions, or email me for questions.
