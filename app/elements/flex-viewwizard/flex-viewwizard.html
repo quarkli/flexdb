@@ -66,6 +66,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </paper-icon-item>
             </template>
           </iron-list>
+          <br>
+          <paper-checkbox checked="{{viewDef.source.group}}">Group Table as One Document</paper-checkbox>
+          <p>** Generating a summary result from a table instead of against each document.</p>
           <p></p><hr>
           <div class="buttons" align="right">
             <paper-button on-tap="updateFilters" disabled="[[!viewDef.source.data]]">Next</paper-button>
@@ -278,7 +281,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             });
           }
           viewDef.source.filters = this.filters;
-          viewDef.source.groupby = [];
+          viewDef.source.group = false;
 
           viewDef.reference = [];
 
@@ -307,8 +310,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             viewDef.name = viewsrc.name;
           }
-
-          this.$$('flex-form').refTables = app.getRefTables();
         },
 
         popFilterDialog: function(e) {
@@ -409,7 +410,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           // change value in the same object will not trigger data-binding event
           // copy the object to a new one will do the trick
-          filter = JSON.parse(JSON.stringify(filter));
+          filter = flexTools.cloneObject(filter);
           var value = isNaN(this.evalValue) ? '"' + this.evalValue + '"' : this.evalValue;
           filter.table = this.filterTable;
           filter.field = this.filterField;
@@ -430,6 +431,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           invalid.forEach(function(e){
             me.splice('filters', e, 1);
           });
+
+          var refTables = app.findSingleDocTable();
+          var mytable = refTables.find(function(e){return e.name == me.viewDef.source.data.name;});
+          if (!mytable) refTables.splice(0, 0, me.viewDef.source.data);
+          this.$$('flex-form').refTables = refTables;
 
           this.$$('#wizardpages').selectNext();
         },

@@ -78,7 +78,7 @@ This code may only be used under the MIT license.
     // Arguments: oa-node
     this.buildPathFromNode = buildPathFromNode;
     function buildPathFromNode(node) {
-      var path = JSON.parse(JSON.stringify(node));
+      var path = cloneObject(node);
       path.p.push(path.k);
       path = path.p.join('"]["');
       return '["' + path + '"]';
@@ -355,7 +355,7 @@ This code may only be used under the MIT license.
     //  4. Arithmetic statement will be evaluated last.
     // Arguments:
     //  statement - statement to be evaluated
-    //  refObj - refernce object to be looked for the value of node-ref
+    //  refObj - refernce objects to be looked for the value of node-ref
     this.complexParser = complexParser;
     function complexParser(statement, refObj, aob) {
       var ret = statement;
@@ -421,7 +421,7 @@ This code may only be used under the MIT license.
     // and aob
     // Arguments:
     //  evalObj - object to be evaluated
-    //  refObj - reference object
+    //  refObj - reference objects, as [{name: <object_name>, data: <object>}, ...]
     //  aob - array of object used for aob function evaluation
     // Return: object with evaluated nodes
     this.evalObject = evalObject;
@@ -452,7 +452,7 @@ This code may only be used under the MIT license.
     // evaluate a statement against a reference object
     // Arguments:
     //  statement - statement to be evaluated
-    //  refObj - reference object to be looked for node-ref value
+    //  refObj - reference objects to be looked for node-ref value
     // Return: evaluated string
     this.evalStatement = evalStatement;
     function evalStatement(statement, refObj) {
@@ -461,10 +461,12 @@ This code may only be used under the MIT license.
         if (breakdowns[i].length == 0) breakdowns.splice(i, 1);
       }
       if (breakdowns.length > 0) breakdowns = breakdowns.map(function(e){
-        var path = e.split('/').slice(1).join('/');
+        var path = e.split('/');
+        var table = path[0];
+        path = path.slice(1).join('/');
         path = convertPath(path);
 
-        var ret = getNodeValue(path, refObj);
+        var ret = getNodeValue(table, path, refObj);
         return ret ? ret : e;
       });
 
@@ -484,18 +486,37 @@ This code may only be used under the MIT license.
       }
     }
 
-    // get a node value of an object with node path
+    // translate node value from reference objects with node path
     // Arguments:
-    //  path - node path
-    //  obj - object
+    //  name - object name
+    //  path - node path in a object
+    //  refObj - reference objects, as [{name: <object_name>, data: <object>}, ...]
     // Return: node value
     this.getNodeValue = getNodeValue;
-    function getNodeValue(path, obj) {
+    function getNodeValue(name, path, refObj) {
       try {
-        return eval('obj' + path);
+        var ret = '';
+        refObj.forEach(function(ref){
+          if (ref.name == table) {
+            ret = eval('ref.data' + path);
+          }
+        });
+        console.log(ret)
+        return ret;
       }
       catch(e) {
         return '';
+      }
+    }
+
+    // clone object
+    this.cloneObject = cloneObject;
+    function cloneObject(obj) {
+      try {
+        return JSON.parse(JSON.stringify(obj));
+      }
+      catch(e) {
+        return null;
       }
     }
 

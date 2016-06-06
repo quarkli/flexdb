@@ -185,7 +185,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       if (data.params.id) {
         var view = app.getView(data.params.id);
         if (view) {
-          viewwizard.viewDef = JSON.parse(JSON.stringify(view));
+          viewwizard.viewDef = flexTools.cloneObject(view);
           app.title = 'Edit View';
         }
       }

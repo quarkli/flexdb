@@ -116,7 +116,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   app.getForm = function(name) {
     try{
       var id = formlist.forms.findIndex(function(e){return e.name == name;});
-      return id > -1 ?　JSON.parse(JSON.stringify(formlist.forms[id])) : undefined;
+      return id > -1 ?　flexTools.cloneObject(formlist.forms[id]) : undefined;
     }
     catch(e) {
       return undefined;
@@ -159,17 +159,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     return table ? table.data : [];
   };
 
-  app.getRefTables = function() {
-    var tables = [];
-    formlist.forms.forEach(function(e){
-      tables.push({name: e.name, type: 'table'});
-    });
-    viewlist.views.forEach(function(e){
-      tables.push({name: e.name, type: 'view'});
-    });
-    return tables;
-  };
-
   app.saveView = function(name, view) {
     if (app.title != 'Edit View' && app.getView(name)) {
         popToast("View name duplicated!", '#F48FB1');
@@ -200,6 +189,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.produceViewTable(name);
   };
 
+  app.findSingleDocTable = function() {
+    var ret = [];
+
+    tablelist.tables.forEach(function(e){
+      if (e.row == 1) {
+        ret.push({type: 'table', name: e.name});
+      }
+    });
+
+    viewlist.views.forEach(function(e){
+      var table = app.getViewTable(e.name);
+      if (table.length == 1) ret.push({type: 'view', name: e.name});
+    });
+
+    return ret;
+  };
+
   app.produceViewTable = function(name) {
     name = name.length ? name : app.title;
 
@@ -210,11 +216,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     var filters = viewsrc.filters;
     var srcName = viewsrc.data.name;
     var srcTbl = viewsrc.data.type == 'table' ? app.getTable(srcName) : app.getViewTable(srcName);
-    srcTbl = JSON.parse(JSON.stringify(srcTbl));
+    srcTbl = flexTools.cloneObject(srcTbl);
 
     if (filters && filters.length) {
       filters.forEach(function(e){
-        var query = JSON.parse(JSON.stringify(e));
+        var query = flexTools.cloneObject(e);
         query.path = '["data"]' + query.path;
         flexTools.filter(srcTbl, query);
       });
@@ -222,11 +228,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     var form = app.getViewForm(name);
     var obj = flexTools.arrayToObject(form);
-    var tgtTbl = srcTbl; //[{key: 0, data: srcTbl}];
+    var tgtTbl = viewsrc.group ?[{key: 0, data: srcTbl}] : srcTbl;
     flexModel.remove('computed-view/' + name);
 
+    var refObj = [];
+    app.findSingleDocTable().forEach(function(e){
+      var table;
+      if (e.type == 'table') {
+        table = app.getTable(e.name);
+      }
+      if (e.type == 'view') {
+        table = app.getViewTable(e.name);
+      }
+      if (table && table.length) refObj.push({name: e.name, data: table[0].data});
+    });
+
     tgtTbl.forEach(function(e){
-      var value = flexTools.evalObject(obj, e.data, srcTbl);
+      var ref = refObj.slice();
+      ref.splice(0, 0, {name: srcName, data: e.data});
+      var value = flexTools.evalObject(obj, ref, srcTbl);
       flexModel.set('computed-view/' + name + '/' + e.key, value);
     });
 
