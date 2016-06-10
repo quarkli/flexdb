@@ -125,7 +125,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </div>
 
         <div id="step4">
-          <h2>Stept 4. Save the View</h2>
+          <h2>Step 4. Save the View</h2>
           <paper-input id="viewname" label="Name of View" value="{{viewDef.name}}"></paper-input>
           <p>Save your view with a unique name and you are ready to check the result.</p>
           <p></p><hr>
@@ -281,7 +281,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             });
           }
           viewDef.source.filters = this.filters;
-          viewDef.source.group = false;
+          viewDef.source.group = viewDef.source.group ? true : false;
 
           viewDef.reference = [];
 

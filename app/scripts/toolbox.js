@@ -397,7 +397,6 @@ This code may only be used under the MIT license.
 
       try {
         var result = eval(func.toLowerCase() + '(aob , \'' + path + '\')');
-
         breakdown.push(result);
         slice = slice.slice(1).join(')');
 
@@ -445,7 +444,6 @@ This code may only be used under the MIT license.
           console.error(e);
         }
       }, false);
-
       return obj;
     }
 
@@ -465,7 +463,6 @@ This code may only be used under the MIT license.
         var table = path[0];
         path = path.slice(1).join('/');
         path = convertPath(path);
-
         var ret = getNodeValue(table, path, refObj);
         return ret ? ret : e;
       });
@@ -497,11 +494,10 @@ This code may only be used under the MIT license.
       try {
         var ret = '';
         refObj.forEach(function(ref){
-          if (ref.name == table) {
+          if (ref.name == name) {
             ret = eval('ref.data' + path);
           }
         });
-        console.log(ret)
         return ret;
       }
       catch(e) {
