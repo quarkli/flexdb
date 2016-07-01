@@ -84,6 +84,12 @@ This code may only be used under the MIT license.
       return '["' + path + '"]';
     }
 
+    this.LIMIT = LIMIT;
+    function LIMIT(val, upper, lower) {
+      val = eval(val);
+      return val > upper ? upper : val < lower ? lower : val;
+    }
+
     // calculate average value of a specific node in an array of object (aob)
     // Arguments:
     //  aob - source array of object
@@ -361,9 +367,13 @@ This code may only be used under the MIT license.
       var ret = statement;
       if (ret.indexOf('=') == 0) {
         ret = ret.slice(1);
+        ret = evalStatement(ret, refObj);
         ret = evalAobFunc('SUM', ret, aob);
         ret = evalAobFunc('AVG', ret, aob);
-        ret = evalStatement(ret, refObj);
+        try {
+          ret = eval(ret);
+        }
+        catch (e) {}
       }
       return ret;
     }
