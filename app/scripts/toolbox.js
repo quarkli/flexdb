@@ -474,6 +474,24 @@ This code may only be used under the MIT license.
         path = path.slice(1).join('/');
         path = convertPath(path);
         var ret = getNodeValue(table, path, refObj);
+        var obj = null;
+        if (table && path.indexOf('[""]') > -1) {
+          path = path.replace('[""]', '');
+          refObj.forEach(function(ref){
+            if (ref.name == table) {
+              try {
+                obj = eval('ref.data' + path);
+              }
+              catch(e) {}
+            }
+          });
+        }
+        if (obj) {
+          ret = 0;
+          objectIterator(obj, function(e,k,p,o){
+            if (!isNaN(e)) ret += e * 1;
+          });
+        }
         return ret ? ret : e;
       });
 
