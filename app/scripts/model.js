@@ -10,24 +10,30 @@ This code may only be used under the MIT license.
   // provide database access APIs
   function FlexModel(){
     var me = this;
-    var url = 'https://luminous-inferno-3027.firebaseio.com';
     var uid = null;
     var authentication = null;
     var username = '';
     var cbCache = [];
     var ubase = null;
-    var fbase = new Firebase(url);
+    var appCB = null;
+    var signInErr = null;
+    var signInPwd = null;
+    var config = {
+      apiKey: "AIzaSyAowwPsyEEQjSnIbZrJqEYotN0xjLzCUBk",
+      authDomain: "luminous-inferno-3027.firebaseapp.com",
+      databaseURL: "https://luminous-inferno-3027.firebaseio.com"
+    };
 
-    // --- must be removed for production
-    // uid = "abb11a6c-fd31-4b3d-be34-5fc261b80810";
-    // _initUbase(uid);
-    // --- must be removed for production
+    firebase.initializeApp(config);
 
-    fbase.onAuth(authDataCallback);
+    var fbase = firebase.database().ref();
 
-    function _initUbase(id) {
-          uid = id;
-          ubase = new Firebase(([url, 'userdb', uid]).join('/'));
+    var fauth = firebase.auth();
+
+    fauth.onAuthStateChanged(authCB);
+
+    function _initUbase() {
+          ubase = fbase.child('userdb').child(uid);
           cbCache.forEach(function(e){
             me.on(e.path, e.event, e.cb)
           });
@@ -35,30 +41,35 @@ This code may only be used under the MIT license.
     }
 
     //  add user information to 'users' collection when login succeeded
-    function authDataCallback(authData) {
-      if (authData) {
+    function authCB(user) {
+      if (user) {
+        // user logged in
         // save the user's profile into the database so we can list users,
         // use them in Security and Firebase Rules, and show profiles
-        fbase.child("users").child(authData.uid).set({
-          provider: authData.provider,
-          name: getName(authData)
+        authentication = fauth.currentUser;
+        uid = authentication.uid;
+        username = getName(authentication);
+
+        fbase.child("users").child(uid).set({
+          provider: authentication.providerData[0].providerId,
+          name: username
         });
-        authentication = authData;
-        username = getName(authData);
-        _initUbase(authData.uid);
+
+        _initUbase();
+        if (appCB) appCB(null, uid);       
+      }
+      else {
+        // user logged out
+        signInPwd = null;
       }
     }
 
     //  get user's name according to authentication method
-    function getName(authData) {
-      switch(authData.provider) {
-         case 'password':
-           return authData.password.email.replace(/@.*/, '');
-         case 'twitter':
-           return authData.twitter.displayName;
-         case 'facebook':
-           return authData.facebook.displayName;
+    function getName(user) {
+      if ('password' == user.providerData[0].providerId) {
+           return user.email.replace(/@.*/, '');
       }
+      return '';
     }
 
     //  export below properties only for development convenience
@@ -68,6 +79,10 @@ This code may only be used under the MIT license.
 
     Object.defineProperty(this, 'ubase', {
       get: function(){return ubase}
+    });
+
+    Object.defineProperty(this, 'fauth', {
+      get: function(){return fauth}
     });
 
     Object.defineProperty(this, 'uid', {
@@ -84,21 +99,27 @@ This code may only be used under the MIT license.
 
     // Authentication method, only authenticated user gets 'userdb' accessbility
     this.auth = function(eml, pwd, cb) {
-      fbase.authWithPassword({
-        email    : eml,
-        password : pwd
-      }, function(err, authData){
-        if (authData) _initUbase(authData.uid);
-        if (cb) cb(err, authData ? authData.uid : null);
+      if (cb) {
+        appCB = cb;
+        fauth.onAuthStateChanged(authCB);
+      }
+
+      signInPwd = pwd;
+      fauth.signInWithEmailAndPassword(eml, pwd).catch(function(err){
+        if (appCB) appCB(err, null);              
+        console.log(err);
+        signInPwd = null;
       });
     };
 
     // Unauthentication method
     this.unauth = function() {
-      fbase.unauth();
+      fauth.signOut();
       uid = null;
       authentication = null;
       username = '';
+      ubase = null;
+      signInPwd = null;
     };
 
     // push data into specific path with auto-generated id
@@ -159,72 +180,61 @@ This code may only be used under the MIT license.
 
     // create new user
     this.newUser = function(email, pass, cb) {
-      fbase.createUser({
-        email: email,
-        password: pass
-      }, function(error, userData) {
+      fauth.createUserWithEmailAndPassword(email, pass).catch(function(error) {
         var err = null;
-        var uid = null;
+
         if (error) {
           switch (error.code) {
-            case "EMAIL_TAKEN":
+            case "auth/email-already-in-use":
               err = "The new user account cannot be created because the email is already in use.";
               break;
-            case "INVALID_EMAIL":
+            case "auth/invalid-email":
               err = "The specified email is not a valid email.";
               break;
+           case "auth/operation-not-allowed":
+              err = "The email/password authentication is not enable on Firebase.";
+              break;
+           case "auth/weak-password":
+              err = "The password is too weak.";
+              break;              
             default:
-              err = "Error creating user:" + error.toString();
+              err = "Error creating user:" + error.message;
           }
-        } else {
-          uid = userData.uid;
-        }
-        if (cb) cb(err, uid);
-      });
-    };
+        } 
 
-    // login with oauth provider
-    this.oauthLogin = function(provider) {
-      fbase.authWithOAuthPopup("facebook", function(error, authData) {
-        if (error) {
-          console.log("Login Failed!", error);
-        } else {
-          console.log("Authenticated successfully with payload:", authData);
-        }
+        if (cb) cb(err, null);
       });
     };
 
     // change user password
-    this.changePassword = function(oldpwd, newpwd, cb) {
-      if (!uid) return;
-      fbase.changePassword({
-        email       : authentication.password.email,
-        oldPassword : oldpwd,
-        newPassword : newpwd
-      }, function(error) {
+    this.changePassword = function(pwd, cb) {
+      if (!authentication) return;
+      authentication.updatePassword(pwd).then(function(){
+        signInPwd = pwd;
+        if (cb) cb(null);
+      }).catch(function(error) {
         if (cb) cb(error);
       });
     };
 
     // delete user, and remove all user's data
     this.deleteUser = function(pwd, cb) {
-      if (!uid) return;
-      me.changePassword(pwd, pwd, function(e){
-        if (e) {
-          if (cb) cb(e);
-        }
-        else {
-          fbase.child('users/' + authentication.uid).remove();
-          fbase.child('userdb/' + authentication.uid).remove();
-          fbase.removeUser({
-            email    : authentication.password.email,
-            password : pwd
-          }, function(error) {
-            if (cb) cb(error);
-          });
-        }
-      });
-    }
+      if (!authentication) return;
+
+      if (pwd == signInPwd) {
+        fbase.child('users/' + uid).remove();
+        fbase.child('userdb/' + uid).remove();
+        authentication.delete().then(function() {
+          signInPwd = null;
+          if (cb) cb (null);
+        }).catch(function(error) {
+          if (cb) cb(error);
+        }); 
+      }
+      else {
+        if (cb) cb("Password incorrect!");
+      }
+    };
 
     // modify key in document and dependent documents
     this.modifyKey = function(path, oldKey, newKey, depPath) {

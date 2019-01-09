@@ -23,10 +23,9 @@
 
 </div>
 	
-<script src="bower_components/firebase/firebase.js"></script>
-<script src="bower_components/angular/angular.min.js"></script>
-<script src="bower_components/angularfire/dist/angularfire.min.js"></script>
-<script>
+<script src="https://www.gstatic.com/firebasejs/5.7.1/firebase.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script><script>
 var app = angular.module('myApp', ['firebase']);
 app.controller('customersCtrl', function($scope, $firebaseObject) {
 	var fbfi_url = 'https://luminous-inferno-3027.firebaseio.com/dbfi';

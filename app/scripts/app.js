@@ -309,7 +309,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     else {
       spinReason.innerHTML = "Changing Password";
       spinDialog.opened = true;
-      flexModel.changePassword(app.password, app.newPassword, function(e){
+      flexModel.changePassword(app.newPassword, function(e){
         spinReason.innerHTML = "";
         spinDialog.opened = false;
         if (e) {
@@ -317,8 +317,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
         else {
           popToast('Password changed! Please use new password at next login.', '#B2DFDB');
+          page('/');
         }
       });
+      app.newPassword = '';
+      app.cfmNewPassword = '';
     }
   };
 
@@ -336,6 +339,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           popToast("Deleting account failed! Reason: " + e, '#F48FB1');
         }
         else {
+          popToast("User logged out!", '#F48FB1');
           logoutApp();
         }
       });
@@ -622,7 +626,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     app.authenticated = true;
     app.username = flexModel.username;
-    app.email = flexModel.authentication.password.email;
+    app.email = flexModel.authentication.email;
     popToast('User has logged in!', '#B2DFDB');
 
     // fetch data
